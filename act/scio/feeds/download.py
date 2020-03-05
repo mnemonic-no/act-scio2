@@ -32,7 +32,7 @@ import time
 import urllib.parse
 import urllib.request
 from datetime import datetime
-from typing import Text
+from typing import Any, Callable, Dict, List, Optional, Text, Tuple, cast
 
 import feedparser
 import justext
@@ -78,7 +78,7 @@ def init() -> argparse.Namespace:
     return args
 
 
-def create_html(entry) -> Text:
+def create_html(entry: Dict) -> Text:
     """Wrap an entry in html headers and footers"""
 
     html_data = """<html>
@@ -108,7 +108,7 @@ def create_html(entry) -> Text:
                             summary=summary)
 
 
-def safe_filename(path):
+def safe_filename(path: Text) -> Text:
     """Make filename safe by only allowing alpha numeric characters,
     digits and ._-"""
 
@@ -118,7 +118,17 @@ def safe_filename(path):
                    c in "_ -.").replace(" ", "_")
 
 
-def download_and_store(feed_url, ignore_file, path, link):
+def default_headers() -> Dict:
+    """ Return default headers with a custom user agent """
+    return cast(Dict, requests.utils.default_headers().update(
+        {'User-Agent': 'Mozilla/5.0 Gecko/56.0 Firefox/56.0'}))
+
+
+def download_and_store(
+        feed_url: Text,
+        ignore_file: Optional[Text],
+        path: Text,
+        link: Text) -> None:
     """Download and store a link. Storage defined in args"""
 
     if not os.path.isdir(path):
@@ -131,17 +141,6 @@ def download_and_store(feed_url, ignore_file, path, link):
         link = link.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/')
         LOGGER.info("modified link: {0}".format(link))
 
-    headers = requests.utils.default_headers()
-
-    # Update the headers with your custom ones
-    # You don't have to worry about case-sensitivity with
-    # the dictionary keys, because default_headers uses a custom
-    # CaseInsensitiveDict implementation within requests' source code.
-    headers.update(
-        {
-            'User-Agent': 'Mozilla/5.0 Gecko/56.0 Firefox/56.0',
-        })
-
     parsed = urllib.parse.urlparse(link)
 
     if parsed.netloc == '':
@@ -151,11 +150,7 @@ def download_and_store(feed_url, ignore_file, path, link):
         LOGGER.info("possible relative path %s, trying to append host: %s",
                     parsed.path, parsed_feed_url.netloc)
 
-    req = requests.get(link,
-                       headers=headers,
-                       verify=False,
-                       stream=True,
-                       timeout=60)
+    req = requests.get(link, headers=default_headers, verify=False, stream=True, timeout=60)
 
     if req.status_code >= 400:
         LOGGER.info("Status %s - %s", req.status_code, link)
@@ -165,7 +160,7 @@ def download_and_store(feed_url, ignore_file, path, link):
     fname = os.path.join(path, safe_filename(os.path.basename(url.path)))
     if ignore_file:
         if not os.path.isfile(ignore_file):
-            LOGGER.warn("Ignore file not found: %s", ignore_file)
+            LOGGER.warning("Ignore file not found: %s", ignore_file)
         else:
             with open("/opt/scio_feeds/ignore.txt") as f:
                 ignored = [l.strip() for l in f.readlines()]
@@ -177,7 +172,7 @@ def download_and_store(feed_url, ignore_file, path, link):
         shutil.copyfileobj(req.raw, download_file)
 
 
-def check_links(feed_url, args, links):
+def check_links(feed_url: Text, args: argparse.Namespace, links: List[Text]) -> None:
     """Run though a list of urls, checking if they contains certain
     elements that looks like possible file download possibilities"""
 
@@ -195,33 +190,23 @@ def check_links(feed_url, args, links):
             LOGGER.error('Exception occurred', exc_info=exc_info)
 
 
-def get_feed(feed_url):
+def get_feed(feed_url: Text) -> Any:
     """Download and parse a feed"""
 
     feed_url = feed_url.strip()
 
     LOGGER.info("Opening feed : %s", feed_url)
 
-    headers = requests.utils.default_headers()
-    headers.update(
-        {
-            'User-Agent': 'Mozilla/5.0 Gecko/56.0 Firefox/56.0',
-        })
-
-    req = requests.get(feed_url, headers=headers, verify=False, timeout=60)
+    req = requests.get(feed_url, headers=default_headers(), verify=False, timeout=60)
 
     return feedparser.parse(req.text)
 
 
-def partial_entry_text_to_file(args, entry):
+def partial_entry_text_to_file(
+        args: argparse.Namespace,
+        entry: Dict) -> Tuple[Optional[Text], Optional[Text]]:
     """Download the original content and write it to the proper file.
     Return the html."""
-
-    headers = requests.utils.default_headers()
-    headers.update(
-        {
-            'User-Agent': 'Mozilla/5.0 Gecko/56.0 Firefox/56.0',
-        })
 
     if "link" not in entry:
         LOGGER.warning("entry does not contain 'link'")
@@ -229,7 +214,7 @@ def partial_entry_text_to_file(args, entry):
 
     url = entry["link"]
 
-    req = requests.get(url, headers=headers, verify=False, timeout=60)
+    req = requests.get(url, headers=default_headers(), verify=False, timeout=60)
 
     if req.status_code >= 400:
         return None, None
@@ -261,7 +246,7 @@ def partial_entry_text_to_file(args, entry):
     return filename, raw_html
 
 
-def entry_text_to_file(args, entry):
+def entry_text_to_file(args: argparse.Namespace, entry: Dict) -> Tuple[Text, Text]:
     """Extract the entry content and write it to the proper file.
     Return the wrapped HTML"""
 
@@ -276,7 +261,7 @@ def entry_text_to_file(args, entry):
     return filename, html_data
 
 
-def html_information_extraction(entry, html_data):
+def html_information_extraction(entry: Dict, html_data: Text) -> Dict[Text, Any]:
     """Extract any information from the htmls that we want to
     do something to."""
 
@@ -290,7 +275,12 @@ def html_information_extraction(entry, html_data):
     return {"links": links}
 
 
-def create_entry_meta_file(args, filename, feed_title, entry, my_info):
+def create_entry_meta_file(
+        args: argparse.Namespace,
+        filename: Text,
+        feed_title: Text,
+        entry: Dict,
+        my_info: Dict) -> None:
     """Create the meta file for a single entry"""
 
     if feed_title.strip() == "":
@@ -318,7 +308,7 @@ def create_entry_meta_file(args, filename, feed_title, entry, my_info):
         json.dump(data, fp=meta_file, indent=4)
 
 
-def handle_partial_feed(args, feed_url):
+def handle_partial_feed(args: argparse.Namespace, feed_url: Text) -> Tuple[Text, Text]:
     """Take a feed, extract all entries, download the full original
     web page, extract links and download any documents references
     if specified in the arguments and write the feed entry content
@@ -338,16 +328,19 @@ def handle_partial_feed(args, feed_url):
                     entry_n, len(feed["entries"]), entry['title'])
 
         filename, raw_html = partial_entry_text_to_file(args, entry)
+
+        if not (filename and raw_html):
+            continue
+
         my_info = html_information_extraction(entry, raw_html)
         my_info["partial_feed"] = True
-        create_entry_meta_file(args, filename,
-                               feed["feed"]["title"], entry, my_info)
+        create_entry_meta_file(args, filename, feed["feed"]["title"], entry, my_info)
         check_links(entry["link"], args, my_info["links"])
 
     return "OK", feed_url
 
 
-def handle_feed(args, feed_url):
+def handle_feed(args: argparse.Namespace, feed_url: Text) -> Tuple[Text, Text]:
     """Take a feed, extract all entries, wrap the entries in full
     HTML body, extract links and download any documents references
     if specified in the arguments and write the feed entry content
@@ -376,7 +369,7 @@ def handle_feed(args, feed_url):
     return "OK", feed_url
 
 
-def parse_feed_file(filename):
+def parse_feed_file(filename: Text) -> Tuple[List[Text], List[Text]]:
     """Parse feed file, split feeds into partial and full feeds
     (lines starting with 'f ' and 'p ')"""
 
@@ -396,7 +389,10 @@ def parse_feed_file(filename):
     return full_feeds, partial_feeds
 
 
-def download_feed_list(args, feed_list, handler_fn):
+def download_feed_list(
+        args: argparse.Namespace,
+        feed_list: List[Text],
+        handler_fn: Callable) -> None:
     """Download and analyze a list of feeds concurrently"""
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
@@ -417,12 +413,12 @@ def download_feed_list(args, feed_list, handler_fn):
                             result)
 
 
-def main():
+def main() -> None:
     """Main program loop. entry point"""
     args = init()
     logformat = '%(asctime)-15s [%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s'  # NOQA
 
-    logcfg = {
+    logcfg: Dict = {
         "format": logformat,
         "level": logging.WARN,
     }
