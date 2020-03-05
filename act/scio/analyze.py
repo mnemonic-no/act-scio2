@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-
 import asyncio
 import plugin
 import argparse
 import logging
+
+from act.scio import plugin
 
 
 def parse_args() -> argparse.Namespace:
@@ -62,6 +63,7 @@ async def analyze(doc) -> dict:
                             candidate.dependencies)
 
     return res
+
 
 async def main() -> None:
     pass
