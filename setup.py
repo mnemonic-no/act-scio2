@@ -15,7 +15,7 @@ setup(
     author="mnemonic AS",
     zip_safe=True,
     author_email="opensource@mnemonic.no",
-    description="ACT workers",
+    description="ACT SCIO",
     long_description=long_description,
     long_description_content_type='text/markdown',
     license="MIT",
