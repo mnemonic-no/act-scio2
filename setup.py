@@ -36,7 +36,7 @@ setup(
     # __path__ = __import__('pkgutil').extend_path(__path__, __name__)
     namespace_packages=['act'],
     url="https://github.com/mnemonic-no/act-workers",
-    install_requires=['tika', 'greenstalk', 'fastapi', 'uvicorn'],
+    install_requires=['tika', 'greenstalk', 'fastapi', 'uvicorn', 'aiofiles'],
     python_requires='>=3.6, <4',
     classifiers=[
         "Development Status :: 4 - Beta",

@@ -48,7 +48,7 @@ def document_lookup(document_id: Text) -> LookupResponse:
     """ Lookpu document location and content type from document_id (hexdigest) """
 
     # TODO - ES-lookup
-    filename = "/tmp/CearSky-Fox-Kitten-Campaign.pdf"
+    filename = "/tmp/ClearSky-Fox-Kitten-Campaign.pdf"
     content_type = "application/pdf"
 
     return LookupResponse(
