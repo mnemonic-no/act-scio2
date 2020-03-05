@@ -5,7 +5,7 @@ import logging
 import os
 
 
-module_interface = ["name", "analyze", "info", "version"]
+module_interface = ["name", "analyze", "info", "version", "dependencies"]
 
 
 def load_plugins(directory: Text) -> List[ModuleType]:
