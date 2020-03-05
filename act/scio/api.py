@@ -3,12 +3,13 @@
 import argparse
 import base64
 import os
-from typing import Text
+from typing import Dict, Text
 
 import uvicorn
 from fastapi import FastAPI, Response
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, StrictStr
+from pydantic.types import constr
 
 STORAGEDIR = "/tmp"
 
@@ -33,11 +34,10 @@ def parse_args() -> argparse.Namespace:
     """ Parse arguments """
     parser = argparse.ArgumentParser(description="SCIO API")
 
-    parser.add_argument(
-        '--port',
-        type=int,
-        default=3000,
-        help="API port to listen on (default=3000)")
+    parser.add_argument('--port', type=int, default=3000,
+                        help="API port to listen on (default=3000)")
+    parser.add_argument('--reload', action="store_true",
+                        help="Reload web server on file change (dev mode)")
     parser.add_argument('--host', dest='host', default='127.0.0.1',
                         help="Host interface (default=127.0.0.1)")
 
@@ -45,7 +45,9 @@ def parse_args() -> argparse.Namespace:
 
 
 def document_lookup(document_id: Text) -> LookupResponse:
-    """ Lookpu document location and content type from document_id (hexdigest) """
+    """ Lookup document location and content type from document_id (hexdigest) """
+
+    document_id = document_id.lower()
 
     # TODO - ES-lookup
     filename = "/tmp/ClearSky-Fox-Kitten-Campaign.pdf"
@@ -74,7 +76,7 @@ async def submit(doc: Document):
 
 
 @app.get("/download/{document_id}")
-def download(document_id: Text):
+def download(document_id: constr(regex=r"^[0-9A-Fa-f]{64}$")) -> Response:
     """ Download document as original content"""
     res = document_lookup(document_id)
 
@@ -88,7 +90,7 @@ def download(document_id: Text):
 
 
 @app.get("/download_json/{document_id}")
-def download_json(document_id: Text):
+def download_json(document_id: constr(regex=r"^[0-9A-Fa-f]{64}$")) -> Response:
     """ Download document base64 decoded in json struct """
     res = document_lookup(document_id)
 
@@ -111,7 +113,12 @@ def download_json(document_id: Text):
 def main():
     """ Main API loop """
     args = parse_args()
-    uvicorn.run("act.scio.api:app", host=args.host, port=args.port, log_level="info")
+    uvicorn.run(
+        "act.scio.api:app",
+        host=args.host,
+        port=args.port,
+        log_level="info",
+        reload=args.reload)
 
 
 if __name__ == "__main__":
