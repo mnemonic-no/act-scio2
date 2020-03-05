@@ -1,11 +1,19 @@
 from importlib import import_module
+from pydantic import BaseModel
+from pydantic import StrictStr
 from types import ModuleType
-from typing import Text, List
+from typing import Text, List, Dict
 import logging
 import os
 
 
 module_interface = ["name", "analyze", "info", "version", "dependencies"]
+
+
+class Result(BaseModel):
+    name: StrictStr
+    result: Dict
+    version: StrictStr
 
 
 def load_plugins(directory: Text) -> List[ModuleType]:
