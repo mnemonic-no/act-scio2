@@ -24,19 +24,34 @@ setup(
         'console_scripts': [
             'scio-analyze = act.scio.analyze:main',
             'scio-api = act.scio.api:main',
+            'scio-feed-download = act.scio.feeds.download:main',
+            'scio-feed-submitcache= act.scio.feeds.submitcache:main',
+            'scio-upload = act.scio.upload:main',
         ]
     },
 
     # Include ini-file(s) from act/workers/etc
-    package_data={'act.scio': ['etc/*.ini']},
-    packages=["act.scio", "act.scio.plugins"],
+    package_data={'act.scio': ['etc/*']},
+    packages=["act.scio", "act.scio.plugins", "act.scio.feeds"],
 
     # https://packaging.python.org/guides/packaging-namespace-packages/#pkgutil-style-namespace-packages
     # __init__.py under all packages under in the act namespace must contain exactly string:
     # __path__ = __import__('pkgutil').extend_path(__path__, __name__)
     namespace_packages=['act'],
     url="https://github.com/mnemonic-no/act-workers",
-    install_requires=['tika', 'greenstalk', 'fastapi', 'uvicorn', 'aiofiles'],
+    install_requires=[
+        "tika",
+        "greenstalk",
+        "fastapi",
+        "uvicorn",
+        "aiofiles",
+        "urllib3",
+        "beautifulsoup4",
+        "bs4",
+        "requests",
+        "python-magic",
+        "justext",
+        "feedparser"],
     python_requires='>=3.6, <4',
     classifiers=[
         "Development Status :: 4 - Beta",
