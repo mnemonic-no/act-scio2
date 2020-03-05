@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-
-import plugin
 import argparse
 import logging
+
+from act.scio import plugin
 
 
 def parse_args() -> argparse.Namespace:
