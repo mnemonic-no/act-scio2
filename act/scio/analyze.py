@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
-from typing import Text, Dict
+
+""" SCIO Analyze module """
+
+from typing import Any, Dict, List
 import argparse
 import asyncio
 import logging
+import sys
 
 from act.scio import plugin
 
@@ -12,25 +16,16 @@ def parse_args() -> argparse.Namespace:
 
     parser.add_argument('--beanstalk', dest='beanstalk', type=str, default=None,
                         help="Connect to beanstalk server. If not specified, read from stdin")
-    parser.add_argument('--plugins', dest='plugins', type=str,
-                        default='plugins/')
+    parser.add_argument('--plugins', dest='plugins', type=str)
 
     return parser.parse_args()
 
 
-async def analyze(doc: Text) -> dict:
-    args = parse_args()
+async def analyze(plugins: List[Any], beanstalk: bool) -> dict:
     loop = asyncio.get_event_loop()
 
-    plugins = plugin.load_default_plugins()
-    try:
-        plugins += plugin.load_external_plugins(args.plugins)
-    except FileNotFoundError:
-        logging.warning("Unable to load plugins from %s", args.plugins)
-
     data = ""
-    if not args.beanstalk:
-        import sys
+    if not beanstalk:
         data = sys.stdin.read()
 
     staged = []  # for plugins with dependencies
@@ -74,8 +69,18 @@ async def analyze(doc: Text) -> dict:
 
 
 async def async_main() -> None:
+    args = parse_args()
+
+    plugins = plugin.load_default_plugins()
+
+    if args.plugins:
+        try:
+            plugins += plugin.load_external_plugins(args.plugins)
+        except FileNotFoundError:
+            logging.warning("Unable to load plugins from %s", args.plugins)
+
     loop = asyncio.get_event_loop()
-    task = loop.create_task(analyze("test document"))
+    task = loop.create_task(analyze(plugins, args.beanstalk))
     await task
     print(task.result())
 
