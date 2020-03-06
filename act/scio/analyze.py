@@ -2,13 +2,14 @@
 
 """ SCIO Analyze module """
 
+
+from act.scio import plugin
 from typing import Any, Dict, List
 import argparse
 import asyncio
+import json
 import logging
 import sys
-
-from act.scio import plugin
 
 
 def parse_args() -> argparse.Namespace:
@@ -81,7 +82,7 @@ async def async_main() -> None:
     loop = asyncio.get_event_loop()
     task = loop.create_task(analyze(plugins, args.beanstalk))
     await task
-    print(task.result())
+    print(json.dumps(task.result()))
 
 
 def main() -> None:

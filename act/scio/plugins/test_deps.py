@@ -9,5 +9,4 @@ class Plugin(BasePlugin):
     dependencies: List[Text] = ["test"]
 
     async def analyze(self, text: Text, prior_result: Dict) -> Result:
-        print("old result", prior_result)
         return Result(name=self.name, version=self.version, result={"test_deps": text, "dependency_result":  prior_result["test"]})
