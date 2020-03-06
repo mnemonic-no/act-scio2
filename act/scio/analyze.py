@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-import asyncio
-import plugin
+from typing import Text, Dict
 import argparse
+import asyncio
 import logging
 
 from act.scio import plugin
@@ -18,10 +18,11 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-async def analyze(doc) -> dict:
+async def analyze(doc: Text) -> dict:
     args = parse_args()
 
-    plugins = plugin.load_plugins(args.plugins)
+    plugins = plugin.load_default_plugins()
+    plugins += plugin.load_external_plugins(args.plugins)
 
     data = ""
     if not args.beanstalk:
@@ -37,7 +38,7 @@ async def analyze(doc) -> dict:
         else:
             pipeline.append(p)
 
-    result = {}
+    result: Dict = {}
     while pipeline:
         tasks = []
         for p in pipeline:
@@ -47,12 +48,15 @@ async def analyze(doc) -> dict:
             await task
 
         for task in tasks:
-            res = task.result()
-            result[res["name"]] = res
+            if task.exception():
+                logging.warning("%s return an exception: %s", task.get_name(), task.exception())
+            else:
+                res = task.result()
+                result[res.name] = res.result
 
         pipeline = []
         for candidate in staged[:]:
-            if all(dep in res for dep in candidate.dependencies):
+            if all(dep in result for dep in candidate.dependencies):
                 pipeline.append(candidate)
                 staged.remove(candidate)
 
@@ -62,12 +66,19 @@ async def analyze(doc) -> dict:
                             candidate.name,
                             candidate.dependencies)
 
-    return res
+    return result
 
 
-async def main() -> None:
-    pass
+async def async_main() -> None:
+    task = asyncio.create_task(analyze("test document"))
+    await task
+    print(task.result())
+
+
+def main() -> None:
+    asyncio.run(async_main())  # type: ignore
+    #await main_task
 
 
 if __name__ == "__main__":
-    asyncio.run(main())  # type: ignore
+    main()
