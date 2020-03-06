@@ -3,6 +3,7 @@ from act.scio.plugin import BasePlugin, Result
 import ipaddress
 import re
 
+
 class Plugin(BasePlugin):
     name = "indicators"
     info = "Extracting Atomic indicators like ip/fqdn/hash from body of text"
@@ -12,7 +13,8 @@ class Plugin(BasePlugin):
     md5 = re.compile("\\b[0-9a-fA-F]{32}\\b")
     sha1 = re.compile("\\b[.0-9a-fA-F]{40}\\b")
     sha256 = re.compile("\\b[0-9a-fA-F]{64}\\b")
-    ipv4 = re.compile("\\b([0-2]?[0-9]?[0-9])\\.([0-2]?[0-9]?[0-9])\\.([0-2]?[0-9]?[0-9])\\.([0-2]?[0-9]?[0-9])\\b")
+    ipv4 = re.compile("\\b([0-2]?[0-9]?[0-9])\\.([0-2]?[0-9]?[0-9])\\.([0-2]?[0-9]?[0-9])" +
+                      "\\.([0-2]?[0-9]?[0-9])\\b")
     email = re.compile("\\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}\\b")
     fqdn = re.compile("\\b([a-zA-Z0-9\\.\\-]+\\.[a-zA-Z0-9\\.\\-]+)\\b")
 
