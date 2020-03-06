@@ -16,8 +16,7 @@ def parse_args() -> argparse.Namespace:
 
     parser.add_argument('--beanstalk', dest='beanstalk', type=str, default=None,
                         help="Connect to beanstalk server. If not specified, read from stdin")
-    parser.add_argument('--plugins', dest='plugins', type=str,
-                        default='plugins/')
+    parser.add_argument('--plugins', dest='plugins', type=str)
 
     return parser.parse_args()
 
@@ -49,7 +48,7 @@ async def analyze(plugins: List[Any], beanstalk: bool) -> dict:
 
         for task in tasks:
             if task.exception():
-                logging.warning("returned an exception: %s", task.exception())
+                logging.warning("%s return an exception: %s", task, task.exception())
             else:
                 res = task.result()
                 result[res.name] = res.result
@@ -73,7 +72,12 @@ async def async_main() -> None:
     args = parse_args()
 
     plugins = plugin.load_default_plugins()
-    plugins += plugin.load_external_plugins(args.plugins)
+
+    if args.plugins:
+        try:
+            plugins += plugin.load_external_plugins(args.plugins)
+        except FileNotFoundError:
+            logging.warning("Unable to load plugins from %s", args.plugins)
 
     loop = asyncio.get_event_loop()
     task = loop.create_task(analyze(plugins, args.beanstalk))
