@@ -26,5 +26,7 @@ async def test_plugins(monkeypatch) -> None:
     assert "count" in res
     assert "sentences" in res
 
+    assert len(res["count"]) == 2
+
     assert res["count"]["This is a test"] == 14
     assert res["count"]["And this is another one"] == 23
