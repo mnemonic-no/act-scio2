@@ -1,9 +1,9 @@
 from importlib import import_module
+from importlib.util import module_from_spec, spec_from_file_location
 
 from act.scio import plugins
 import pkgutil
-from types import ModuleType
-from typing import Text, List, Dict
+from typing import Text, List, Dict, Optional
 import logging
 import os
 from pydantic import BaseModel, StrictStr
@@ -41,23 +41,9 @@ def load_default_plugins() -> List[BasePlugin]:
 
     prefix = plugins.__name__ + "."
     for _, modname, _ in pkgutil.iter_modules(plugins.__path__, prefix):
-        try:
-            module = import_module(modname)
-        except Exception as e:
-            logging.warning(e)
-            continue
 
-        conform = True
-        try:
-            p = module.Plugin()  # type: ignore
-        except AttributeError as err:
-            logging.warning("%s", err)
-            continue
-        for mint in module_interface:
-            if not hasattr(p, mint):
-                logging.warning(f"{modname} does not have {mint} attribute")
-                conform = False
-        if conform:
+        p = load_plugin(modname)
+        if p:
             myplugins.append(p)
 
     return myplugins
@@ -76,25 +62,39 @@ def load_external_plugins(directory: Text) -> List[BasePlugin]:
             continue
         plugin_path = os.path.join(directory, plugin_file_name)
         if os.path.isfile(plugin_path) and plugin_path.endswith(".py"):
-            module_import = plugin_path.replace("/", ".")[:-3]
 
-            try:
-                module = import_module(module_import)
-            except Exception as e:
-                logging.warning(e)
-                continue
-
-            conform = True
-            try:
-                p = module.Plugin()  # type: ignore
-            except AttributeError as err:
-                logging.warning("%s", err)
-                continue
-            for mint in module_interface:
-                if not hasattr(p, mint):
-                    logging.warning(f"{plugin_path} does not have {mint} attribute")
-                    conform = False
-            if conform:
+            p = load_plugin(plugin_path)
+            if p:
                 myplugins.append(p)
 
     return myplugins
+
+
+def load_plugin(module_name: Text) -> Optional[BasePlugin]:
+    if module_name.endswith(".py"):
+        spec = spec_from_file_location("plugin_mod", module_name)
+        module = module_from_spec(spec)
+        spec.loader.exec_module(module)
+    else:
+        try:
+            module = import_module(module_name)
+        except Exception as e:
+            logging.warning(e)
+            return None
+
+    conform = True
+    try:
+        p = module.Plugin()  # type: ignore
+    except AttributeError as err:
+        logging.warning("Could not load plugin from module %s: %s", module_name, err)
+        return None
+
+    for mint in module_interface:
+        if not hasattr(p, mint):
+            logging.warning("%s does not have %s attribute", p.name, mint)
+            conform = False
+
+    if not conform:
+        return None
+
+    return p
