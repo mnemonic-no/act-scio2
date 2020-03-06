@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
-from typing import Text, Dict
+
+""" SCIO Analyze module """
+
+from typing import Any, Dict, List
 import argparse
 import asyncio
 import logging
+import sys
 
 from act.scio import plugin
 
@@ -18,16 +22,11 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-async def analyze(doc: Text) -> dict:
-    args = parse_args()
+async def analyze(plugins: List[Any], beanstalk: bool) -> dict:
     loop = asyncio.get_event_loop()
 
-    plugins = plugin.load_default_plugins()
-    plugins += plugin.load_external_plugins(args.plugins)
-
     data = ""
-    if not args.beanstalk:
-        import sys
+    if not beanstalk:
         data = sys.stdin.read()
 
     staged = []  # for plugins with dependencies
@@ -50,7 +49,7 @@ async def analyze(doc: Text) -> dict:
 
         for task in tasks:
             if task.exception():
-                logging.warning("%s return an exception: %s", task.get_name(), task.exception())
+                logging.warning("returned an exception: %s", task.exception())
             else:
                 res = task.result()
                 result[res.name] = res.result
@@ -71,8 +70,13 @@ async def analyze(doc: Text) -> dict:
 
 
 async def async_main() -> None:
+    args = parse_args()
+
+    plugins = plugin.load_default_plugins()
+    plugins += plugin.load_external_plugins(args.plugins)
+
     loop = asyncio.get_event_loop()
-    task = loop.create_task(analyze("test document"))
+    task = loop.create_task(analyze(plugins, args.beanstalk))
     await task
     print(task.result())
 
