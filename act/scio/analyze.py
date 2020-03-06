@@ -76,7 +76,9 @@ async def async_main() -> None:
 
 
 def main() -> None:
-    asyncio.run(async_main())  # type: ignore
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(asyncio.wait([async_main()]))
+    #asyncio.run(async_main())  # type: ignore
     #await main_task
 
 
