@@ -20,6 +20,7 @@ def parse_args() -> argparse.Namespace:
 
 async def analyze(doc: Text) -> dict:
     args = parse_args()
+    loop = asyncio.get_event_loop()
 
     plugins = plugin.load_default_plugins()
     plugins += plugin.load_external_plugins(args.plugins)
@@ -42,7 +43,7 @@ async def analyze(doc: Text) -> dict:
     while pipeline:
         tasks = []
         for p in pipeline:
-            tasks.append(asyncio.create_task(p.analyze(data, result)))
+            tasks.append(loop.create_task(p.analyze(data, result)))
 
         for task in tasks:
             await task
@@ -70,7 +71,8 @@ async def analyze(doc: Text) -> dict:
 
 
 async def async_main() -> None:
-    task = asyncio.create_task(analyze("test document"))
+    loop = asyncio.get_event_loop()
+    task = loop.create_task(analyze("test document"))
     await task
     print(task.result())
 
