@@ -21,7 +21,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-async def analyze(plugins: List[Any], beanstalk: bool) -> dict:
+async def analyze(plugins: List[plugin.BasePlugin], beanstalk: bool) -> dict:
     loop = asyncio.get_event_loop()
 
     data = ""
@@ -32,7 +32,7 @@ async def analyze(plugins: List[Any], beanstalk: bool) -> dict:
     pipeline = []  # for plugins to be run now
 
     for p in plugins:
-        if len(p.dependencies) > 0:
+        if p.dependencies:
             staged.append(p)
         else:
             pipeline.append(p)
@@ -59,11 +59,10 @@ async def analyze(plugins: List[Any], beanstalk: bool) -> dict:
                 pipeline.append(candidate)
                 staged.remove(candidate)
 
-    if len(staged) > 0:
-        for candidate in staged:
-            logging.warning("Candidate %s did not run due to unmet dependency %s",
-                            candidate.name,
-                            candidate.dependencies)
+    for candidate in staged:
+        logging.warning("Candidate %s did not run due to unmet dependency %s",
+                        candidate.name,
+                        candidate.dependencies)
 
     return result
 
