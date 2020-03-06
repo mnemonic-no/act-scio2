@@ -23,7 +23,10 @@ async def analyze(doc: Text) -> dict:
     loop = asyncio.get_event_loop()
 
     plugins = plugin.load_default_plugins()
-    plugins += plugin.load_external_plugins(args.plugins)
+    try:
+        plugins += plugin.load_external_plugins(args.plugins)
+    except FileNotFoundError:
+        logging.warning("Unable to load plugins from %s", args.plugins)
 
     data = ""
     if not args.beanstalk:
@@ -50,7 +53,7 @@ async def analyze(doc: Text) -> dict:
 
         for task in tasks:
             if task.exception():
-                logging.warning("%s return an exception: %s", task.get_name(), task.exception())
+                logging.warning("%s return an exception: %s", task, task.exception())
             else:
                 res = task.result()
                 result[res.name] = res.result
