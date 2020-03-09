@@ -48,6 +48,8 @@ setup(
         "greenstalk",
         "ipaddress",
         "justext",
+        "pytest-asyncio",
+        "pytest",
         "python-magic",
         "requests",
         "tika",
