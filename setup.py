@@ -48,6 +48,7 @@ setup(
         "greenstalk",
         "ipaddress",
         "justext",
+        "nltk",
         "python-magic",
         "requests",
         "tika",
