@@ -43,7 +43,7 @@ class Plugin(BasePlugin):
 
         res.ipv6 = pos_ipv6
 
-        return Result(name=self.name, version=self.version, result=AttrDict(res))
+        return Result(name=self.name, version=self.version, result=res)
 
 
 TLDS: Set[Text] = {
