@@ -1,12 +1,13 @@
-from importlib import import_module
-from importlib.util import module_from_spec, spec_from_file_location
-
 from act.scio import plugins
-import pkgutil
+from act.scio.attrdict import AttrDict
+from importlib import import_module
+from importlib.machinery import ModuleSpec
+from importlib.util import module_from_spec, spec_from_file_location
+from pydantic import BaseModel, StrictStr
 from typing import Text, List, Dict, Optional
 import logging
 import os
-from pydantic import BaseModel, StrictStr
+import pkgutil
 
 
 module_interface = ["name", "analyze", "info", "version", "dependencies"]
@@ -15,7 +16,7 @@ module_interface = ["name", "analyze", "info", "version", "dependencies"]
 class Result(BaseModel):
     name: StrictStr
     version: StrictStr
-    result: dict
+    result: AttrDict
 
 
 class BasePlugin:
@@ -72,9 +73,9 @@ def load_external_plugins(directory: Text) -> List[BasePlugin]:
 
 def load_plugin(module_name: Text) -> Optional[BasePlugin]:
     if module_name.endswith(".py"):
-        spec = spec_from_file_location("plugin_mod", module_name)
+        spec: ModuleSpec = spec_from_file_location("plugin_mod", module_name)
         module = module_from_spec(spec)
-        spec.loader.exec_module(module)
+        spec.loader.exec_module(module)  # type: ignore
     else:
         try:
             module = import_module(module_name)
@@ -84,7 +85,7 @@ def load_plugin(module_name: Text) -> Optional[BasePlugin]:
 
     conform = True
     try:
-        p = module.Plugin()  # type: ignore
+        p: BasePlugin = module.Plugin()  # type: ignore
     except AttributeError as err:
         logging.warning("Could not load plugin from module %s: %s", module_name, err)
         return None
