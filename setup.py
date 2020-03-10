@@ -38,7 +38,7 @@ setup(
     # __init__.py under all packages under in the act namespace must contain exactly string:
     # __path__ = __import__('pkgutil').extend_path(__path__, __name__)
     namespace_packages=['act'],
-    url="https://github.com/mnemonic-no/act-workers",
+    url="https://github.com/mnemonic-no/act-scio2",
     install_requires=[
         "aiofiles",
         "beautifulsoup4",
@@ -49,6 +49,8 @@ setup(
         "ipaddress",
         "justext",
         "nltk",
+        "pytest-asyncio",
+        "pytest",
         "python-magic",
         "requests",
         "tika",
