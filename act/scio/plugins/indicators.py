@@ -1,4 +1,4 @@
-from typing import Text, List, Dict
+from typing import Text, List, Dict, Set
 from act.scio.plugin import BasePlugin, Result
 import ipaddress
 import re
@@ -28,25 +28,25 @@ class Plugin(BasePlugin):
             'sha256': self.sha256.findall(text),
             'email': self.email.findall(text),
             'fqdn': [dn for dn in self.fqdn.findall(text)
-                     if any(dn.endswith("." + tld) for tld in TLDS)],
+                     if dn.split(".")[-1] in TLDS],
             'ipv4': ['.'.join(ip) for ip in self.ipv4.findall(text)],
         }
 
-        pos_ipv6 = self.allposipv6.findall(text)
-        for candidate in pos_ipv6[:]:
+        pos_ipv6 = []
+        for candidate in self.allposipv6.findall(text):
             try:
                 addr = ipaddress.ip_address(candidate)
                 if addr.version != 6:
-                    pos_ipv6.remove(candidate)
+                    pos_ipv6.append(candidate)
             except ValueError:
-                pos_ipv6.remove(candidate)
+                pass
 
         res['ipv6'] = pos_ipv6
 
         return Result(name=self.name, version=self.version, result=res)
 
 
-TLDS: List[Text] = [
+TLDS: Set[Text] = {
     "abb",
     "abbott",
     "abogado",
@@ -976,4 +976,4 @@ TLDS: List[Text] = [
     "zone",
     "zuerich",
     "zw",
-]
+}
