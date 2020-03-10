@@ -4,7 +4,7 @@ from importlib import import_module
 from importlib.machinery import ModuleSpec
 from importlib.util import module_from_spec, spec_from_file_location
 from pydantic import BaseModel, StrictStr
-from typing import Text, List, Dict, Optional
+from typing import Text, List, Optional
 import logging
 import os
 import pkgutil
@@ -29,7 +29,7 @@ class BasePlugin:
     version = "0.1"
     dependencies: List[Text] = []
 
-    async def analyze(self, text: Text, prior_result: Dict) -> Result:
+    async def analyze(self, text: Text, prior_result: AttrDict) -> Result:
         return Result(name=self.name, version=self.version, result={"test": text})
 
 

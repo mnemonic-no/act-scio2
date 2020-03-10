@@ -5,15 +5,14 @@
     - NLP stemming
 """
 
-import configparser
-import re
-from typing import Any, Dict, List, Optional, Pattern
 
-import nltk  # type: ignore
-
-import aliasregex
-from alias import parse_aliases
+from act.scio.alias import parse_aliases
 from act.scio.attrdict import AttrDict
+from typing import Any, Dict, List, Optional, Pattern
+import act.scio.aliasregex as aliasregex
+import configparser
+import nltk  # type: ignore
+import re
 
 
 def from_config(config_filename: str) -> AttrDict:
@@ -46,8 +45,7 @@ def from_config(config_filename: str) -> AttrDict:
 class IllegalVocabularyKeyType(Exception):
     """Non existing Vocabulary Key Type"""
 
-    def __init__(self, *args: Any, **kwargs: Dict[Any, Any]) -> None:
-        Exception.__init__(self, *args, **kwargs)
+    pass
 
 
 class Vocabulary:
