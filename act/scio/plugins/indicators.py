@@ -1,5 +1,5 @@
 from act.scio.plugin import BasePlugin, Result
-from attrdict import AttrDict
+from act.scio.attrdict import AttrDict
 from typing import Text, List, Dict, Set
 import ipaddress
 import re
@@ -19,7 +19,7 @@ class Plugin(BasePlugin):
     email = re.compile("\\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}\\b")
     fqdn = re.compile("\\b([a-zA-Z0-9\\.\\-]+\\.[a-zA-Z0-9\\.\\-]+)\\b")
 
-    allposipv6 = re.compile("\\b[a-f0-9:.]+\\b")
+    allposipv6 = re.compile("\\b[a-f0-9:.]+:[a-f0-9:.]+:[a-f0-9:.]+\\b")
 
     async def analyze(self, text: Text, prior_result: AttrDict) -> Result:
 

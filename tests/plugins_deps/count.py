@@ -1,5 +1,6 @@
 from typing import Dict, List, Text
 
+from act.scio.attrdict import AttrDict
 from act.scio.plugin import BasePlugin, Result
 
 
@@ -13,4 +14,4 @@ class Plugin(BasePlugin):
         return Result(
             name=self.name,
             version=self.version,
-            result={s: len(s) for s in prior_result["sentences"]["split"]})
+            result=AttrDict({s: len(s) for s in prior_result["sentences"]["split"]}))

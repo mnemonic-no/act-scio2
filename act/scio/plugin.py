@@ -1,5 +1,5 @@
 from act.scio import plugins
-from attrdict import AttrDict
+from act.scio.attrdict import AttrDict
 from importlib import import_module
 from importlib.machinery import ModuleSpec
 from importlib.util import module_from_spec, spec_from_file_location
