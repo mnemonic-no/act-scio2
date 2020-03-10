@@ -1,5 +1,6 @@
-from typing import Text, List, Dict, Set
 from act.scio.plugin import BasePlugin, Result
+from attrdict import AttrDict
+from typing import Text, List, Dict, Set
 import ipaddress
 import re
 
@@ -20,17 +21,16 @@ class Plugin(BasePlugin):
 
     allposipv6 = re.compile("\\b[a-f0-9:.]+\\b")
 
-    async def analyze(self, text: Text, prior_result: Dict) -> Result:
+    async def analyze(self, text: Text, prior_result: AttrDict) -> Result:
 
-        res = {
-            'md5': self.md5.findall(text),
-            'sha1': self.sha1.findall(text),
-            'sha256': self.sha256.findall(text),
-            'email': self.email.findall(text),
-            'fqdn': [dn for dn in self.fqdn.findall(text)
-                     if dn.split(".")[-1] in TLDS],
-            'ipv4': ['.'.join(ip) for ip in self.ipv4.findall(text)],
-        }
+        res = AttrDict()
+        res.md5 = self.md5.findall(text)
+        res.sha1 = self.sha1.findall(text)
+        res.sha256 = self.sha256.findall(text)
+        res.email = self.email.findall(text)
+        res.fqdn = [dn for dn in self.fqdn.findall(text)
+                    if dn.split(".")[-1] in TLDS]
+        res.ipv4 = ['.'.join(ip) for ip in self.ipv4.findall(text)]
 
         pos_ipv6 = []
         for candidate in self.allposipv6.findall(text):
@@ -41,9 +41,9 @@ class Plugin(BasePlugin):
             except ValueError:
                 pass
 
-        res['ipv6'] = pos_ipv6
+        res.ipv6 = pos_ipv6
 
-        return Result(name=self.name, version=self.version, result=res)
+        return Result(name=self.name, version=self.version, result=AttrDict(res))
 
 
 TLDS: Set[Text] = {

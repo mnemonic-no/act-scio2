@@ -41,6 +41,7 @@ setup(
     url="https://github.com/mnemonic-no/act-scio2",
     install_requires=[
         "aiofiles",
+        "attrdict",
         "beautifulsoup4",
         "bs4",
         "fastapi",
