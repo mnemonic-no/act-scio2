@@ -120,7 +120,7 @@ def safe_filename(path: Text) -> Text:
 
 def default_headers() -> Dict:
     """ Return default headers with a custom user agent """
-    return cast(Dict, requests.utils.default_headers().update(
+    return cast(Dict, requests.utils.default_headers().update(  # type: ignore
         {'User-Agent': 'Mozilla/5.0 Gecko/56.0 Firefox/56.0'}))
 
 

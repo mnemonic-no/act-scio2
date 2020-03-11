@@ -24,6 +24,7 @@ setup(
         'console_scripts': [
             'scio-analyze = act.scio.analyze:main',
             'scio-api = act.scio.api:main',
+            'scio-config = act.scio.scio_config:main',
             'scio-feed-download = act.scio.feeds.download:main',
             'scio-feed-submitcache= act.scio.feeds.submitcache:main',
             'scio-upload = act.scio.upload:main',
@@ -41,6 +42,7 @@ setup(
     url="https://github.com/mnemonic-no/act-scio2",
     install_requires=[
         "aiofiles",
+        "caep",
         "beautifulsoup4",
         "bs4",
         "fastapi",

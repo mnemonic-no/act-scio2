@@ -3,8 +3,9 @@
 This module contains function to convert an alias config file an/or an alias into
 regular expressions for matching purposes"""
 
-import re
 from typing import Set
+import re
+import sys
 
 
 def alias_set_from_config(config_file_name: str) -> Set[str]:
@@ -106,8 +107,8 @@ def get_reg_ex_set(config_file_name: str) -> Set[str]:
     alias_set = alias_set_from_config(config_file_name)
     for alias in alias_set:
         if alias.isdigit():
-            print(alias)
-            raise Exception("BOOM")
+            sys.stderr.write(f"WARNING: Unable to create regex from all digit alais {alias}\n")
+            continue
         regex_set.add(regex_from_alias(alias))
 
     return regex_set

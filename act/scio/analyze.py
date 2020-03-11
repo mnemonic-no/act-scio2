@@ -2,13 +2,15 @@
 
 """ SCIO Analyze module """
 
-
+from act.scio.attrdict import AttrDict
 from act.scio import plugin
-from typing import Any, Dict, List
+from caep import get_config_dir
+from typing import List
 import argparse
 import asyncio
 import json
 import logging
+import os.path
 import sys
 
 
@@ -17,6 +19,8 @@ def parse_args() -> argparse.Namespace:
 
     parser.add_argument('--beanstalk', dest='beanstalk', type=str, default=None,
                         help="Connect to beanstalk server. If not specified, read from stdin")
+    parser.add_argument('--config-dir', dest='configdir', type=str, default=get_config_dir(),
+                        help="Default config dir with configurations for scio and plugins")
     parser.add_argument('--plugins', dest='plugins', type=str)
 
     return parser.parse_args()
@@ -38,7 +42,7 @@ async def analyze(plugins: List[plugin.BasePlugin], beanstalk: bool) -> dict:
         else:
             pipeline.append(p)
 
-    result: Dict = {}
+    result: AttrDict = AttrDict()
     while pipeline:
         tasks = []
         for p in pipeline:
@@ -78,6 +82,10 @@ async def async_main() -> None:
             plugins += plugin.load_external_plugins(args.plugins)
         except FileNotFoundError:
             logging.warning("Unable to load plugins from %s", args.plugins)
+
+    # Inject config directory into each plugin
+    for p in plugins:
+        p.configdir = os.path.join(args.configdir, "plugins")
 
     loop = asyncio.get_event_loop()
     task = loop.create_task(analyze(plugins, args.beanstalk))
