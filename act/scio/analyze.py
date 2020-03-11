@@ -4,7 +4,7 @@
 
 from act.scio.attrdict import AttrDict
 from act.scio import plugin
-from act.scio.scio_config import get_config_dir
+from caep import get_config_dir
 from typing import List
 import argparse
 import asyncio
