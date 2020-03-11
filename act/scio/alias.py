@@ -53,7 +53,7 @@ def parse_aliases(line: str) -> Tuple[str, List[str]]:
     """
 
     # Split on ":" unless they are escaped
-    vocab, aliases_str = re.split(r'(?<!\\):', line)
+    vocab, aliases_str = re.split(r'(?<!\\):', line, maxsplit=1)
 
     # Split aliases on ",", unless they are escaped
     aliases = [unescape(a.strip())

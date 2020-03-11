@@ -13,7 +13,7 @@ def alias_set_from_config(config_file_name: str) -> Set[str]:
 
     alias_set = set()
     for line in open(config_file_name):
-        pri, rest = line.split(":")
+        pri, rest = re.split(r'(?<!\\):', line, maxsplit=1)
         aliases = rest.split(",")
         aliases.append(pri)
         aliases = [alias.strip() for alias in aliases if alias.strip() != '']
