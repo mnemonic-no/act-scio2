@@ -28,6 +28,8 @@ class BasePlugin:
     info = "This is the empty plugin of a plugin for Scio"
     version = "0.1"
     dependencies: List[Text] = []
+    configdir = ""
+    debug = False
 
     async def analyze(self, text: Text, prior_result: AttrDict) -> Result:
         return Result(name=self.name, version=self.version, result={"test": text})
