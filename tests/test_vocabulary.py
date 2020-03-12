@@ -2,15 +2,16 @@
 Vocabulary tests
 """
 
-from pathlib import Path
+import os
 
-import act.scio.vocabulary as vocabulary
+from act.scio.vocabulary import Vocabulary
 from act.scio.alias import parse_aliases
+from act.scio.attrdict import AttrDict
 
 
 def test_vocabulary_sector():
     """ Sector tests """
-    ini = Path(__file__).resolve().parent.parent.joinpath("vocabularies.ini").resolve()
+    ini = Path(__file__).resolve().parent.joinpath("vocabulary/vocabularies.ini").resolve()
     sector = vocabulary.from_config(ini)["sector"]
 
     assert sector["defense"] == "defence"
@@ -20,8 +21,18 @@ def test_vocabulary_sector():
 
 def test_vocabulary_threat_actor():
     """ Threat actor vocabulary tests """
-    ini = Path(__file__).resolve().parent.parent.joinpath("vocabularies.ini").resolve()
-    ta = vocabulary.from_config(ini)["threat_actor"]
+
+    test_datadir = os.path.join(os.path.dirname(__file__), "vocabulary")
+
+    config = AttrDict()
+
+    config.alias = os.path.join(test_datadir, "ta_aliases.cfg")
+    config.regexmanual = True
+    config.regexmanual = r'''
+        \b([a-zA-Z]{4,}\s?[-_. ](?:dragon|duke|falcon|cedar|viper|panda|bear|jackal|spider|chollima|kitten|tiger))\b
+        \b((?:BRONZE|IRON|GOLD)(?:\s+|[-_.]+)[A-Z]{3,})\b'''
+
+    ta = Vocabulary(config)
 
     assert ta.get("OceanLotus Group", primary=True) == "APT32"
     assert ta.get("OCEANLOTUS GROUP", key_mod="none") is None
@@ -33,7 +44,7 @@ def test_vocabulary_threat_actor():
 
 def test_vocabulary_tool():
     """ Tool vocabulary test """
-    ini = Path(__file__).resolve().parent.parent.joinpath("vocabularies.ini").resolve()
+    ini = Path(__file__).resolve().parent.joinpath("vocabulary/vocabularies.ini").resolve()
     tool = vocabulary.from_config(ini)["tool"]
 
     assert tool.get("backdoor:java/adwind", primary=True) == "adwind"
