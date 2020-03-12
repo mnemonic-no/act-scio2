@@ -4,15 +4,22 @@ Vocabulary tests
 
 import os
 
-from act.scio.vocabulary import Vocabulary
 from act.scio.alias import parse_aliases
 from act.scio.attrdict import AttrDict
+from act.scio.vocabulary import Vocabulary
+
+VOCABULARY_DATADIR = os.path.join(os.path.dirname(__file__), "vocabulary")
 
 
 def test_vocabulary_sector():
     """ Sector tests """
-    ini = Path(__file__).resolve().parent.joinpath("vocabulary/vocabularies.ini").resolve()
-    sector = vocabulary.from_config(ini)["sector"]
+
+    config = AttrDict()
+    config.alias = os.path.join(VOCABULARY_DATADIR, "sector_aliases.cfg")
+    config.key_mod = "stem"
+    config.primary = True
+
+    sector = Vocabulary(config)
 
     assert sector["defense"] == "defence"
     assert sector.get("defense", primary=False) == "defense"
@@ -22,12 +29,9 @@ def test_vocabulary_sector():
 def test_vocabulary_threat_actor():
     """ Threat actor vocabulary tests """
 
-    test_datadir = os.path.join(os.path.dirname(__file__), "vocabulary")
-
     config = AttrDict()
-
-    config.alias = os.path.join(test_datadir, "ta_aliases.cfg")
-    config.regexmanual = True
+    config.alias = os.path.join(VOCABULARY_DATADIR, "ta_aliases.cfg")
+    config.regexfromalias = True
     config.regexmanual = r'''
         \b([a-zA-Z]{4,}\s?[-_. ](?:dragon|duke|falcon|cedar|viper|panda|bear|jackal|spider|chollima|kitten|tiger))\b
         \b((?:BRONZE|IRON|GOLD)(?:\s+|[-_.]+)[A-Z]{3,})\b'''
@@ -44,10 +48,13 @@ def test_vocabulary_threat_actor():
 
 def test_vocabulary_tool():
     """ Tool vocabulary test """
-    ini = Path(__file__).resolve().parent.joinpath("vocabulary/vocabularies.ini").resolve()
-    tool = vocabulary.from_config(ini)["tool"]
 
-    assert tool.get("backdoor:java/adwind", primary=True) == "adwind"
+    config = AttrDict()
+    config.alias = os.path.join(VOCABULARY_DATADIR, "tool_aliases.cfg")
+
+    tool = Vocabulary(config)
+
+    assert tool.get("backdoor:java/adwind", primary=True) == "jrat"
     assert tool["backdoor:java/adwind"] == "backdoor:java/adwind"
 
 
