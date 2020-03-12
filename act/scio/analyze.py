@@ -19,7 +19,7 @@ def parse_args() -> argparse.Namespace:
 
     parser.add_argument('--beanstalk', dest='beanstalk', type=str, default=None,
                         help="Connect to beanstalk server. If not specified, read from stdin")
-    parser.add_argument('--config-dir', dest='configdir', type=str, default=get_config_dir(),
+    parser.add_argument('--config-dir', dest='configdir', type=str, default=get_config_dir("scio"),
                         help="Default config dir with configurations for scio and plugins")
     parser.add_argument('--plugins', dest='plugins', type=str)
 
