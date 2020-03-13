@@ -6,13 +6,25 @@
 """
 
 
+import configparser
+import re
+from typing import Dict, List, Optional, Pattern
+
+import nltk  # type: ignore
+
+import act.scio.aliasregex as aliasregex
 from act.scio.alias import parse_aliases
 from act.scio.attrdict import AttrDict
-from typing import Any, Dict, List, Optional, Pattern
-import act.scio.aliasregex as aliasregex
-import configparser
-import nltk  # type: ignore
-import re
+
+DEFAULT_CONFIG = AttrDict({
+    "alias": None,
+    "default": None,
+    "regexfromalias": False,
+    "primary": False,
+    "key_mod": "lower",
+    "regexmanual": "",
+    "object_type": None
+})
 
 
 def from_config(config_filename: str) -> AttrDict:
@@ -30,13 +42,13 @@ def from_config(config_filename: str) -> AttrDict:
 
         # Config
         config = AttrDict()
-        config.alias = section.get("alias", None)
-        config.default = section.get("default", None)
+        config.alias = section.get("alias", DEFAULT_CONFIG.alias)
+        config.default = section.get("default", DEFAULT_CONFIG.default)
         config.regexfromalias = section.getboolean("regexfromalias")
         config.primary = section.getboolean("primary")
-        config.key_mod = section.get("key_mod", "lower")
-        config.regexmanual = section.get("regexmanual", "")
-        config.object_type = section.get("object_type", None)
+        config.key_mod = section.get("key_mod", DEFAULT_CONFIG.key_mod)
+        config.regexmanual = section.get("regexmanual", DEFAULT_CONFIG.regexmanual)
+        config.object_type = section.get("object_type", DEFAULT_CONFIG.object_type)
         vocabularies[vocabulary_name] = Vocabulary(config)
 
     return vocabularies
@@ -65,11 +77,12 @@ class Vocabulary:
                     * default (bool)         # Default value for if key does not exist
                     * regexfromalias (bool)  # Create regex from aliases?
                     * primary (bool)         # Use primary name as default return value
-                    * key_mod (str)         # Default key_mod (default = "norm")
+                    * key_mod (str)          # Default key_mod (default = "lower")
                     * regexmanual (str[])    # Extra regular expressions for regex search
                     * object_type (str)      # ACT object type applicable for this vocabulary
         """
-        self.config = config
+        self.config = AttrDict(DEFAULT_CONFIG)
+        self.config.update(config)
         self.regex: List[Pattern] = []
         self.vocab: Dict[str, Dict[str, AttrDict]] = AttrDict(
             none=AttrDict(),
@@ -82,9 +95,6 @@ class Vocabulary:
 
         if self.config.alias:
             self.load_alias(self.config.alias)  # type: ignore
-
-        if not self.config.regexmanual:
-            self.config.regxmanual = []
 
         if self.config.regexmanual:
             self.regex = [re.compile(entry.strip(), re.I)

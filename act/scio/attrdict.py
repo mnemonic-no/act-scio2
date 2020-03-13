@@ -12,7 +12,7 @@ class AttrDict(dict):
 
     def __getattr__(self, key: Any) -> Any:
         if key not in self:
-            raise ValueError("Burr!")
+            raise KeyError(f"'{key}'")
         return self[key]
         try:
             return self[key]
