@@ -1,11 +1,12 @@
-import pytest
 
 from act.scio.attrdict import AttrDict
 from act.scio.plugins import sectors
+import os
+import pytest
 
 
 @pytest.mark.asyncio
-async def test_sectors(monkeypatch) -> None:
+async def test_sectors() -> None:
     """ test for plugins """
 
     prior_result = AttrDict()
@@ -15,11 +16,10 @@ async def test_sectors(monkeypatch) -> None:
     test_text = 'The companies in the Bus; Finanical, Aviation and Automobile industry are large.'
 
     plugin = sectors.Plugin()
-    plugin.configdir = "act/scio/etc/plugins"
+    plugin.configdir = os.path.join(os.path.dirname(__file__), "../act/scio/etc/plugins")
     res = await plugin.analyze(test_text, prior_result)
 
     assert 'aerospace' in res.result.sectors
     assert 'automotive' in res.result.sectors
     assert 'finanical' not in res.result.sectors
     assert 'finanical' not in res.result.unknown_sectors
-
