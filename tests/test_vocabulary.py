@@ -3,7 +3,7 @@ Vocabulary tests
 """
 
 import os
-from typing import Text
+from typing import Text, List
 
 from act.scio.alias import parse_aliases
 from act.scio.aliasregex import normalize
@@ -49,7 +49,7 @@ def test_vocabulary_threat_actor() -> None:
     ta = Vocabulary(config)
 
     matches: List[Text] = ta.regex_search(
-        "Observed thrat actors apt_32, apt_28 and Crazy Kitten",
+        "Observed threat actors apt_32, apt_28 and Crazy Kitten",
         normalize_result=normalize_ta)
 
     assert "APT 32" in matches
