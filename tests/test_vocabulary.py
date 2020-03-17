@@ -3,15 +3,17 @@ Vocabulary tests
 """
 
 import os
+from typing import Text
 
 from act.scio.alias import parse_aliases
+from act.scio.aliasregex import normalize
 from act.scio.attrdict import AttrDict
 from act.scio.vocabulary import Vocabulary
 
 VOCABULARY_DATADIR = os.path.join(os.path.dirname(__file__), "vocabulary")
 
 
-def test_vocabulary_sector():
+def test_vocabulary_sector() -> None:
     """ Sector tests """
 
     config = AttrDict()
@@ -26,7 +28,15 @@ def test_vocabulary_sector():
     assert sector["not_exists"] is None
 
 
-def test_vocabulary_threat_actor():
+def normalize_ta(name: Text) -> Text:
+    return normalize(
+        name,
+        capitalize=True,
+        uppercase_abbr=["APT", "BRONZE", "IRON", "GOLD"],
+    )
+
+
+def test_vocabulary_threat_actor() -> None:
     """ Threat actor vocabulary tests """
 
     config = AttrDict()
@@ -38,11 +48,12 @@ def test_vocabulary_threat_actor():
 
     ta = Vocabulary(config)
 
-    matches = []
-    for regex in ta.regex:
-        matches += [match for match in regex.findall("Observed thrat actors APT32 and Crazy Kitten")]
+    matches: List[Text] = ta.regex_search(
+        "Observed thrat actors apt_32, apt_28 and Crazy Kitten",
+        normalize_result=normalize_ta)
 
-    assert "APT32" in matches
+    assert "APT 32" in matches
+    assert "APT 28" in matches
     assert "Crazy Kitten" in matches
 
     assert ta.get("OceanLotus Group", primary=True) == "APT32"
@@ -54,7 +65,7 @@ def test_vocabulary_threat_actor():
     assert ta["not_exists"] is None
 
 
-def test_vocabulary_tool():
+def test_vocabulary_tool() -> None:
     """ Tool vocabulary test """
 
     config = AttrDict()
@@ -66,7 +77,7 @@ def test_vocabulary_tool():
     assert tool["backdoor:java/adwind"] == "backdoor:java/adwind"
 
 
-def test_vocabulary_aliases():
+def test_vocabulary_aliases() -> None:
     """ Parse alias config test """
 
     alias_line1 = "my\\:tool: "
