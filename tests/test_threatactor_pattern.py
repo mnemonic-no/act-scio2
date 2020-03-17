@@ -1,0 +1,26 @@
+
+from act.scio.attrdict import AttrDict
+from act.scio.plugins import threatactor_pattern
+import os
+import pytest
+
+
+@pytest.mark.asyncio
+async def test_threatactor_pattern() -> None:
+    """ test for plugins """
+
+    prior_result = AttrDict()
+
+    test_text = '''Lorem Ipsum Dirty Panda, APT1 APT-2, Apt 35, aPT_46
+    '''
+
+    plugin = threatactor_pattern.Plugin()
+    plugin.configdir = os.path.join(os.path.dirname(__file__), "../act/scio/etc/plugins")
+    res = await plugin.analyze(test_text, prior_result)
+
+
+    assert 'Dirty Panda' in res.result.ThreatActors
+    assert 'APT1' in res.result.ThreatActors
+    assert 'APT-2' in res.result.ThreatActors
+    assert 'Apt 35' in res.result.ThreatActors
+    assert 'aPT_46' in res.result.ThreatActors
