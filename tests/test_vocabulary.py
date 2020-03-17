@@ -38,9 +38,17 @@ def test_vocabulary_threat_actor():
 
     ta = Vocabulary(config)
 
+    matches = []
+    for regex in ta.regex:
+        matches += [match for match in regex.findall("Observed thrat actors APT32 and Crazy Kitten")]
+
+    assert "APT32" in matches
+    assert "Crazy Kitten" in matches
+
     assert ta.get("OceanLotus Group", primary=True) == "APT32"
     assert ta.get("OCEANLOTUS GROUP", key_mod="none") is None
     assert ta.get("oceanLotusGroup", key_mod="norm") == "OceanLotus Group"
+    assert ta.get("aPT32", key_mod="lower") == "APT32"
     assert ta.get("OCEANLOTUS GROUP", primary=True) == "APT32"
     assert ta["OCEANLOTUS GROUP"] == "OceanLotus Group"
     assert ta["not_exists"] is None
