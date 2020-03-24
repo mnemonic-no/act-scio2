@@ -9,33 +9,26 @@ import pytest
 async def test_locations() -> None:
     """ test for plugins """
 
-    prior_result = AttrDict()
-    prior_result.pos_tag = AttrDict()
-    prior_result.pos_tag.tokens = [('The', 'DT'), ('Democratic', 'JJ'),
-                                   ('Republic', 'NNP'), ('of', 'IN'), ('Congo',
-                                                                       'NNP'),
-                                   ('and', 'CC'), ('the', 'DT'), ('Arabic',
-                                                                  'NNP'),
-                                   ('Emirates', 'NNP'), ('.', '.'), ('In',
-                                                                     'IN'),
-                                   ('London', 'NNP'), (',', ','), ('people',
-                                                                   'NNS'),
-                                   ('eat', 'VBP'), ('a', 'DT'), ('lot', 'NN'),
-                                   ('of', 'IN'), ('fish', 'JJ'), ('and', 'CC'),
-                                   ('chips', 'NNS'), ('.', '.'), ('England',
-                                                                  'NNP'),
-                                   ('and', 'CC'), ('Scotland', 'NNP'), ('is',
-                                                                        'VBZ'),
-                                   ('part', 'NN'), ('of', 'IN'), ('the', 'DT'),
-                                   ('UK', 'NNP'), ('.', '.')]
-
-    test_text = ('The Democratic Republic of Congo and the Arabic Emirates.\n\n' +
-                 'In London, people eat a lot of fish and chips.\n\n' +
-                 'England and Scotland is part of the UK.\n')
+    nlpdata = AttrDict()
+    nlpdata.text = ('The Democratic Republic of Congo and the Arabic Emirates.\n\n' +
+                    'In London, people eat a lot of fish and chips.\n\n' +
+                    'England and Scotland is part of the UK.\n')
+    nlpdata.pos_tag = AttrDict()
+    nlpdata.pos_tag.tokens = [('The', 'DT'), ('Democratic', 'JJ'),
+                              ('Republic', 'NNP'), ('of', 'IN'), ('Congo', 'NNP'),
+                              ('and', 'CC'), ('the', 'DT'), ('Arabic', 'NNP'),
+                              ('Emirates', 'NNP'), ('.', '.'), ('In', 'IN'),
+                              ('London', 'NNP'), (',', ','), ('people', 'NNS'),
+                              ('eat', 'VBP'), ('a', 'DT'), ('lot', 'NN'),
+                              ('of', 'IN'), ('fish', 'JJ'), ('and', 'CC'),
+                              ('chips', 'NNS'), ('.', '.'), ('England', 'NNP'),
+                              ('and', 'CC'), ('Scotland', 'NNP'), ('is', 'VBZ'),
+                              ('part', 'NN'), ('of', 'IN'), ('the', 'DT'),
+                              ('UK', 'NNP'), ('.', '.')]
 
     plugin = locations.Plugin()
     plugin.configdir = os.path.join(os.path.dirname(__file__), "../act/scio/etc/plugins")
-    res = await plugin.analyze(test_text, prior_result)
+    res = await plugin.analyze(nlpdata)
 
     for country in ['UK', 'Republic of Congo', 'England', 'Scotland', 'Congo']:
         assert country in res.result.countries_mentioned

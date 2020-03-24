@@ -10,11 +10,11 @@ class Plugin(BasePlugin):
     version = "0.1"
     dependencies: List[Text] = []
 
-    async def analyze(self, text: Text, prior_result: AttrDict) -> Result:
+    async def analyze(self, nlpdata: AttrDict) -> Result:
+
+        tokens = nltk.word_tokenize(nlpdata.text)
 
         res = AttrDict()
-
-        tokens = nltk.word_tokenize(text)
 
         res.tokens = nltk.pos_tag(tokens)
 

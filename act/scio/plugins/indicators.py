@@ -21,9 +21,12 @@ class Plugin(BasePlugin):
 
     allposipv6 = re.compile("\\b[a-f0-9:.]+:[a-f0-9:.]+:[a-f0-9:.]+\\b")
 
-    async def analyze(self, text: Text, prior_result: AttrDict) -> Result:
+    async def analyze(self, nlpdata: AttrDict) -> Result:
+
+        text = nlpdata.text
 
         res = AttrDict()
+
         res.md5 = self.md5.findall(text)
         res.sha1 = self.sha1.findall(text)
         res.sha256 = self.sha256.findall(text)
