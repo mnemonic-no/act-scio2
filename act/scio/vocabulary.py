@@ -9,7 +9,7 @@
 import configparser
 import re
 import sys
-from typing import Any, Callable, Dict, List, Optional, Pattern
+from typing import Any, Callable, Dict, List, Optional, Pattern, Union
 
 from logging import info
 
@@ -76,7 +76,7 @@ class Vocabulary:
         - NLP stemming
     """
 
-    def __init__(self, config: addict.Dict) -> None:
+    def __init__(self, config: Union[addict.Dict, Dict, configparser.SectionProxy]) -> None:
         """
         Args:
             config (addict.Dict):  addict.Dict with the following keys
