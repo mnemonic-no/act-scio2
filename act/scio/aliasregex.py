@@ -3,18 +3,18 @@
 This module contains function to convert an alias config file an/or an alias into
 regular expressions for matching purposes"""
 
-from typing import Set
+from typing import Set, Text
 import re
 import sys
 
 
-def alias_set_from_config(config_file_name: str) -> Set[str]:
+def alias_set_from_config(config_file_name: Text) -> Set[Text]:
     """Read and parse a alias config file, add all aliases to a flat set"""
 
     alias_set = set()
     for line in open(config_file_name):
         pri, rest = re.split(r'(?<!\\):', line, maxsplit=1)
-        aliases = rest.split(",")
+        aliases = re.split(r'(?<!\\),', rest)
         aliases.append(pri)
         aliases = [alias.strip() for alias in aliases if alias.strip() != '']
         for alias in aliases:
@@ -22,13 +22,13 @@ def alias_set_from_config(config_file_name: str) -> Set[str]:
     return alias_set
 
 
-def regex_from_alias(alias: str) -> str:
+def regex_from_alias(alias: Text) -> Text:
     """convert a alias to a more general form using regex. All "breaks" in the
     alias (camlecase, numbers, underscores etc) is allowed to be "as is", a set
     of whitespace (one or more) and also -_/. to allow for different
     conventions in writing aliases"""
 
-    def camel_case_break(alias: str, i: int) -> bool:
+    def camel_case_break(alias: Text, i: int) -> bool:
         """Detect transistion from lower case to uppper case"""
 
         if i < 0:
@@ -41,7 +41,7 @@ def regex_from_alias(alias: str) -> str:
             return False
         return True
 
-    def alpha_to_digit_break(alias: str, i: int) -> bool:
+    def alpha_to_digit_break(alias: Text, i: int) -> bool:
         """Detect transistion from letters to digist"""
 
         if i < 0:
@@ -54,7 +54,7 @@ def regex_from_alias(alias: str) -> str:
             return False
         return True
 
-    tmp_re: str = r"\b("  # start with word boundry
+    tmp_re: Text = r"\b("  # start with word boundry
     for i, c in enumerate(alias):
         # transistions from lower to upper case and from letter to number may
         # also be written with a space.
@@ -74,7 +74,7 @@ def regex_from_alias(alias: str) -> str:
     return tmp_re
 
 
-def normalize(name: str,
+def normalize(name: Text,
         space_before_numbers=True,
         space_before_capitalized=True,
         remove_non_alphanumeric=True,
@@ -135,7 +135,7 @@ def normalize(name: str,
     return name
 
 
-def get_reg_ex_set(config_file_name: str) -> Set[str]:
+def get_reg_ex_set(config_file_name: Text) -> Set[Text]:
     """Helper function to take a config file, parse it and create regular
     expressions from the aliases contained within. The aliases is returned in
     a set og regex strings"""

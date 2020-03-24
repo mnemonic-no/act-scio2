@@ -85,12 +85,12 @@ async def async_main() -> None:
 
     # Inject config directory into each plugin
     for p in plugins:
-        p.configdir = os.path.join(args.configdir, "plugins")
+        p.configdir = os.path.join(args.configdir, "etc/plugins")
 
     loop = asyncio.get_event_loop()
     task = loop.create_task(analyze(plugins, args.beanstalk))
     await task
-    print(json.dumps(task.result()))
+    print(json.dumps(task.result(), indent="  "))
 
 
 def main() -> None:

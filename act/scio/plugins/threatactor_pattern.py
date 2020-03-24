@@ -1,5 +1,5 @@
 from act.scio.attrdict import AttrDict
-from act.scio.regexalias import normalize
+from act.scio.aliasregex import normalize
 from act.scio.vocabulary import Vocabulary
 from act.scio.plugin import BasePlugin, Result
 from typing import Text, List
