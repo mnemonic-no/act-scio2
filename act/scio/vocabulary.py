@@ -6,15 +6,16 @@
 """
 
 
+from typing import Dict, List, Optional, Pattern
 import configparser
 import re
-from typing import Dict, List, Optional, Pattern
+import sys
 
 import nltk  # type: ignore
 
-import act.scio.aliasregex as aliasregex
 from act.scio.alias import parse_aliases
 from act.scio.attrdict import AttrDict
+import act.scio.aliasregex as aliasregex
 
 DEFAULT_CONFIG = AttrDict({
     "alias": None,
@@ -104,7 +105,11 @@ class Vocabulary:
 
         if self.config.regexfromalias:
             for aliasre in aliasregex.get_reg_ex_set(self.config.alias):
-                self.regex.append(re.compile(aliasre, re.IGNORECASE))
+                try:
+                    self.regex.append(re.compile(aliasre, re.IGNORECASE))
+                except re.error:
+                    sys.stderr.write(f"ERROR in regex {aliasre}\n")
+                    raise
 
     def load_alias(self, filename: str) -> None:
         """

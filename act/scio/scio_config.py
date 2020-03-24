@@ -42,21 +42,56 @@ def default_ini() -> List[Tuple[Text, Text]]:
 
     files: List[Tuple[Text, Text]] = []
     if resource_exists(PKG_NAME, "etc") and resource_isdir(PKG_NAME, "etc"):
-        for fname in [x for x in resource_listdir(PKG_NAME, "etc") if resource_isfile(PKG_NAME, x)]:
-            files.append((f"{fname}",
-                         resource_string(PKG_NAME, "etc/" + fname).decode("utf-8")))
+        for fname in [x for x in resource_listdir(PKG_NAME, "etc")
+                      if resource_isfile(PKG_NAME, x)]:
+            try:
+                files.append((f"etc/{fname}",
+                              resource_string(PKG_NAME, "etc/" + fname).decode("utf-8")))
+            except UnicodeDecodeError as err:
+                sys.stderr.write(f"WARNING: Skipping file {fname} [{err}]\n")
 
         if resource_exists(PKG_NAME, "etc/plugins") and resource_isdir(PKG_NAME, "etc/plugins"):
             for fname in [x for x in resource_listdir(PKG_NAME, "etc/plugins")
                           if resource_isfile(PKG_NAME, x)]:
-                files.append((f"plugins/{fname}",
-                             resource_string(PKG_NAME, "etc/plugins/" + fname).decode("utf-8")))
+                try:
+                    files.append((f"etc/plugins/{fname}",
+                                 resource_string(PKG_NAME, "etc/plugins/" + fname).decode("utf-8")))
+                except UnicodeDecodeError as err:
+                    sys.stderr.write(f"WARNING: Skipping file {fname} [{err}]\n")
+
+    if resource_exists(PKG_NAME, "vendor") and resource_isdir(PKG_NAME, "vendor"):
+        for fname in [x for x in resource_listdir(PKG_NAME, "vendor")
+                      if resource_isfile(PKG_NAME, x)]:
+            try:
+                files.append((f"vendor/{fname}",
+                             resource_string(PKG_NAME, "vendor/" + fname).decode("utf-8")))
+            except UnicodeDecodeError as err:
+                sys.stderr.write(f"WARNING: Skipping file {fname} [{err}]\n")
 
     return files
 
 
+def make_path(configdir: Text, path: Text) -> None:
+    # Make sure the config directories exists before storing files.
+    plugin_path = os.path.join(configdir, path)
+    try:
+        os.mkdir(plugin_path)
+        print(f"creating directory {plugin_path}")
+    except FileExistsError:
+        print(f"WARNING: config path allready exists {plugin_path}")
+        pass
+    except PermissionError:
+        sys.stderr.write(f"ERROR: Permission denied when creating {plugin_path}\n")
+        sys.exit(2)
+
+
 def save_config(configdir: Text) -> None:
     """ Save config to specified directory """
+
+    # Make sure the config directories exists before storing files.
+    make_path(configdir, "etc")
+    make_path(configdir, "etc/plugins")
+    make_path(configdir, "vendor")
 
     # Make sure the config directories exists before storing files.
     plugin_path = os.path.join(configdir, "plugins")
