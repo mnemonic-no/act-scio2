@@ -1,16 +1,24 @@
 from act.scio.attrdict import AttrDict
+from act.scio.regexalias import normalize
 from act.scio.vocabulary import Vocabulary
 from act.scio.plugin import BasePlugin, Result
 from typing import Text, List
 import configparser
-import logging
 import os.path
+
+
+def normalize_ta(name: Text) -> Text:
+    return normalize(
+        name,
+        capitalize=True,
+        uppercase_abbr=["APT", "BRONZE", "IRON", "GOLD"],
+    )
 
 
 class Plugin(BasePlugin):
     name = "threatactor"
     info = "Extracting references to known threat actors from a body of text"
-    version = "0.1"
+    version = "0.2"
     dependencies: List[Text] = []
 
     async def analyze(self, text: Text, prior_result: AttrDict) -> Result:
@@ -21,15 +29,11 @@ class Plugin(BasePlugin):
 
         vocab = Vocabulary(AttrDict(ini['threat_actor']))
 
-        tas = []
-        for regex in vocab.regex:
-            for match in regex.findall(text):
-                tas.append(match)
-                if self.debug:
-                    logging.info("%s found by regex %s", match, regex)
-
         res = AttrDict()
 
-        res.ThreatActors = tas
+        res.ThreatActors = vocab.regex_search(
+                text,
+                normalize_result=normalize_ta,
+                debug=self.debug)
 
         return Result(name=self.name, version=self.version, result=res)

@@ -8,7 +8,9 @@
 
 import configparser
 import re
-from typing import Dict, List, Optional, Pattern
+from typing import Any, Callable, Dict, List, Optional, Pattern
+
+from logging import info
 
 import nltk  # type: ignore
 
@@ -25,6 +27,11 @@ DEFAULT_CONFIG = AttrDict({
     "regexmanual": "",
     "object_type": None
 })
+
+
+def identity(x: Any) -> Any:
+    """ Identity function. Used as default to return same value as input """
+    return x
 
 
 def from_config(config_filename: str) -> AttrDict:
@@ -133,6 +140,7 @@ class Vocabulary:
                     self.vocab["none"][name] = AttrDict(value=name, primary=primary)
                     self.vocab["lower"][name.lower()] = AttrDict(value=name, primary=primary)
                     self.vocab["stem"][self.stemmer(name)] = AttrDict(value=name, primary=primary)
+
                     self.vocab["norm"][aliasregex.normalize(name)] = AttrDict(
                         value=name,
                         primary=primary)
@@ -143,6 +151,44 @@ class Vocabulary:
         """
 
         return self.get(key)
+
+    def regex_search(self,
+                     text,
+                     key_mod: str = "DEFAULT",
+                     normalize_result: Callable = identity,
+                     debug: bool = False) -> List[str]:
+        """
+        Find all matches in vocabulary from regex search
+
+        Args:
+            text (str):       Input text
+            key_mod (text):   Lookup using modifie key
+        """
+
+        key_mod = self.get_key_mod(key_mod)
+
+        result = []
+        for regex in self.regex:
+            for match in regex.findall(text):
+                if debug:
+                    logging.info("%s found by regex %s", match, regex)
+                result.append(normalize_result(match))
+
+        return result
+
+    def get_key_mod(self, key_mod: Optional[str]) -> str:
+        """ Verify and get key_mod """
+
+        # Get key modifier from config
+        if key_mod == "DEFAULT":
+            key_mod = self.config.key_mod
+
+        elif key_mod is None:  # Use "none" modifier (the value itself)
+            key_mod = "none"
+
+        if key_mod not in self.vocab:
+            raise IllegalVocabularyKeyType("Illegal key: {}".format(key_mod))
+        return key_mod
 
     def get(self, key: str, key_mod: str = "DEFAULT", primary: Optional[bool] = None,
             default: Optional[str] = None) -> Optional[str]:
@@ -158,15 +204,7 @@ class Vocabulary:
             default (str|None):  Default value if key is not found. Default == None
         """
 
-        # Get key modifier from config
-        if key_mod == "DEFAULT":
-            key_mod = self.config.key_mod
-
-        elif key_mod is None:  # Use "none" modifier (the value itself)
-            key_mod = "none"
-
-        if key_mod not in self.vocab:
-            raise IllegalVocabularyKeyType("Illegal key: {}".format(key_mod))
+        key_mod = self.get_key_mod(key_mod)
 
         # If primary is not set, get from config whether we should retrieve the primary name
         if primary is None:
