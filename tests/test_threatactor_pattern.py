@@ -11,7 +11,7 @@ async def test_threatactor_pattern() -> None:
 
     prior_result = AttrDict()
 
-    test_text = '''Lorem Ipsum Dirty Panda, APT1 APT-2, Apt 35, aPT_46
+    test_text = '''Lorem Ipsum Dirty Panda, APT1 APT-2, Apt 35, APT_46
     '''
 
     plugin = threatactor_pattern.Plugin()
@@ -20,7 +20,7 @@ async def test_threatactor_pattern() -> None:
 
 
     assert 'Dirty Panda' in res.result.ThreatActors
-    assert 'APT1' in res.result.ThreatActors
-    assert 'APT-2' in res.result.ThreatActors
-    assert 'Apt 35' in res.result.ThreatActors
-    assert 'aPT_46' in res.result.ThreatActors
+    assert 'APT 1' in res.result.ThreatActors
+    assert 'APT 2' in res.result.ThreatActors
+    assert 'APT 35' in res.result.ThreatActors
+    assert 'APT 46' in res.result.ThreatActors

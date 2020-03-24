@@ -3,14 +3,13 @@ from act.scio.vocabulary import Vocabulary
 from act.scio.plugin import BasePlugin, Result
 from typing import Text, List
 import configparser
-import logging
 import os.path
 
 
 class Plugin(BasePlugin):
     name = "tools"
     info = "Extracting references to known tools from a body of text"
-    version = "0.1"
+    version = "0.2"
     dependencies: List[Text] = []
 
     async def analyze(self, text: Text, prior_result: AttrDict) -> Result:
@@ -21,15 +20,8 @@ class Plugin(BasePlugin):
 
         vocab = Vocabulary(AttrDict(ini['tools']))
 
-        tas = []
-        for regex in vocab.regex:
-            for match in regex.findall(text):
-                tas.append(match)
-                if self.debug:
-                    logging.info("%s found by regex %s", match, regex)
-
         res = AttrDict()
 
-        res.Tools = tas
+        res.Tools = vocab.regex_search(text, debug=self.debug)
 
         return Result(name=self.name, version=self.version, result=res)
