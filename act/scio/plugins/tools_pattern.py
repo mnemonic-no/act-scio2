@@ -18,7 +18,7 @@ class Plugin(BasePlugin):
         ini.read([os.path.join(self.configdir, "tools_pattern.ini")])
         ini['tools']['alias'] = os.path.join(self.configdir, ini['tools']['alias'])
 
-        vocab = Vocabulary(addict.Dict(ini['tools']))
+        vocab = Vocabulary(ini['tools'])
 
         res = addict.Dict()
 
