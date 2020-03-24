@@ -14,7 +14,7 @@ class Plugin(BasePlugin):
     version = "0.1"
     dependencies: List[Text] = ["pos_tag"]
 
-    async def analyze(self, text: Text, prior_result: AttrDict) -> Result:
+    async def analyze(self, nlpdata: AttrDict) -> Result:
 
         res = AttrDict()
 
@@ -37,13 +37,13 @@ class Plugin(BasePlugin):
         # Look through all tokens. If any token relating to a sector is found,
         # look-before and collect all nouns while the tokens are nouns or part
         # of a listing.
-        for i, (token, tag) in enumerate(prior_result.pos_tag.tokens):
+        for i, (token, tag) in enumerate(nlpdata.pos_tag.tokens):
             if tag in posible_tag_types and ps.stem(token) in sector_stem_postfix:
                 n = i - 1
-                while prior_result.pos_tag.tokens[n][1] in lookbefore_tags:
+                while nlpdata.pos_tag.tokens[n][1] in lookbefore_tags:
                     n -= 1
                 pos_sectors += [token for (token, pos_tag)
-                                in prior_result.pos_tag.tokens[n:i]
+                                in nlpdata.pos_tag.tokens[n:i]
                                 if pos_tag in posible_tag_types]
 
         ini = configparser.ConfigParser()

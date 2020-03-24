@@ -42,11 +42,12 @@ async def analyze(plugins: List[plugin.BasePlugin], beanstalk: bool) -> dict:
         else:
             pipeline.append(p)
 
-    result: AttrDict = AttrDict()
+    nlpdata: AttrDict = AttrDict()
+    nlpdata.text = data
     while pipeline:
         tasks = []
         for p in pipeline:
-            tasks.append(loop.create_task(p.analyze(data, result)))
+            tasks.append(loop.create_task(p.analyze(nlpdata)))
 
         for task in tasks:
             await task
@@ -56,11 +57,11 @@ async def analyze(plugins: List[plugin.BasePlugin], beanstalk: bool) -> dict:
                 logging.warning("%s return an exception: %s", task, task.exception())
             else:
                 res = task.result()
-                result[res.name] = res.result
+                nlpdata[res.name] = res.result
 
         pipeline = []
         for candidate in staged[:]:
-            if all(dep in result for dep in candidate.dependencies):
+            if all(dep in nlpdata for dep in candidate.dependencies):
                 pipeline.append(candidate)
                 staged.remove(candidate)
 
@@ -69,7 +70,7 @@ async def analyze(plugins: List[plugin.BasePlugin], beanstalk: bool) -> dict:
                         candidate.name,
                         candidate.dependencies)
 
-    return result
+    return nlpdata
 
 
 async def async_main() -> None:

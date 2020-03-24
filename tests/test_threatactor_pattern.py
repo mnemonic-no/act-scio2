@@ -9,15 +9,13 @@ import pytest
 async def test_threatactor_pattern() -> None:
     """ test for plugins """
 
-    prior_result = AttrDict()
+    nlpdata = AttrDict()
 
-    test_text = '''Lorem Ipsum Dirty Panda, APT1 APT-2, Apt 35, APT_46
-    '''
+    nlpdata.text = '''Lorem Ipsum Dirty Panda, APT1 APT-2, Apt 35, APT_46'''
 
     plugin = threatactor_pattern.Plugin()
     plugin.configdir = os.path.join(os.path.dirname(__file__), "../act/scio/etc/plugins")
-    res = await plugin.analyze(test_text, prior_result)
-
+    res = await plugin.analyze(nlpdata)
 
     assert 'Dirty Panda' in res.result.ThreatActors
     assert 'APT 1' in res.result.ThreatActors

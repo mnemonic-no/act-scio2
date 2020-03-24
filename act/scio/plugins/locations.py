@@ -77,7 +77,7 @@ class Plugin(BasePlugin):
 
         return names, alpha2
 
-    async def analyze(self, text: Text, prior_result: AttrDict) -> Result:
+    async def analyze(self, nlpdata: AttrDict) -> Result:
 
         res = AttrDict()
 
@@ -94,7 +94,7 @@ class Plugin(BasePlugin):
         cities = self.cities_from_file(ini['locations']['cities'])
         country_names, country_cc = self.countries_from_file(ini['locations']['countries'])
 
-        nouns = self.nouns(prior_result.pos_tag.tokens)
+        nouns = self.nouns(nlpdata.pos_tag.tokens)
         vocab = Vocabulary(AttrDict(ini['vocabulary']))
 
         res.cities = []

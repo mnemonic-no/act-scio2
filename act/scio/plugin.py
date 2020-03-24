@@ -1,3 +1,8 @@
+"""plugins.py contains the main type and base class used by the analyzis plugins.
+
+It also contains the work functions used to load the plugins both from disc and
+from the resources."""
+
 from act.scio import plugins
 from act.scio.attrdict import AttrDict
 from importlib import import_module
@@ -14,12 +19,16 @@ module_interface = ["name", "analyze", "info", "version", "dependencies"]
 
 
 class Result(BaseModel):
+    """The result type returned by all analyze methods of the plugins."""
+
     name: StrictStr
     version: StrictStr
     result: AttrDict
 
 
 class BasePlugin:
+    """The class that all analyzis plugins inherits. Contains the basis attributes and
+    interface required by the plugin system."""
 
     def __init__(self: object):
         pass
@@ -31,8 +40,9 @@ class BasePlugin:
     configdir = ""
     debug = False
 
-    async def analyze(self, text: Text, prior_result: AttrDict) -> Result:
-        return Result(name=self.name, version=self.version, result={"test": text})
+    async def analyze(self, nlpdata: AttrDict) -> Result:
+        """Main analyzis method"""
+        return Result(name=self.name, version=self.version, result=AttrDict({"test": nlpdata.text}))
 
 
 def load_default_plugins() -> List[BasePlugin]:

@@ -12,7 +12,7 @@ class Plugin(BasePlugin):
     version = "0.2"
     dependencies: List[Text] = []
 
-    async def analyze(self, text: Text, prior_result: AttrDict) -> Result:
+    async def analyze(self, nlpdata: AttrDict) -> Result:
 
         ini = configparser.ConfigParser()
         ini.read([os.path.join(self.configdir, "tools_pattern.ini")])
@@ -22,6 +22,6 @@ class Plugin(BasePlugin):
 
         res = AttrDict()
 
-        res.Tools = vocab.regex_search(text, debug=self.debug)
+        res.Tools = vocab.regex_search(nlpdata.text, debug=self.debug)
 
         return Result(name=self.name, version=self.version, result=res)
