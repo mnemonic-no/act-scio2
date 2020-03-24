@@ -1,11 +1,11 @@
 from typing import Any
 
 
-class AttrDict(dict):
+class addict.Dict(dict):
     "Dict like object that supports setattr() getattr()"
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super(AttrDict, self).__init__(*args, **kwargs)
+        super(addict.Dict, self).__init__(*args, **kwargs)
 
     def __setattr__(self, key: Any, value: Any) -> None:
         self[key] = value

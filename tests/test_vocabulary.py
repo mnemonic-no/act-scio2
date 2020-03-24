@@ -7,7 +7,7 @@ from typing import Text, List
 
 from act.scio.alias import parse_aliases
 from act.scio.aliasregex import normalize
-from act.scio.attrdict import AttrDict
+import addict
 from act.scio.vocabulary import Vocabulary
 
 VOCABULARY_DATADIR = os.path.join(os.path.dirname(__file__), "vocabulary")
@@ -16,7 +16,7 @@ VOCABULARY_DATADIR = os.path.join(os.path.dirname(__file__), "vocabulary")
 def test_vocabulary_sector() -> None:
     """ Sector tests """
 
-    config = AttrDict()
+    config = addict.Dict()
     config.alias = os.path.join(VOCABULARY_DATADIR, "sector_aliases.cfg")
     config.key_mod = "stem"
     config.primary = True
@@ -39,7 +39,7 @@ def normalize_ta(name: Text) -> Text:
 def test_vocabulary_threat_actor() -> None:
     """ Threat actor vocabulary tests """
 
-    config = AttrDict()
+    config = addict.Dict()
     config.alias = os.path.join(VOCABULARY_DATADIR, "ta_aliases.cfg")
     config.regexfromalias = True
     config.regexmanual = r'''
@@ -68,7 +68,7 @@ def test_vocabulary_threat_actor() -> None:
 def test_vocabulary_tool() -> None:
     """ Tool vocabulary test """
 
-    config = AttrDict()
+    config = addict.Dict()
     config.alias = os.path.join(VOCABULARY_DATADIR, "tool_aliases.cfg")
 
     tool = Vocabulary(config)

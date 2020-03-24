@@ -1,4 +1,4 @@
-from act.scio.attrdict import AttrDict
+import addict
 from act.scio.aliasregex import normalize
 from act.scio.vocabulary import Vocabulary
 from act.scio.plugin import BasePlugin, Result
@@ -21,15 +21,15 @@ class Plugin(BasePlugin):
     version = "0.2"
     dependencies: List[Text] = []
 
-    async def analyze(self, nlpdata: AttrDict) -> Result:
+    async def analyze(self, nlpdata: addict.Dict) -> Result:
 
         ini = configparser.ConfigParser()
         ini.read([os.path.join(self.configdir, "threatactor_pattern.ini")])
         ini['threat_actor']['alias'] = os.path.join(self.configdir, ini['threat_actor']['alias'])
 
-        vocab = Vocabulary(AttrDict(ini['threat_actor']))
+        vocab = Vocabulary(ini['threat_actor'])
 
-        res = AttrDict()
+        res = addict.Dict()
 
         res.ThreatActors = vocab.regex_search(
             nlpdata.text,

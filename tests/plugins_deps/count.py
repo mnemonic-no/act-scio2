@@ -1,6 +1,6 @@
 from typing import Dict, List, Text
 
-from act.scio.attrdict import AttrDict
+import addict
 from act.scio.plugin import BasePlugin, Result
 
 
@@ -10,8 +10,8 @@ class Plugin(BasePlugin):
     version = "0.1"
     dependencies: List[Text] = ["sentences"]
 
-    async def analyze(self, text: Text, prior_result: Dict) -> Result:
+    async def analyze(self, nlpdata: addict.Dict) -> Result:
         return Result(
             name=self.name,
             version=self.version,
-            result=AttrDict({s: len(s) for s in prior_result["sentences"]["split"]}))
+            result=addict.Dict({s: len(s) for s in nlpdata["sentences"]["split"]}))

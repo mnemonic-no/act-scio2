@@ -1,5 +1,5 @@
 
-from act.scio.attrdict import AttrDict
+import addict
 from act.scio.plugins import locations
 import os
 import pytest
@@ -9,11 +9,11 @@ import pytest
 async def test_locations() -> None:
     """ test for plugins """
 
-    nlpdata = AttrDict()
+    nlpdata = addict.Dict()
     nlpdata.text = ('The Democratic Republic of Congo and the Arabic Emirates.\n\n' +
                     'In London, people eat a lot of fish and chips.\n\n' +
                     'England and Scotland is part of the UK.\n')
-    nlpdata.pos_tag = AttrDict()
+    nlpdata.pos_tag = addict.Dict()
     nlpdata.pos_tag.tokens = [('The', 'DT'), ('Democratic', 'JJ'),
                               ('Republic', 'NNP'), ('of', 'IN'), ('Congo', 'NNP'),
                               ('and', 'CC'), ('the', 'DT'), ('Arabic', 'NNP'),

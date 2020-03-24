@@ -1,5 +1,5 @@
 
-from act.scio.attrdict import AttrDict
+import addict
 from act.scio.plugins import sectors
 import os
 import pytest
@@ -9,8 +9,8 @@ import pytest
 async def test_sectors() -> None:
     """ test for plugins """
 
-    nlpdata = AttrDict()
-    nlpdata.pos_tag = AttrDict()
+    nlpdata = addict.Dict()
+    nlpdata.pos_tag = addict.Dict()
     nlpdata.pos_tag.tokens = [('The', 'DT'), ('companies', 'NNS'), ('in', 'IN'),
                               ('the', 'DT'), ('Bus', 'NNP'), (';', ':'),
                               ('Finanical', 'NNP'), (',', ','), ('Aviation', 'NNP'),
