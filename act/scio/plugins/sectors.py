@@ -1,4 +1,4 @@
-from act.scio.attrdict import AttrDict
+import addict
 from act.scio.vocabulary import Vocabulary
 from act.scio.plugin import BasePlugin, Result
 from typing import Text, List
@@ -14,9 +14,9 @@ class Plugin(BasePlugin):
     version = "0.1"
     dependencies: List[Text] = ["pos_tag"]
 
-    async def analyze(self, text: Text, prior_result: AttrDict) -> Result:
+    async def analyze(self, text: Text, prior_result: addict.Dict) -> Result:
 
-        res = AttrDict()
+        res = addict.Dict()
 
         sector_stem_postfix = {
             'compani',  # company, companies, [...],
@@ -50,7 +50,7 @@ class Plugin(BasePlugin):
         ini.read([os.path.join(self.configdir, "sectors.ini")])
         ini['sectors']['alias'] = os.path.join(self.configdir, ini['sectors']['alias'])
 
-        vocab = Vocabulary(AttrDict(ini['sectors']))
+        vocab = Vocabulary(ini['sectors'])
         sectors = []
         unknown_sectors = []
         for pos_sector in pos_sectors:

@@ -1,5 +1,5 @@
 
-from act.scio.attrdict import AttrDict
+import addict
 from act.scio.plugins import sectors
 import os
 import pytest
@@ -9,8 +9,8 @@ import pytest
 async def test_sectors() -> None:
     """ test for plugins """
 
-    prior_result = AttrDict()
-    prior_result.pos_tag = AttrDict()
+    prior_result = addict.Dict()
+    prior_result.pos_tag = addict.Dict()
     prior_result.pos_tag.tokens = [('The', 'DT'), ('companies', 'NNS'), ('in', 'IN'), ('the', 'DT'), ('Bus', 'NNP'), (';', ':'), ('Finanical', 'NNP'), (',', ','), ('Aviation', 'NNP'), ('and', 'CC'), ('Automobile', 'NNP'), ('industry', 'NN'), ('is', 'VBZ'), ('in', 'IN'), ('trouble', 'NN'), ('.', '.')]
 
     test_text = 'The companies in the Bus; Finanical, Aviation and Automobile industry are large.'

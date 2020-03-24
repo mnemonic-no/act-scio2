@@ -1,5 +1,5 @@
 from act.scio import plugins
-from act.scio.attrdict import AttrDict
+import addict
 from importlib import import_module
 from importlib.machinery import ModuleSpec
 from importlib.util import module_from_spec, spec_from_file_location
@@ -16,7 +16,7 @@ module_interface = ["name", "analyze", "info", "version", "dependencies"]
 class Result(BaseModel):
     name: StrictStr
     version: StrictStr
-    result: AttrDict
+    result: addict.Dict
 
 
 class BasePlugin:
@@ -31,7 +31,7 @@ class BasePlugin:
     configdir = ""
     debug = False
 
-    async def analyze(self, text: Text, prior_result: AttrDict) -> Result:
+    async def analyze(self, text: Text, prior_result: addict.Dict) -> Result:
         return Result(name=self.name, version=self.version, result={"test": text})
 
 

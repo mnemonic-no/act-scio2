@@ -1,4 +1,4 @@
-from act.scio.attrdict import AttrDict
+import addict
 from act.scio.vocabulary import Vocabulary
 from act.scio.plugin import BasePlugin, Result
 from typing import Text, List
@@ -12,15 +12,15 @@ class Plugin(BasePlugin):
     version = "0.2"
     dependencies: List[Text] = []
 
-    async def analyze(self, text: Text, prior_result: AttrDict) -> Result:
+    async def analyze(self, text: Text, prior_result: addict.Dict) -> Result:
 
         ini = configparser.ConfigParser()
         ini.read([os.path.join(self.configdir, "tools_pattern.ini")])
         ini['tools']['alias'] = os.path.join(self.configdir, ini['tools']['alias'])
 
-        vocab = Vocabulary(AttrDict(ini['tools']))
+        vocab = Vocabulary(ini['tools'])
 
-        res = AttrDict()
+        res = addict.Dict()
 
         res.Tools = vocab.regex_search(text, debug=self.debug)
 

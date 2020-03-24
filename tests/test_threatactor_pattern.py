@@ -1,5 +1,5 @@
 
-from act.scio.attrdict import AttrDict
+import addict
 from act.scio.plugins import threatactor_pattern
 import os
 import pytest
@@ -9,7 +9,7 @@ import pytest
 async def test_threatactor_pattern() -> None:
     """ test for plugins """
 
-    prior_result = AttrDict()
+    prior_result = addict.Dict()
 
     test_text = '''Lorem Ipsum Dirty Panda, APT1 APT-2, Apt 35, APT_46
     '''

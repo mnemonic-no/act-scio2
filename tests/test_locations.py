@@ -1,5 +1,5 @@
 
-from act.scio.attrdict import AttrDict
+import addict
 from act.scio.plugins import locations
 import os
 import pytest
@@ -9,8 +9,8 @@ import pytest
 async def test_locations() -> None:
     """ test for plugins """
 
-    prior_result = AttrDict()
-    prior_result.pos_tag = AttrDict()
+    prior_result = addict.Dict()
+    prior_result.pos_tag = addict.Dict()
     prior_result.pos_tag.tokens = [('The', 'DT'), ('Democratic', 'JJ'),
                                    ('Republic', 'NNP'), ('of', 'IN'), ('Congo',
                                                                        'NNP'),

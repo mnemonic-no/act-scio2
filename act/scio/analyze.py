@@ -2,7 +2,7 @@
 
 """ SCIO Analyze module """
 
-from act.scio.attrdict import AttrDict
+import addict
 from act.scio import plugin
 from caep import get_config_dir
 from typing import List
@@ -42,7 +42,7 @@ async def analyze(plugins: List[plugin.BasePlugin], beanstalk: bool) -> dict:
         else:
             pipeline.append(p)
 
-    result: AttrDict = AttrDict()
+    result: addict.Dict = addict.Dict()
     while pipeline:
         tasks = []
         for p in pipeline:
