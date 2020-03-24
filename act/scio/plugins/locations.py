@@ -99,14 +99,14 @@ class Plugin(BasePlugin):
 
         res.cities = []
         res.countries = []
-        res.countries_infered = []
+        res.countries_inferred = []
         res.countries_mentioned = []
 
         for noun in nouns:
             if noun in cities:
                 city = cities[noun]
                 res.cities.append(city)
-                res.countries_infered.append(country_cc.get(city['country code'], "UNK"))
+                res.countries_inferred.append(country_cc.get(city['country code'], "UNK"))
             if noun in country_names:
                 res.countries.append(country_names[noun])
             if vocab.get(noun):

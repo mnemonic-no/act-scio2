@@ -42,4 +42,4 @@ async def test_locations() -> None:
 
     assert "London" in [x.name for x in res.result.cities]
     assert "Congo" in [x.name for x in res.result.countries]
-    assert "United Kingdom of Great Britain and Northern Ireland" in [x.name for x in res.result.countries_infered]
+    assert "United Kingdom of Great Britain and Northern Ireland" in [x.name for x in res.result.countries_inferred]
