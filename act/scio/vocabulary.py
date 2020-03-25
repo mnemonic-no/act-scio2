@@ -9,17 +9,17 @@
 import configparser
 import re
 import sys
-from typing import Any, Callable, Dict, List, Optional, Pattern
+from typing import Any, Callable, Dict, List, Optional, Pattern, Union
 
 from logging import info
 
 import nltk  # type: ignore
 
 from act.scio.alias import parse_aliases
-from act.scio.attrdict import AttrDict
+import addict
 import act.scio.aliasregex as aliasregex
 
-DEFAULT_CONFIG = AttrDict({
+DEFAULT_CONFIG = addict.Dict({
     "alias": None,
     "default": None,
     "regexfromalias": False,
@@ -35,7 +35,7 @@ def identity(x: Any) -> Any:
     return x
 
 
-def from_config(config_filename: str) -> AttrDict:
+def from_config(config_filename: str) -> addict.Dict:
     """
     Load vocabularies from config and return Dict
     with vocabulary-name as key and Vocabulary as value
@@ -43,13 +43,13 @@ def from_config(config_filename: str) -> AttrDict:
     cparser = configparser.ConfigParser()
     cparser.read(str(config_filename))
 
-    vocabularies = AttrDict()
+    vocabularies = addict.Dict()
 
     for vocabulary_name in cparser.sections():
         section = cparser[vocabulary_name]
 
         # Config
-        config = AttrDict()
+        config = addict.Dict()
         config.alias = section.get("alias", DEFAULT_CONFIG.alias)
         config.default = section.get("default", DEFAULT_CONFIG.default)
         config.regexfromalias = section.getboolean("regexfromalias")
@@ -76,10 +76,10 @@ class Vocabulary:
         - NLP stemming
     """
 
-    def __init__(self, config: AttrDict) -> None:
+    def __init__(self, config: Union[addict.Dict, Dict, configparser.SectionProxy]) -> None:
         """
         Args:
-            config (AttrDict):  AttrDict with the following keys
+            config (addict.Dict):  addict.Dict with the following keys
                     * alias (str)            # Config filw with aliases
                     * primary (bool)         # Point aliases to primary name
                     * default (bool)         # Default value for if key does not exist
@@ -89,14 +89,14 @@ class Vocabulary:
                     * regexmanual (str[])    # Extra regular expressions for regex search
                     * object_type (str)      # ACT object type applicable for this vocabulary
         """
-        self.config = AttrDict(DEFAULT_CONFIG)
+        self.config = addict.Dict(DEFAULT_CONFIG)
         self.config.update(config)
         self.regex: List[Pattern] = []
-        self.vocab: Dict[str, Dict[str, AttrDict]] = AttrDict(
-            none=AttrDict(),
-            lower=AttrDict(),
-            stem=AttrDict(),
-            norm=AttrDict()
+        self.vocab: Dict[str, Dict[str, addict.Dict]] = addict.Dict(
+            none=addict.Dict(),
+            lower=addict.Dict(),
+            stem=addict.Dict(),
+            norm=addict.Dict()
         )
 
         self.stemmer = nltk.stem.PorterStemmer().stem
@@ -142,11 +142,11 @@ class Vocabulary:
                     # For each entry, also store the value itself and the
                     # primary name
 
-                    self.vocab["none"][name] = AttrDict(value=name, primary=primary)
-                    self.vocab["lower"][name.lower()] = AttrDict(value=name, primary=primary)
-                    self.vocab["stem"][self.stemmer(name)] = AttrDict(value=name, primary=primary)
+                    self.vocab["none"][name] = addict.Dict(value=name, primary=primary)
+                    self.vocab["lower"][name.lower()] = addict.Dict(value=name, primary=primary)
+                    self.vocab["stem"][self.stemmer(name)] = addict.Dict(value=name, primary=primary)
 
-                    self.vocab["norm"][aliasregex.normalize(name)] = AttrDict(
+                    self.vocab["norm"][aliasregex.normalize(name)] = addict.Dict(
                         value=name,
                         primary=primary)
 

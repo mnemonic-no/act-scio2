@@ -41,10 +41,11 @@ setup(
     namespace_packages=['act'],
     url="https://github.com/mnemonic-no/act-scio2",
     install_requires=[
+        "addict",
         "aiofiles",
-        "caep",
         "beautifulsoup4",
         "bs4",
+        "caep",
         "fastapi",
         "feedparser",
         "greenstalk",

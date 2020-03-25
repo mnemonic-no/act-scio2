@@ -1,5 +1,5 @@
 from act.scio.plugin import BasePlugin, Result
-from act.scio.attrdict import AttrDict
+import addict
 from typing import Text, List, Dict, Set
 import ipaddress
 import re
@@ -21,11 +21,11 @@ class Plugin(BasePlugin):
 
     allposipv6 = re.compile("\\b[a-f0-9:.]+:[a-f0-9:.]+:[a-f0-9:.]+\\b")
 
-    async def analyze(self, nlpdata: AttrDict) -> Result:
+    async def analyze(self, nlpdata: addict.Dict) -> Result:
 
         text = nlpdata.text
 
-        res = AttrDict()
+        res = addict.Dict()
 
         res.md5 = self.md5.findall(text)
         res.sha1 = self.sha1.findall(text)

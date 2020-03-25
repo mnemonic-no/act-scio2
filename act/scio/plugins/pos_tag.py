@@ -1,4 +1,4 @@
-from act.scio.attrdict import AttrDict
+import addict
 import nltk
 from act.scio.plugin import BasePlugin, Result
 from typing import Text, List
@@ -10,11 +10,11 @@ class Plugin(BasePlugin):
     version = "0.1"
     dependencies: List[Text] = []
 
-    async def analyze(self, nlpdata: AttrDict) -> Result:
+    async def analyze(self, nlpdata: addict.Dict) -> Result:
 
         tokens = nltk.word_tokenize(nlpdata.text)
 
-        res = AttrDict()
+        res = addict.Dict()
 
         res.tokens = nltk.pos_tag(tokens)
 

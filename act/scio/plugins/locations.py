@@ -1,4 +1,4 @@
-from act.scio.attrdict import AttrDict
+import addict
 from act.scio.plugin import BasePlugin, Result
 from act.scio.vocabulary import Vocabulary
 from typing import Text, List, Tuple, Dict, Set
@@ -56,7 +56,7 @@ class Plugin(BasePlugin):
         for _, city, _, _, _, _, _, _, cc, _, _, _, _, _, pop, _, _, area, _ in reader:
             city = city.split(",")[0]
             if (city in ret and ret[city]['population'] < int(pop)) or city not in ret:
-                ret[city] = AttrDict({
+                ret[city] = addict.Dict({
                     'name': city,
                     'population': int(pop),
                     'country code': cc,
@@ -72,14 +72,14 @@ class Plugin(BasePlugin):
         countries = json.load(open(filename))
 
         for country in countries:
-            names[country['name']] = AttrDict(country)
-            alpha2[country['alpha-2']] = AttrDict(country)
+            names[country['name']] = addict.Dict(country)
+            alpha2[country['alpha-2']] = addict.Dict(country)
 
         return names, alpha2
 
-    async def analyze(self, nlpdata: AttrDict) -> Result:
+    async def analyze(self, nlpdata: addict.Dict) -> Result:
 
-        res = AttrDict()
+        res = addict.Dict()
 
         ini = configparser.ConfigParser()
         ini.read([os.path.join(self.configdir, "locations.ini")])
@@ -95,7 +95,7 @@ class Plugin(BasePlugin):
         country_names, country_cc = self.countries_from_file(ini['locations']['countries'])
 
         nouns = self.nouns(nlpdata.pos_tag.tokens)
-        vocab = Vocabulary(AttrDict(ini['vocabulary']))
+        vocab = Vocabulary(ini['vocabulary'])
 
         res.cities = []
         res.countries = []

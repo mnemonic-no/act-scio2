@@ -4,7 +4,7 @@ It also contains the work functions used to load the plugins both from disc and
 from the resources."""
 
 from act.scio import plugins
-from act.scio.attrdict import AttrDict
+import addict
 from importlib import import_module
 from importlib.machinery import ModuleSpec
 from importlib.util import module_from_spec, spec_from_file_location
@@ -23,7 +23,7 @@ class Result(BaseModel):
 
     name: StrictStr
     version: StrictStr
-    result: AttrDict
+    result: addict.Dict
 
 
 class BasePlugin:
@@ -40,9 +40,9 @@ class BasePlugin:
     configdir = ""
     debug = False
 
-    async def analyze(self, nlpdata: AttrDict) -> Result:
+    async def analyze(self, nlpdata: addict.Dict) -> Result:
         """Main analyzis method"""
-        return Result(name=self.name, version=self.version, result=AttrDict({"test": nlpdata.text}))
+        return Result(name=self.name, version=self.version, result=addict.Dict({"test": nlpdata.text}))
 
 
 def load_default_plugins() -> List[BasePlugin]:
