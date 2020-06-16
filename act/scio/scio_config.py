@@ -78,17 +78,6 @@ def save_config(configdir: Text) -> None:
     make_path(configdir, "etc/plugins")
     make_path(configdir, "vendor")
 
-    # Make sure the config directories exists before storing files.
-    plugin_path = os.path.join(configdir, "plugins")
-    try:
-        os.mkdir(plugin_path)
-        print(f"creating directory {plugin_path}")
-    except FileExistsError:
-        print(f"WARNING: config path allready exists {plugin_path}")
-    except PermissionError:
-        sys.stderr.write(f"ERROR: Permission denied when creating {plugin_path}\n")
-        sys.exit(2)
-
     for filename, content in default_ini():
         full_filename = os.path.join(configdir, filename)
         if os.path.isfile(full_filename):
