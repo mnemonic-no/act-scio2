@@ -2,6 +2,7 @@
 
 from tika import parser
 from typing import Text, Optional, Any
+import argparse
 import asyncio
 import greenstalk
 import json
@@ -10,8 +11,15 @@ import os
 import time
 import tika
 import gzip
+import act.scio.logging
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Scio 2 Tika server")
+    parser.add_argument('--logfile', dest='logfile', type=str)
+    parser.add_argument('--loglevel', default="info", type=str)
+
+    return parser.parse_args()
 
 class Server:
     """The server class listening for new work on beanstalk and sending it to
@@ -28,7 +36,7 @@ class Server:
         tika.initVM()
 
     def client_ready(self) -> bool:
-        """client_ready is a utility function checking wether the
+        """client_ready is a utility function checking whether the
         beanstalk client has a connection that works."""
 
         if not self.client:
@@ -136,8 +144,10 @@ class Server:
 def main() -> None:
     """entry point"""
 
-    #logging.basicConfig(filename='example.log',level=logging.DEBUG)
-    logging.basicConfig(level=logging.DEBUG)
+    args = parse_args()
+
+    act.scio.logging.setup_logging(args.loglevel, args.logfile, "scio-tika-server")
+
     server = Server()
 
 
