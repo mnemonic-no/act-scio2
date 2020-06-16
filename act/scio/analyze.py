@@ -20,6 +20,8 @@ import sys
 import act.scio.logging
 
 def parse_args() -> argparse.Namespace:
+    """Helper setting up the argsparse configuration"""
+
     parser = argparse.ArgumentParser(description="Scio 2 Analyzer")
 
     parser.add_argument('--beanstalk', dest='beanstalk', type=str, default=None,
@@ -36,13 +38,10 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-async def analyze(plugins: List[plugin.BasePlugin],
-                  beanstalk_client: Optional[greenstalk.Client] = None) -> addict.Dict:
-    loop = asyncio.get_event_loop()
+def get_input(beanstalk_client: Optional[greenstalk.Client] = None) -> addict.Dict:
+    """Helper function to abstract away how we get the text to work on"""
 
-    nlpdata: addict.Dict = addict.Dict()
-    data = ""
-
+    nlpdata = addict.Dict()
     if not beanstalk_client:
         logging.info("Waiting for work on stdin")
         data = sys.stdin.read()
@@ -54,6 +53,17 @@ async def analyze(plugins: List[plugin.BasePlugin],
         nlpdata = addict.Dict(json.loads(gzip.decompress(job.body)))
         logging.info(nlpdata.keys())
         beanstalk_client.delete(job)
+
+    return nlpdata
+
+
+async def analyze(plugins: List[plugin.BasePlugin],
+                  beanstalk_client: Optional[greenstalk.Client] = None) -> addict.Dict:
+    """Main analyze loop running all plugins on the text"""
+
+    loop = asyncio.get_event_loop()
+
+    nlpdata: addict.Dict = get_input(beanstalk_client)
 
     staged = []  # for plugins with dependencies
     pipeline = []  # for plugins to be run now
@@ -93,14 +103,11 @@ async def analyze(plugins: List[plugin.BasePlugin],
 
 
 async def async_main() -> None:
+    """Async version of main"""
+
     args = parse_args()
 
     act.scio.logging.setup_logging(args.loglevel, args.logfile, "scio-analyze")
-
-    logging.debug("debug")
-    logging.info("info")
-    logging.warn("warn")
-    logging.error("error")
 
     plugins = plugin.load_default_plugins()
 
@@ -151,6 +158,8 @@ async def async_main() -> None:
 
 
 def main() -> None:
+    """Main entry point"""
+
     loop = asyncio.get_event_loop()
     loop.run_until_complete(asyncio.wait([async_main()]))
 

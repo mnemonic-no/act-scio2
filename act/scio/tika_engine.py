@@ -15,11 +15,12 @@ import act.scio.logging
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Scio 2 Tika server")
-    parser.add_argument('--logfile', dest='logfile', type=str)
-    parser.add_argument('--loglevel', default="info", type=str)
+    """Helper setting up the argsparse configuration"""
+    arg_parser = argparse.ArgumentParser(description="Scio 2 Tika server")
+    arg_parser.add_argument('--logfile', dest='logfile', type=str)
+    arg_parser.add_argument('--loglevel', default="info", type=str)
 
-    return parser.parse_args()
+    return arg_parser.parse_args()
 
 class Server:
     """The server class listening for new work on beanstalk and sending it to
@@ -149,7 +150,6 @@ def main() -> None:
     act.scio.logging.setup_logging(args.loglevel, args.logfile, "scio-tika-server")
 
     server = Server()
-
 
     logging.info("Starting Tika server")
     server.start()
