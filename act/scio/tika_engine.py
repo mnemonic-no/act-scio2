@@ -12,7 +12,6 @@ import tika
 import gzip
 
 
-
 class Server:
     """The server class listening for new work on beanstalk and sending it to
     Apache Tika for text extraction and den sending it to Scio for text analyzis."""
@@ -136,10 +135,8 @@ class Server:
 def main() -> None:
     """entry point"""
 
-    #logging.basicConfig(filename='example.log',level=logging.DEBUG)
     logging.basicConfig(level=logging.DEBUG)
     server = Server()
-
 
     logging.info("Starting Tika server")
     server.start()
