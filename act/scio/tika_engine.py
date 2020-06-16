@@ -11,16 +11,15 @@ import os
 import time
 import tika
 import gzip
+import caep
 import act.scio.logging
-
+import act.scio.config
 
 def parse_args() -> argparse.Namespace:
     """Helper setting up the argsparse configuration"""
-    arg_parser = argparse.ArgumentParser(description="Scio 2 Tika server")
-    arg_parser.add_argument('--logfile', dest='logfile', type=str)
-    arg_parser.add_argument('--loglevel', default="info", type=str)
 
-    return arg_parser.parse_args()
+    arg_parser = act.scio.config.parse_args("Scio 2 Tika server")
+    return caep.config.handle_args(arg_parser, "scio/etc", "scio.ini", "tika")
 
 class Server:
     """The server class listening for new work on beanstalk and sending it to
@@ -149,7 +148,7 @@ def main() -> None:
 
     act.scio.logging.setup_logging(args.loglevel, args.logfile, "scio-tika-server")
 
-    server = Server()
+    server = Server(args.beanstalk, args.beanstalk_port)
 
     logging.info("Starting Tika server")
     server.start()

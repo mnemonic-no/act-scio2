@@ -18,7 +18,31 @@ PERFORMANCE OF THIS SOFTWARE.
 Config utilities for scio
 """
 
+import argparse
 import os
+from typing import Text
+
+import caep
+
+def parse_args(description: Text) -> argparse.ArgumentParser:
+    """ Parse default arguments """
+    parser = argparse.ArgumentParser(description=description)
+
+    parser.add_argument('--beanstalk',
+                        help="Connect to beanstalk server. " +
+                        "If not specified, read from stdin",
+                        default="localhost")
+    parser.add_argument('--beanstalk-port',
+                        type=int,
+                        default=11300,
+                        help="Default 11300")
+    parser.add_argument('--config-dir',
+                        default=caep.get_config_dir("scio"),
+                        help="Default config dir with configurations for scio and plugins")
+    parser.add_argument('--logfile')
+    parser.add_argument('--loglevel', default="info")
+
+    return parser
 
 
 def get_cache_dir(cache_id: str, create: bool = False) -> str:

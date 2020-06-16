@@ -3,7 +3,6 @@
 """ SCIO Analyze module """
 
 from act.scio import plugin
-from caep import get_config_dir  # type: ignore
 from typing import Optional, List
 
 import addict  # type: ignore
@@ -17,25 +16,19 @@ import os.path
 import requests
 import sys
 
+import caep
+
 import act.scio.logging
+import act.scio.config
 
 def parse_args() -> argparse.Namespace:
     """Helper setting up the argsparse configuration"""
 
-    parser = argparse.ArgumentParser(description="Scio 2 Analyzer")
+    arg_parser = act.scio.config.parse_args("Scio 2 Analyzer")
+    arg_parser.add_argument('--plugins', dest='plugins', type=str)
+    arg_parser.add_argument('--webdump', dest='webdump', type=str, help="URI to post result data")
 
-    parser.add_argument('--beanstalk', dest='beanstalk', type=str, default=None,
-                        help="Connect to beanstalk server. If not specified, read from stdin")
-    parser.add_argument('--beanstalk_port', dest='beanstalk_port', type=int, default=11300,
-                        help="Default 11300")
-    parser.add_argument('--config-dir', dest='configdir', type=str, default=get_config_dir("scio"),
-                        help="Default config dir with configurations for scio and plugins")
-    parser.add_argument('--plugins', dest='plugins', type=str)
-    parser.add_argument('--webdump', dest='webdump', type=str, help="URI to post result data")
-    parser.add_argument('--logfile', dest='logfile', type=str)
-    parser.add_argument('--loglevel', default="info", type=str)
-
-    return parser.parse_args()
+    return caep.config.handle_args(arg_parser, "scio/etc", "scio", "analyze")
 
 
 def get_input(beanstalk_client: Optional[greenstalk.Client] = None) -> addict.Dict:
@@ -119,7 +112,7 @@ async def async_main() -> None:
 
     # Inject config directory into each plugin
     for p in plugins:
-        p.configdir = os.path.join(args.configdir, "etc/plugins")
+        p.configdir = os.path.join(args.config_dir, "etc/plugins")
 
     beanstalk_client = None
     if args.beanstalk:
