@@ -26,7 +26,8 @@ setup(
             'scio-api = act.scio.api:main',
             'scio-config = act.scio.scio_config:main',
             'scio-feed-download = act.scio.feeds.download:main',
-            'scio-feed-submitcache= act.scio.feeds.submitcache:main',
+            'scio-feed-submitcache = act.scio.feeds.submitcache:main',
+            'scio-tika-server = act.scio.tika_engine:main',
             'scio-upload = act.scio.upload:main',
         ]
     },

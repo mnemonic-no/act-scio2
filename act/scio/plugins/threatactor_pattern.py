@@ -32,7 +32,7 @@ class Plugin(BasePlugin):
         res = addict.Dict()
 
         res.ThreatActors = vocab.regex_search(
-            nlpdata.text,
+            nlpdata.content,
             normalize_result=normalize_ta,
             debug=self.debug)
 

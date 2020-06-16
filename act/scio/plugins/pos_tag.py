@@ -12,7 +12,7 @@ class Plugin(BasePlugin):
 
     async def analyze(self, nlpdata: addict.Dict) -> Result:
 
-        tokens = nltk.word_tokenize(nlpdata.text)
+        tokens = nltk.word_tokenize(nlpdata.content)
 
         res = addict.Dict()
 

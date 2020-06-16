@@ -22,6 +22,6 @@ class Plugin(BasePlugin):
 
         res = addict.Dict()
 
-        res.Tools = vocab.regex_search(nlpdata.text, debug=self.debug)
+        res.Tools = vocab.regex_search(nlpdata.content, debug=self.debug)
 
         return Result(name=self.name, version=self.version, result=res)

@@ -11,7 +11,7 @@ async def test_threatactor_pattern() -> None:
 
     nlpdata = addict.Dict()
 
-    nlpdata.text = '''Lorem Ipsum Dirty Panda, APT1 APT-2, Apt 35, APT_46'''
+    nlpdata.content = '''Lorem Ipsum Dirty Panda, APT1 APT-2, Apt 35, APT_46'''
 
     plugin = threatactor_pattern.Plugin()
     plugin.configdir = os.path.join(os.path.dirname(__file__), "../act/scio/etc/plugins")

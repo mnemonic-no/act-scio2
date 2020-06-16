@@ -2,15 +2,18 @@
 
 """ SCIO Analyze module """
 
-import addict
 from act.scio import plugin
-from caep import get_config_dir
-from typing import List
+from caep import get_config_dir  # type: ignore
+from typing import Optional, List
+import addict  # type: ignore
 import argparse
 import asyncio
+import greenstalk  # type: ignore
+import gzip
 import json
 import logging
 import os.path
+import requests
 import sys
 
 
@@ -19,19 +22,34 @@ def parse_args() -> argparse.Namespace:
 
     parser.add_argument('--beanstalk', dest='beanstalk', type=str, default=None,
                         help="Connect to beanstalk server. If not specified, read from stdin")
+    parser.add_argument('--beanstalk_port', dest='beanstalk_port', type=int, default=11300,
+                        help="Default 11300")
     parser.add_argument('--config-dir', dest='configdir', type=str, default=get_config_dir("scio"),
                         help="Default config dir with configurations for scio and plugins")
     parser.add_argument('--plugins', dest='plugins', type=str)
+    parser.add_argument('--webdump', dest='webdump', type=str, help="URI to post result data")
+    parser.add_argument('--logfile', dest='logfile', type=str, default="scio_analyze.log")
 
     return parser.parse_args()
 
 
-async def analyze(plugins: List[plugin.BasePlugin], beanstalk: bool) -> dict:
+async def analyze(plugins: List[plugin.BasePlugin],
+                  beanstalk_client: Optional[greenstalk.Client] = None) -> addict.Dict:
     loop = asyncio.get_event_loop()
 
+    nlpdata: addict.Dict = addict.Dict()
     data = ""
-    if not beanstalk:
+
+    if not beanstalk_client:
         data = sys.stdin.read()
+        nlpdata.content = data
+    else:
+        # ADD BEANSTALK JOB CONSUMPTION
+        logging.info("Waiting for work")
+        job = beanstalk_client.reserve()
+        nlpdata = addict.Dict(json.loads(gzip.decompress(job.body)))
+        logging.info(nlpdata.keys())
+        beanstalk_client.delete(job)
 
     staged = []  # for plugins with dependencies
     pipeline = []  # for plugins to be run now
@@ -42,15 +60,12 @@ async def analyze(plugins: List[plugin.BasePlugin], beanstalk: bool) -> dict:
         else:
             pipeline.append(p)
 
-    nlpdata: addict.Dict = addict.Dict()
-    nlpdata.text = data
     while pipeline:
         tasks = []
         for p in pipeline:
             tasks.append(loop.create_task(p.analyze(nlpdata)))
 
-        for task in tasks:
-            await task
+        await asyncio.gather(*tasks)
 
         for task in tasks:
             if task.exception():
@@ -76,6 +91,12 @@ async def analyze(plugins: List[plugin.BasePlugin], beanstalk: bool) -> dict:
 async def async_main() -> None:
     args = parse_args()
 
+    logging.basicConfig(filename=args.logfile, level=logging.DEBUG)
+    logging.debug("debug")
+    logging.info("info")
+    logging.warn("warn")
+    logging.error("error")
+
     plugins = plugin.load_default_plugins()
 
     if args.plugins:
@@ -88,10 +109,35 @@ async def async_main() -> None:
     for p in plugins:
         p.configdir = os.path.join(args.configdir, "etc/plugins")
 
+    beanstalk_client = None
+    if args.beanstalk:
+        logging.info("Connection to beanstalk")
+        beanstalk_client = greenstalk.Client(args.beanstalk, args.beanstalk_port, encoding=None)
+        beanstalk_client.watch('scio_analyze')
+
     loop = asyncio.get_event_loop()
-    task = loop.create_task(analyze(plugins, args.beanstalk))
-    await task
-    print(json.dumps(task.result(), indent="  "))
+
+    while True:
+        task = loop.create_task(analyze(plugins, beanstalk_client))
+        await task
+        result = json.dumps(task.result(), indent="  ")
+        if args.webdump:
+            proxies = {
+                'http': args.proxy_string,
+                'https': args.proxy_string
+            } if args.proxy_string else None
+
+            r = requests.post(args.webdump, data=result, proxies=proxies)
+            if r.status_code != 200:
+                logging.error("Unable to post result data to webdump: %s", r.text)
+
+        else:
+            print(result)
+
+        # If we are not listening on a beanstalk work queue, behave like a command line
+        # utility and exit after one document.
+        if not beanstalk_client:
+            break
 
 
 def main() -> None:
