@@ -1,5 +1,5 @@
 # act-scio2
-Scio v2 is a reimplementation of [Scio|https://github.com/mnemonic-no/act-scio] in Python3.
+Scio v2 is a reimplementation of [Scio](https://github.com/mnemonic-no/act-scio) in Python3.
 
 Scio uses [tika](https://tika.apache.org) to extract text from documents (PDF, HTML, DOC, etc).
 
