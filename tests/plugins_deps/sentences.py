@@ -15,7 +15,7 @@ class Plugin(BasePlugin):
 
     async def analyze(self, nlpdata: addict.Dict) -> Result:
         result = addict.Dict()
-        result.split = [s.strip() for s in nlpdata.text.split(".") if s.strip()]
+        result.split = [s.strip() for s in nlpdata.content.split(".") if s.strip()]
         return Result(
             name=self.name,
             version=self.version,

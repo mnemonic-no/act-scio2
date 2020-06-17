@@ -10,7 +10,7 @@ async def test_locations() -> None:
     """ test for plugins """
 
     nlpdata = addict.Dict()
-    nlpdata.text = ('The Democratic Republic of Congo and the Arabic Emirates.\n\n' +
+    nlpdata.content = ('The Democratic Republic of Congo and the Arabic Emirates.\n\n' +
                     'In London, people eat a lot of fish and chips.\n\n' +
                     'England and Scotland is part of the UK.\n')
     nlpdata.pos_tag = addict.Dict()

@@ -23,7 +23,7 @@ class Plugin(BasePlugin):
 
     async def analyze(self, nlpdata: addict.Dict) -> Result:
 
-        text = nlpdata.text
+        text = nlpdata.content
 
         res = addict.Dict()
 

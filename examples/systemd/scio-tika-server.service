@@ -1,0 +1,13 @@
+Description=SCIO tika server service
+
+[Service]
+User=scio
+ExecStart=scio-tika-server
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=scio-tika-server
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

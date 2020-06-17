@@ -18,7 +18,7 @@ async def test_sectors() -> None:
                               ('industry', 'NN'), ('is', 'VBZ'), ('in', 'IN'),
                               ('trouble', 'NN'), ('.', '.')]
 
-    nlpdata.text = ('The companies in the Bus; Finanical, ' +
+    nlpdata.content = ('The companies in the Bus; Finanical, ' +
                     'Aviation and Automobile industry are large.')
 
     plugin = sectors.Plugin()

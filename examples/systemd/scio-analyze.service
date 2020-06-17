@@ -1,0 +1,13 @@
+Description=SCIO analyze service
+
+[Service]
+User=scio
+ExecStart=scio-analyze
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=scio-analyze
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

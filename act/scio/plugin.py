@@ -42,7 +42,7 @@ class BasePlugin:
 
     async def analyze(self, nlpdata: addict.Dict) -> Result:
         """Main analyzis method"""
-        return Result(name=self.name, version=self.version, result=addict.Dict({"test": nlpdata.text}))
+        return Result(name=self.name, version=self.version, result=addict.Dict({"test": nlpdata.content}))
 
 
 def load_default_plugins() -> List[BasePlugin]:
