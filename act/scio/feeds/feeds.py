@@ -34,6 +34,7 @@ import urllib.request
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Text, Tuple, cast
 
+from enum import Enum
 import feedparser
 import justext
 import requests
@@ -45,6 +46,8 @@ from act.scio.config import get_cache_dir
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 LOGGER = logging.getLogger('root')
+
+FeedType = Enum('FeedType', ['none', 'partial', 'full'])
 
 
 def init() -> argparse.Namespace:
@@ -78,6 +81,25 @@ def init() -> argparse.Namespace:
     return args
 
 
+def get_content_from_entry(entry):
+    """Extract and concatenate the content portion of a feed entry"""
+
+    if "content" in entry:
+        return "\n".join([x["value"] for x in entry['content']])
+
+    LOGGER.warning("No content for %s", entry['link'])
+
+    return ""
+
+
+def get_summary_from_entry(entry):
+    """Extract summary from feed entry"""
+
+    if "summary_detail" in entry:
+        return entry['summary_detail']['value']
+    return ""
+
+
 def create_html(entry: Dict) -> Text:
     """Wrap an entry in html headers and footers"""
 
@@ -93,15 +115,8 @@ def create_html(entry: Dict) -> Text:
     </body>
 </html>"""
 
-    content = ""
-    if "content" in entry:
-        content = "\n".join([x["value"] for x in entry['content']])
-    else:
-        LOGGER.warning("No content for %s", entry['link'])
-
-    summary = ""
-    if "summary_detail" in entry:
-        summary = entry['summary_detail']['value']
+    content = get_content_from_entry(entry)
+    summary = get_summary_from_entry(entry)
 
     return html_data.format(title=entry["title"],
                             content=content,
@@ -112,82 +127,117 @@ def safe_filename(path: Text) -> Text:
     """Make filename safe by only allowing alpha numeric characters,
     digits and ._-"""
 
-    return "".join(c for c in path
-                   if c.isalpha() or
-                   c.isdigit() or
-                   c in "_ -.").replace(" ", "_")
+    def _safe_char(c):
+        if c.isalpha():
+            return c
+        if c.isdigit():
+            return c
+        if c in "_-.":
+            return c
+        if c in " \t":
+            return "_"
+        return ""
+
+    return "".join(_safe_char(c) for c in path)
 
 
 def default_headers() -> Dict:
     """ Return default headers with a custom user agent """
     return cast(Dict, requests.utils.default_headers().update(  # type: ignore
-        {'User-Agent': 'Mozilla/5.0 Gecko/56.0 Firefox/56.0'}))
+        {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                       'AppleWebKit/537.36 (KHTML, like Gecko) '
+                       'Chrome/74.0.3729.169 Safari/537.36'}))  # Chrome v74 2020-06-25
+
+
+def parse_and_correct_link(link):
+    """Parse the link and rewrites known web-view vs raw store locations (e.g. github)"""
+
+    parsed = urllib.parse.urlparse(link)
+
+    if parsed.netloc == 'github.com':
+        LOGGER.info("found github link. Modify to get raw content")
+        link = link.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/')
+        LOGGER.info("modified link: %s", link)
+    else:
+        return parsed
+
+    return urllib.parse.urlparse(link)
+
+
+def file_in_ignore_file(fname, ignore_file):
+    """Check if a spesific filename is present in the ignore file (if any)"""
+
+    if not ignore_file:
+        return False
+
+    if not os.path.isfile(ignore_file):
+        LOGGER.warning("Ignore file not found: %s", ignore_file)
+        return False
+
+    with open(ignore_file) as f:
+        ignored = [line.strip() for line in f]
+        if fname in ignored:
+            return True
+
+    return False
 
 
 def download_and_store(
         feed_url: Text,
         ignore_file: Optional[Text],
-        path: Text,
+        storage_path: Text,
         link: Text) -> None:
     """Download and store a link. Storage defined in args"""
 
-    if not os.path.isdir(path):
-        os.mkdir(path)
+    # Check that storage folder exists, create if not
+    if not os.path.isdir(storage_path):
+        os.mkdir(storage_path)
+
     LOGGER.info("found download link: %s", link)
 
-    parsed = urllib.parse.urlparse(link)
-    if parsed.netloc == 'github.com':
-        LOGGER.info("found github link. Modify to get raw content")
-        link = link.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/')
-        LOGGER.info("modified link: {0}".format(link))
+    parsed_link = parse_and_correct_link(link)
 
-    parsed = urllib.parse.urlparse(link)
-
-    if parsed.netloc == '':
+    # if netloc does not contain a hostname, assume a relative path to the feed url
+    if parsed_link.netloc == '':
         parsed_feed_url = urllib.parse.urlparse(feed_url)
-        link = urllib.parse.urljoin("{0}://{1}".format(
-            parsed_feed_url.scheme, parsed_feed_url.netloc), parsed.path)
+        parsed_link = parsed_link._replace(scheme=parsed_feed_url.scheme,
+                                           netloc=parsed_feed_url.netloc,
+                                           path=parsed_link.path)
         LOGGER.info("possible relative path %s, trying to append host: %s",
-                    parsed.path, parsed_feed_url.netloc)
+                    parsed_link.path, parsed_feed_url.netloc)
 
-    req = requests.get(link, headers=default_headers, verify=False, stream=True, timeout=60)
+    req = requests.get(parsed_link.geturl(),
+                       headers=default_headers(),
+                       verify=False,
+                       stream=True,
+                       timeout=60)
 
     if req.status_code >= 400:
         LOGGER.info("Status %s - %s", req.status_code, link)
         return
 
-    url = urllib.parse.urlparse(link)
-    fname = os.path.join(path, safe_filename(os.path.basename(url.path)))
-    if ignore_file:
-        if not os.path.isfile(ignore_file):
-            LOGGER.warning("Ignore file not found: %s", ignore_file)
-        else:
-            with open("/opt/scio_feeds/ignore.txt") as f:
-                ignored = [l.strip() for l in f.readlines()]
-                if fname in ignored:
-                    return
+    fname = os.path.join(storage_path, safe_filename(os.path.basename(parsed_link.path)))
+
+    if file_in_ignore_file(fname, ignore_file):
+        LOGGER.info("Ignoring %s based on %s", fname, ignore_file)
+        return
+
     with open(fname, "wb") as download_file:
         LOGGER.info("Writing %s", fname)
         req.raw.decode_content = True
         shutil.copyfileobj(req.raw, download_file)
 
 
-def check_links(feed_url: Text, args: argparse.Namespace, links: List[Text]) -> None:
+def filter_links(args: argparse.Namespace, links: List[Text]) -> List[Text]:
     """Run though a list of urls, checking if they contains certain
     elements that looks like possible file download possibilities"""
 
+    filtered = []
     for link in links:
-        try:
-            link_lower = link.lower()
-
-            for file_format in args.file_format:
-                if f".{file_format}" in link_lower:
-                    download_and_store(feed_url, args.ignore,
-                                       os.path.join(args.store_path, file_format), link)
-        except Exception as exc:  # pylint: disable=W0703
-            LOGGER.error('%r generated an exception: %s', link, exc)
-            exc_info = (type(exc), exc, exc.__traceback__)
-            LOGGER.error('Exception occurred', exc_info=exc_info)
+        for file_format in args.file_format:
+            if "." + file_format in link.lower():
+                filtered.append(link)
+    return filtered
 
 
 def get_feed(feed_url: Text) -> Any:
@@ -216,6 +266,7 @@ def partial_entry_text_to_file(
 
     req = requests.get(url, headers=default_headers(), verify=False, timeout=60)
 
+    LOGGER.warning("Unable to download contnet: %s", url)
     if req.status_code >= 400:
         return None, None
 
@@ -246,7 +297,9 @@ def partial_entry_text_to_file(
     return filename, raw_html
 
 
-def entry_text_to_file(args: argparse.Namespace, entry: Dict) -> Tuple[Text, Text]:
+def entry_text_to_file(
+        args: argparse.Namespace,
+        entry: Dict) -> Tuple[Optional[Text], Optional[Text]]:
     """Extract the entry content and write it to the proper file.
     Return the wrapped HTML"""
 
@@ -261,9 +314,8 @@ def entry_text_to_file(args: argparse.Namespace, entry: Dict) -> Tuple[Text, Tex
     return filename, html_data
 
 
-def html_information_extraction(entry: Dict, html_data: Text) -> Dict[Text, Any]:
-    """Extract any information from the htmls that we want to
-    do something to."""
+def get_links(entry: Dict, html_data: Text) -> List[Text]:
+    """Extract any links from the html"""
 
     links = []
     soup = BeautifulSoup(html_data, "html.parser")
@@ -272,45 +324,12 @@ def html_information_extraction(entry: Dict, html_data: Text) -> Dict[Text, Any]
     else:
         LOGGER.warning("soup is none : %s", entry['title'])
 
-    return {"links": links}
+    return links
 
 
-def create_entry_meta_file(
-        args: argparse.Namespace,
-        filename: Text,
-        feed_title: Text,
-        entry: Dict,
-        my_info: Dict) -> None:
-    """Create the meta file for a single entry"""
-
-    if feed_title.strip() == "":
-        parsed_uri = urllib.parse.urlparse(entry['link'])
-        feed_title = parsed_uri.netloc
-
-    published = entry.get("published_parsed", datetime.now())
-    if not published:
-        published = datetime.now()
-    if isinstance(published, datetime):
-        creation_date = published
-    else:
-        creation_date = datetime.fromtimestamp(time.mktime(published))
-
-    meta_path = os.path.join(args.store_path, "download")
-
-    with open(os.path.join(meta_path, filename + ".meta"), "w") as meta_file:
-        data = {
-            "link": entry["link"],
-            "source": feed_title,
-            "creation-date": creation_date.isoformat(),
-            "title": entry["title"],
-        }
-        data.update(my_info)
-        json.dump(data, fp=meta_file, indent=4)
-
-
-def handle_partial_feed(args: argparse.Namespace, feed_url: Text) -> Tuple[Text, Text]:
+def handle_feed(args: argparse.Namespace, feed_url: Text, partial: bool) -> Tuple[Text, Text]:
     """Take a feed, extract all entries, download the full original
-    web page, extract links and download any documents references
+    web page if partial , extract links and download any documents references
     if specified in the arguments and write the feed entry content
     to disk together with a meta data json file"""
 
@@ -327,46 +346,47 @@ def handle_partial_feed(args: argparse.Namespace, feed_url: Text) -> Tuple[Text,
         LOGGER.info("Handling : %s of %s : %s",
                     entry_n, len(feed["entries"]), entry['title'])
 
-        filename, raw_html = partial_entry_text_to_file(args, entry)
+        if partial:
+            filename, html_data = entry_text_to_file(args, entry)
+        else:
+            filename, html_data = partial_entry_text_to_file(args, entry)
 
-        if not (filename and raw_html):
+        if not (filename and html_data):
             continue
 
-        my_info = html_information_extraction(entry, raw_html)
-        my_info["partial_feed"] = True
-        create_entry_meta_file(args, filename, feed["feed"]["title"], entry, my_info)
-        check_links(entry["link"], args, my_info["links"])
+        links = get_links(entry, html_data)
+        for link in filter_links(args, links):
+            download_and_store(feed_url, args.ignore, args.store_path, link)
 
     return "OK", feed_url
 
 
-def handle_feed(args: argparse.Namespace, feed_url: Text) -> Tuple[Text, Text]:
-    """Take a feed, extract all entries, wrap the entries in full
-    HTML body, extract links and download any documents references
-    if specified in the arguments and write the feed entry content
-    to disk together with a meta data json file"""
+def get_feed_url_from_feed_file_line(line: Text) -> Optional[Text]:
+    """Extract the url portion from the feed file line"""
 
-    feed = get_feed(feed_url)
+    if len(line) <= 2:
+        LOGGER.warning("Missconfigured feed file line: %s", line)
+        return None
 
-    if not feed:
-        return "NOT FEED", feed_url
+    feed_url = line[2:].strip()
+    if not feed_url:
+        LOGGER.warning("Empty URL part of feed file line: %s", line)
 
-    LOGGER.info("%s contains %s entries",
-                feed_url,
-                len(feed["entries"]))
+    return feed_url
 
-    for entry_n, entry in enumerate(feed["entries"]):
-        LOGGER.info("Handling : %s of %s : %s",
-                    entry_n, len(feed["entries"]), entry['title'])
 
-        filename, html_data = entry_text_to_file(args, entry)
-        my_info = html_information_extraction(entry, html_data)
-        my_info["partial_feed"] = False
-        create_entry_meta_file(args, filename,
-                               feed["feed"]["title"], entry, my_info)
-        check_links(entry["link"], args, my_info["links"])
+def get_feed_kind(line: Text) -> FeedType:
+    """Extract the feed kind from a feed config line"""
 
-    return "OK", feed_url
+    if len(line) < 2:
+        return FeedType.none
+    type_text = line[:2]
+    if type_text == 'p ':
+        return FeedType.partial
+    if type_text == 'f ':
+        return FeedType.full
+
+    return FeedType.none
 
 
 def parse_feed_file(filename: Text) -> Tuple[List[Text], List[Text]]:
@@ -377,14 +397,19 @@ def parse_feed_file(filename: Text) -> Tuple[List[Text], List[Text]]:
     partial_feeds = []
 
     for linenum, feed_line in enumerate(open(filename)):
-        if len(feed_line) < 2:
-            sys.stderr.write("line {0} to short".format(linenum + 1))
-        elif feed_line[:2] == "f ":
-            full_feeds.append(feed_line[2:].strip())
-        elif feed_line[:2] == "p ":
-            partial_feeds.append(feed_line[2:].strip())
-        else:
-            sys.stderr.write("line ({0}), '{1}' is not a valid type [fp]\n".format(linenum + 1, feed_line[0]))  # NOQA
+        feed_type = get_feed_kind(feed_line)
+        feed_url = get_feed_url_from_feed_file_line(feed_line)
+        if not feed_url:
+            continue
+
+        if feed_type == FeedType.none:
+            LOGGER.error("Unable to parse line %s [%s]", linenum + 1, feed_line)
+            continue
+
+        if feed_type == FeedType.full:
+            full_feeds.append(feed_url)
+        if feed_type == FeedType.partial:
+            partial_feeds.append(feed_url)
 
     return full_feeds, partial_feeds
 
@@ -392,12 +417,14 @@ def parse_feed_file(filename: Text) -> Tuple[List[Text], List[Text]]:
 def download_feed_list(
         args: argparse.Namespace,
         feed_list: List[Text],
-        handler_fn: Callable) -> None:
+        handler_fn: Callable,
+        partial: bool) -> None:
+
     """Download and analyze a list of feeds concurrently"""
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=32) as executor:
         # Start the load operations and mark each future with its URL
-        future_to_url = {executor.submit(handler_fn, args, url): url
+        future_to_url = {executor.submit(handler_fn, args, url, partial): url
                          for url in feed_list}
         for future in concurrent.futures.as_completed(future_to_url):
             url = future_to_url[future]
@@ -435,8 +462,8 @@ def main() -> None:
     logging.basicConfig(**logcfg)
     try:
         full_feeds, partial_feeds = parse_feed_file(args.feeds)
-        download_feed_list(args, full_feeds, handle_feed)
-        download_feed_list(args, partial_feeds, handle_partial_feed)
+        download_feed_list(args, full_feeds, handle_feed, partial=False)
+        download_feed_list(args, partial_feeds, handle_feed, partial=True)
     except IOError as err:
         LOGGER.error(str(err))
         raise err
