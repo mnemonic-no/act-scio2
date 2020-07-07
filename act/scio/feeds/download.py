@@ -123,7 +123,10 @@ def handle_feed(args: argparse.Namespace,
         links = extract.get_links(entry, html_data)
         for link in analyze.filter_links(args, links):
             filename = download_and_store(feed_url, args.ignore, args.store_path, link)
-            files.append(filename)
+            if filename:
+                files.append(filename)
+            else:
+                logging.info("Unable to download and store %s", link)
 
     return "OK", feed_url, files
 

@@ -44,13 +44,11 @@ def parse_and_correct_link(link: Text) -> urllib.parse.ParseResult:
     parsed = urllib.parse.urlparse(link)
 
     if parsed.netloc == 'github.com':
+        parsed = parsed._replace(netloc="raw.githubusercontent.com")
+        parsed = parsed._replace(path=parsed.path.replace("/blob/", "/", 1))
         logging.info("found github link. Modify to get raw content")
-        link = link.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/')
-        logging.info("modified link: %s", link)
-    else:
-        return parsed
 
-    return urllib.parse.urlparse(link)
+    return parsed
 
 
 def file_in_ignore_file(fname: Text, ignore_file: Text) -> bool:
