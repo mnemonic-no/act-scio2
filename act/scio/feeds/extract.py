@@ -12,8 +12,6 @@ import requests
 
 from act.scio.feeds import download
 
-LOGGER = logging.getLogger('root')
-
 
 def get_content_from_entry(entry: Dict) -> Text:
     """Extract and concatenate the content portion of a feed entry"""
@@ -21,7 +19,7 @@ def get_content_from_entry(entry: Dict) -> Text:
     if "content" in entry:
         return "\n".join([x["value"] for x in entry['content']])
 
-    LOGGER.warning("No content for %s", entry['link'])
+    logging.warning("No content for %s", entry['link'])
 
     return ""
 
@@ -83,14 +81,14 @@ def partial_entry_text_to_file(
     Return the html."""
 
     if "link" not in entry:
-        LOGGER.warning("entry does not contain 'link'")
+        logging.warning("entry does not contain 'link'")
         return None, None
 
     url = entry["link"]
 
     req = requests.get(url, headers=download.default_headers(), verify=False, timeout=60)
 
-    LOGGER.warning("Unable to download contnet: %s", url)
+    logging.warning("Unable to download contnet: %s", url)
     if req.status_code >= 400:
         return None, None
 
@@ -118,7 +116,7 @@ def partial_entry_text_to_file(
 
     # we want to return the raw_html and not the "article extraction"
     # since we want to extract links to .pdfs etc.
-    return filename, raw_html
+    return full_filename, raw_html
 
 
 def entry_text_to_file(
@@ -135,7 +133,7 @@ def entry_text_to_file(
     with open(full_filename, "w") as html_file:
         html_file.write(html_data)
 
-    return filename, html_data
+    return full_filename, html_data
 
 
 def get_links(entry: Dict, html_data: Text) -> List[Text]:
@@ -146,6 +144,6 @@ def get_links(entry: Dict, html_data: Text) -> List[Text]:
     if soup:
         links = [a['href'] for a in soup.findAll('a', href=True)]
     else:
-        LOGGER.warning("soup is none : %s", entry['title'])
+        logging.warning("soup is none : %s", entry['title'])
 
     return links

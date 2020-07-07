@@ -20,46 +20,63 @@ Download feeds from the feeds.txt file, store feed content in .html and feed
 metadata in .meta files. Also attempts to download links to certain document
 types"""
 
-from typing import Dict
+from typing import Dict, List, Text
 
+import datetime
+import hashlib
 import logging
 import urllib3
 
-
-from act.scio.feeds import conf, download
+from act.scio.feeds import conf, download, cache, upload
+from act.scio.logging import setup_logging
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-LOGGER = logging.getLogger('root')
 
 
 def main() -> None:
     """Main program loop. entry point"""
+
     args = conf.get_args()
     logformat = '%(asctime)-15s [%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s'  # NOQA
 
-    logcfg: Dict = {
-        "format": logformat,
-        "level": logging.WARN,
-    }
+    setup_logging(args.loglevel, args.logfile, "scio-feed-download")
 
-    if args.verbose:
-        logcfg['level'] = logging.INFO
-
-    if args.debug:
-        logcfg['level'] = logging.DEBUG
-
-    if args.log:
-        logcfg['filename'] = args.log
-
-    logging.basicConfig(**logcfg)
+    files: List[Text] = []
     try:
         full_feeds, partial_feeds = conf.parse_feed_file(args.feeds)
-        download.download_feed_list(args, full_feeds, download.handle_feed, partial=False)
-        download.download_feed_list(args, partial_feeds, download.handle_feed, partial=True)
+        files += download.download_feed_list(args, full_feeds, partial=False)
+        files += download.download_feed_list(args, partial_feeds, partial=True)
     except IOError as err:
-        LOGGER.error(str(err))
+        logging.error(str(err))
         raise err
+
+    mycache = cache.Cache(args.cache)
+
+    if not args.scio:
+        logging.info("No Scio API Url provided. Exit after download[%s]", len(files))
+        return
+
+    logging.info("Checking upload status of %s files", len(files))
+
+    nup = 0
+    for filename in files:
+
+        if not filename.strip():
+            continue  # skip "blank" filenames
+
+        with open(filename, "rb") as f:
+            data = f.read()
+            sha256 = hashlib.sha256(data).hexdigest()
+            if not mycache.contains(sha256):
+                try:
+                    upload.upload(args.scio, filename)
+                    mycache.insert(filename, sha256, str(datetime.datetime.now()))
+                    logging.info("Uploaded %s to scio", filename)
+                    nup += 1
+                except upload.UploadError as err:
+                    logging.error(err)
+
+    logging.info("Uploaded %s files", nup)
 
 
 if __name__ == "__main__":
