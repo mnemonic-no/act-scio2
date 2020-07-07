@@ -37,8 +37,6 @@ import os
 import urllib
 import urllib.parse
 
-LOGGER = logging.getLogger('root')
-
 
 def parse_and_correct_link(link: Text) -> urllib.parse.ParseResult:
     """Parse the link and rewrites known web-view vs raw store locations (e.g. github)"""
@@ -46,9 +44,9 @@ def parse_and_correct_link(link: Text) -> urllib.parse.ParseResult:
     parsed = urllib.parse.urlparse(link)
 
     if parsed.netloc == 'github.com':
-        LOGGER.info("found github link. Modify to get raw content")
+        logging.info("found github link. Modify to get raw content")
         link = link.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/')
-        LOGGER.info("modified link: %s", link)
+        logging.info("modified link: %s", link)
     else:
         return parsed
 
@@ -62,7 +60,7 @@ def file_in_ignore_file(fname: Text, ignore_file: Text) -> bool:
         return False
 
     if not os.path.isfile(ignore_file):
-        LOGGER.warning("Ignore file not found: %s", ignore_file)
+        logging.warning("Ignore file not found: %s", ignore_file)
         return False
 
     with open(ignore_file) as f:

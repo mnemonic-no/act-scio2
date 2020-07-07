@@ -10,8 +10,6 @@ import os
 from act.scio.config import get_cache_dir
 
 FeedType = Enum('FeedType', ['none', 'partial', 'full'])
-LOGGER = logging.getLogger('root')
-
 
 def get_args() -> argparse.Namespace:
     """initialize argument parser"""
@@ -29,6 +27,10 @@ def get_args() -> argparse.Namespace:
                         help="file with ignore patterns (default: /opt/scio_feeds/ignore.txt)")
     parser.add_argument("--feeds", default="/opt/scio_feeds/feeds.txt", type=str,
                         help="feed urls (one pr. line) (default: /opt/scio_feeds/feeds.txt)")
+    parser.add_argument("--cache", default="cache.db", help="sqlite db containing cached hashes")
+    parser.add_argument("--scio", default=None, help="Upload to scio engine API url")
+    parser.add_argument('--logfile')
+    parser.add_argument('--loglevel', default="info")
 
     args: argparse.Namespace = caep.config.handle_args(parser, "scio/etc", "scio", "feed")
 
@@ -46,12 +48,12 @@ def get_feed_url_from_feed_file_line(line: Text) -> Optional[Text]:
     """Extract the url portion from the feed file line"""
 
     if len(line) <= 2:
-        LOGGER.warning("Missconfigured feed file line: %s", line)
+        logging.warning("Missconfigured feed file line: %s", line)
         return None
 
     feed_url = line[2:].strip()
     if not feed_url:
-        LOGGER.warning("Empty URL part of feed file line: %s", line)
+        logging.warning("Empty URL part of feed file line: %s", line)
 
     return feed_url
 
@@ -84,7 +86,7 @@ def parse_feed_file(filename: Text) -> Tuple[List[Text], List[Text]]:
             continue
 
         if feed_type == FeedType.none:
-            LOGGER.error("Unable to parse line %s [%s]", linenum + 1, feed_line)
+            logging.error("Unable to parse line %s [%s]", linenum + 1, feed_line)
             continue
 
         if feed_type == FeedType.full:
