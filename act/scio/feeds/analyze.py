@@ -51,7 +51,7 @@ def parse_and_correct_link(link: Text) -> urllib.parse.ParseResult:
     return parsed
 
 
-def file_in_ignore_file(fname: Text, ignore_file: Text) -> bool:
+def in_ignore_file(fname: Text, ignore_file: Text) -> bool:
     """Check if a spesific filename is present in the ignore file (if any)"""
 
     if not ignore_file:
