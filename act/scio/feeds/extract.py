@@ -88,8 +88,8 @@ def partial_entry_text_to_file(
 
     req = requests.get(url, headers=download.default_headers(), verify=False, timeout=60)
 
-    logging.warning("Unable to download contnet: %s", url)
     if req.status_code >= 400:
+        logging.warning("Unable to download content: %s", url)
         return None, None
 
     filename = safe_filename(entry['title'])

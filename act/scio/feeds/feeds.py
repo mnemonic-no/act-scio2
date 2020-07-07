@@ -61,9 +61,6 @@ def main() -> None:
     nup = 0
     for filename in files:
 
-        if not filename.strip():
-            continue  # skip "blank" filenames
-
         with open(filename, "rb") as f:
             data = f.read()
             sha256 = hashlib.sha256(data).hexdigest()
