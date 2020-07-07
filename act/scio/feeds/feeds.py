@@ -20,7 +20,7 @@ Download feeds from the feeds.txt file, store feed content in .html and feed
 metadata in .meta files. Also attempts to download links to certain document
 types"""
 
-from typing import Dict, List, Text
+from typing import List, Text
 
 import datetime
 import hashlib
@@ -33,11 +33,42 @@ from act.scio.logging import setup_logging
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
+def sha256_of_file(filename: Text) -> Text:
+    """Compute sha256 hexdigest of file"""
+
+    with open(filename, "rb") as f:
+        data = f.read()
+        return hashlib.sha256(data).hexdigest()
+
+
+def upload_uncached_files(cache_file: Text, files: List[Text], scio_url: Text) -> int:
+    """Check each downloaded file hexdigest against a cache of previously uploaded
+    files. Only upload "new" files."""
+
+    mycache = cache.Cache(cache_file)
+
+    nup = 0
+
+    for filename in files:
+
+        sha256 = sha256_of_file(filename)
+
+        if not mycache.contains(sha256):
+            try:
+                upload.upload(scio_url, filename)
+                mycache.insert(filename, sha256, str(datetime.datetime.now()))
+                logging.info("Uploaded %s to scio", filename)
+                nup += 1
+            except upload.UploadError as err:
+                logging.error(err)
+
+    return nup
+
+
 def main() -> None:
     """Main program loop. entry point"""
 
     args = conf.get_args()
-    logformat = '%(asctime)-15s [%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s'  # NOQA
 
     setup_logging(args.loglevel, args.logfile, "scio-feed-download")
 
@@ -50,28 +81,13 @@ def main() -> None:
         logging.error(str(err))
         raise err
 
-    mycache = cache.Cache(args.cache)
-
     if not args.scio:
         logging.info("No Scio API Url provided. Exit after download[%s]", len(files))
         return
 
     logging.info("Checking upload status of %s files", len(files))
 
-    nup = 0
-    for filename in files:
-
-        with open(filename, "rb") as f:
-            data = f.read()
-            sha256 = hashlib.sha256(data).hexdigest()
-            if not mycache.contains(sha256):
-                try:
-                    upload.upload(args.scio, filename)
-                    mycache.insert(filename, sha256, str(datetime.datetime.now()))
-                    logging.info("Uploaded %s to scio", filename)
-                    nup += 1
-                except upload.UploadError as err:
-                    logging.error(err)
+    nup = upload_uncached_files(args.cache, files, args.scio)
 
     logging.info("Uploaded %s files", nup)
 

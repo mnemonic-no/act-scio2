@@ -1,6 +1,6 @@
 """Helper functions related to downloading feeds and files"""
 
-from typing import Text, Optional, Any, Dict, cast, List, Callable, Tuple
+from typing import Text, Optional, Any, Dict, cast, List, Tuple
 import argparse
 import concurrent.futures
 import logging
@@ -25,7 +25,7 @@ def download_and_store(
     if analyze.in_ignore_file(link, ignore_file):
         logging.info("Download link [%s] in ignore file.", link)
         return ""
-    
+
     logging.info("downloading %s", link)
 
     parsed_link = analyze.parse_and_correct_link(link)
@@ -37,7 +37,7 @@ def download_and_store(
                                            netloc=parsed_feed_url.netloc,
                                            path=parsed_link.path)
         logging.info("possible relative path %s, trying to append host: %s",
-                    parsed_link.path, parsed_feed_url.netloc)
+                     parsed_link.path, parsed_feed_url.netloc)
 
     req = requests.get(parsed_link.geturl(),
                        headers=default_headers(),
@@ -85,8 +85,8 @@ def default_headers() -> Dict:
 
     headers = requests.utils.default_headers()  # type: ignore
     headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
-                    'AppleWebKit/537.36 (KHTML, like Gecko) '
-                    'Chrome/74.0.3729.169 Safari/537.36'})  # Chrome v74 2020-06-25
+                                  'AppleWebKit/537.36 (KHTML, like Gecko) '
+                                  'Chrome/74.0.3729.169 Safari/537.36'})  # Chrome v74 2020-06-25
 
     return cast(Dict, headers)
 
@@ -107,12 +107,12 @@ def handle_feed(args: argparse.Namespace,
     files = []
 
     logging.info("%s contains %s entries",
-                feed_url,
-                len(feed["entries"]))
+                 feed_url,
+                 len(feed["entries"]))
 
     for entry_n, entry in enumerate(feed["entries"]):
         logging.info("Handling : %s of %s : %s",
-                    entry_n, len(feed["entries"]), entry['title'])
+                     entry_n, len(feed["entries"]), entry['title'])
 
         if partial:
             filename, html_data = extract.entry_text_to_file(args, entry)
@@ -158,7 +158,7 @@ def download_feed_list(
                 logging.error('Exception occurred', exc_info=exc_info)
             else:
                 logging.info("%s returned %s",
-                            feed,
-                            result)
+                             feed,
+                             result)
 
     return files

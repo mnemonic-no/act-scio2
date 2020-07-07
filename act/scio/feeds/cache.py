@@ -77,7 +77,7 @@ class Cache:
 
         sql = "INSERT INTO upload(filename, sha256, description) VALUES(?,?,?)"
         logging.debug("Inserting %s, %s, %s into database",
-                     filename, sha256, description)
+                      filename, sha256, description)
         self.conn.execute(sql, (filename, sha256, description))
         self.conn.commit()
 
