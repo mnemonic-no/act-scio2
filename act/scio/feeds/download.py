@@ -21,11 +21,12 @@ def download_and_store(
         link: Text) -> Text:
     """Download and store a link. Storage defined in args"""
 
-    # Check that storage folder exists, create if not
-    if not os.path.isdir(storage_path):
-        os.mkdir(storage_path)
-
-    logging.info("found download link: %s", link)
+    # check if the actual url is in the ignore file. If so, no download will take place.
+    if analyze.in_ignore_file(link, ignore_file):
+        logging.info("Download link [%s] in ignore file.", link)
+        return ""
+    
+    logging.info("downloading %s", link)
 
     parsed_link = analyze.parse_and_correct_link(link)
 
@@ -52,7 +53,10 @@ def download_and_store(
                          "download",
                          extract.safe_filename(os.path.basename(parsed_link.path)))
 
-    if analyze.file_in_ignore_file(fname, ignore_file):
+    # check if the filename on disk is in the ignore file. If so, do not return filename
+    # for upload. This differ from URL in the ignore file as the file is in fact downloaded by
+    # the feed worker, but not uploaded to Scio.
+    if analyze.in_ignore_file(fname, ignore_file):
         logging.info("Ignoring %s based on %s", fname, ignore_file)
         return ""
 
