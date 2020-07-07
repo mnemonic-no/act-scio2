@@ -11,6 +11,7 @@ from act.scio.config import get_cache_dir
 
 FeedType = Enum('FeedType', ['none', 'partial', 'full'])
 
+
 def get_args() -> argparse.Namespace:
     """initialize argument parser"""
 
