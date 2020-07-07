@@ -23,7 +23,7 @@ def get_args() -> argparse.Namespace:
         help="Location for stored files. Default = ~/.cache/scio-feeds (honors $XDG_CACHE_HOME")
     parser.add_argument("-v", "--verbose", action="store_true", help="Log level DEBUG")
     parser.add_argument("--debug", action="store_true", help="Log level DEBUG")
-    parser.add_argument("--ignore", default="/opt/scio_feeds/ignore.txt", type=str,
+    parser.add_argument("--ignore", type=str,
                         help="file with ignore patterns (default: /opt/scio_feeds/ignore.txt)")
     parser.add_argument("--feeds", default="/opt/scio_feeds/feeds.txt", type=str,
                         help="feed urls (one pr. line) (default: /opt/scio_feeds/feeds.txt)")
