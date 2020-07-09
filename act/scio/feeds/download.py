@@ -9,7 +9,7 @@ import requests
 import shutil
 import urllib.parse
 
-import feedparser
+import feedparser  # type: ignore
 
 from act.scio.feeds import analyze, extract
 

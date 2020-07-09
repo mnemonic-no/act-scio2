@@ -30,7 +30,7 @@ submit utility.
 Helper functions used for making desitions and modifications
 """
 
-from typing import List, Text
+from typing import List, Text, Optional
 import logging
 import os
 import urllib
@@ -50,7 +50,7 @@ def parse_and_correct_link(link: Text) -> urllib.parse.ParseResult:
     return parsed
 
 
-def in_ignore_file(fname: Text, ignore_file: Text) -> bool:
+def in_ignore_file(fname: Text, ignore_file: Optional[Text]) -> bool:
     """Check if a spesific filename is present in the ignore file (if any)"""
 
     if not ignore_file:
