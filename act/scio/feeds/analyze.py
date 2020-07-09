@@ -31,7 +31,6 @@ Helper functions used for making desitions and modifications
 """
 
 from typing import List, Text
-import argparse
 import logging
 import os
 import urllib
@@ -90,4 +89,4 @@ def filter_links(file_formats: List[Text],
         ext = extract_file_extension(url)
         return ext in file_format_set
 
-    return [link for link in filter(__contains_fileextension, links)]
+    return list(filter(__contains_fileextension, links))
