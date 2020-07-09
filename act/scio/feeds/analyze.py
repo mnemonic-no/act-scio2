@@ -69,13 +69,25 @@ def in_ignore_file(fname: Text, ignore_file: Text) -> bool:
     return False
 
 
-def filter_links(args: argparse.Namespace, links: List[Text]) -> List[Text]:
+def extract_file_extension(url: urllib.parse.ParseResult) -> Text:
+    """Extract the extension (if any) from the path.
+    If there are no extension, return the empty string."""
+
+    file_extension = url.path.rsplit(".", 1)
+    if len(file_extension) == 2:
+        return file_extension[1]
+    return ""
+
+
+def filter_links(file_formats: List[Text],
+                 links: List[urllib.parse.ParseResult]) -> List[urllib.parse.ParseResult]:
     """Run though a list of urls, checking if they contains certain
     elements that looks like possible file download possibilities"""
 
-    filtered = []
-    for link in links:
-        for file_format in args.file_format:
-            if "." + file_format in link.lower():
-                filtered.append(link)
-    return filtered
+    file_format_set = set(file_formats)
+
+    def __contains_fileextension(url: urllib.parse.ParseResult) -> bool:
+        ext = extract_file_extension(url)
+        return ext in file_format_set
+
+    return [link for link in filter(__contains_fileextension, links)]

@@ -18,28 +18,26 @@ def download_and_store(
         feed_url: Text,
         ignore_file: Optional[Text],
         storage_path: Text,
-        link: Text) -> Text:
+        link: urllib.parse.ParseResult) -> Text:
     """Download and store a link. Storage defined in args"""
 
     # check if the actual url is in the ignore file. If so, no download will take place.
-    if analyze.in_ignore_file(link, ignore_file):
-        logging.info("Download link [%s] in ignore file.", link)
+    if analyze.in_ignore_file(link.geturl(), ignore_file):
+        logging.info("Download link [%s] in ignore file.", link.geturl())
         return ""
 
-    logging.info("downloading %s", link)
-
-    parsed_link = analyze.parse_and_correct_link(link)
+    logging.info("downloading %s", link.geturl())
 
     # if netloc does not contain a hostname, assume a relative path to the feed url
-    if parsed_link.netloc == '':
+    if link.netloc == '':
         parsed_feed_url = urllib.parse.urlparse(feed_url)
-        parsed_link = parsed_link._replace(scheme=parsed_feed_url.scheme,
-                                           netloc=parsed_feed_url.netloc,
-                                           path=parsed_link.path)
+        link = link._replace(scheme=parsed_feed_url.scheme,
+                             netloc=parsed_feed_url.netloc,
+                             path=link.path)
         logging.info("possible relative path %s, trying to append host: %s",
-                     parsed_link.path, parsed_feed_url.netloc)
+                     link.path, parsed_feed_url.netloc)
 
-    req = requests.get(parsed_link.geturl(),
+    req = requests.get(link.geturl(),
                        headers=default_headers(),
                        verify=False,
                        stream=True,
@@ -51,7 +49,7 @@ def download_and_store(
 
     fname = os.path.join(storage_path,
                          "download",
-                         extract.safe_filename(os.path.basename(parsed_link.path)))
+                         extract.safe_filename(os.path.basename(link.path)))
 
     # check if the filename on disk is in the ignore file. If so, do not return filename
     # for upload. This differ from URL in the ignore file as the file is in fact downloaded by
@@ -125,7 +123,7 @@ def handle_feed(args: argparse.Namespace,
             continue
 
         links = extract.get_links(entry, html_data)
-        for link in analyze.filter_links(args, links):
+        for link in analyze.filter_links(args.file_format, links):
             filename = download_and_store(feed_url, args.ignore, args.store_path, link)
             if filename:
                 files.append(filename)

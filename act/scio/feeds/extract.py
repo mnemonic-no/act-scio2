@@ -4,13 +4,14 @@ from typing import Dict, Text, Tuple, Optional, List
 import logging
 import argparse
 import os.path
+import urllib.parse
 
 from bs4 import BeautifulSoup
 import html
 import justext
 import requests
 
-from act.scio.feeds import download
+from act.scio.feeds import download, analyze
 
 
 def get_content_from_entry(entry: Dict) -> Text:
@@ -136,7 +137,7 @@ def entry_text_to_file(
     return full_filename, html_data
 
 
-def get_links(entry: Dict, html_data: Text) -> List[Text]:
+def get_links(entry: Dict, html_data: Text) -> List[urllib.parse.ParseResult]:
     """Extract any links from the html"""
 
     links = []
@@ -146,4 +147,4 @@ def get_links(entry: Dict, html_data: Text) -> List[Text]:
     else:
         logging.warning("soup is none : %s", entry['title'])
 
-    return links
+    return [analyze.parse_and_correct_link(link) for link in links]

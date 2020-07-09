@@ -55,7 +55,8 @@ def upload_uncached_files(cache_file: Text, files: List[Text], scio_url: Text) -
 
         if not mycache.contains(sha256):
             try:
-                upload.upload(scio_url, filename)
+                if scio_url != "dummy.url":
+                    upload.upload(scio_url, filename)
                 mycache.insert(filename, sha256, str(datetime.datetime.now()))
                 logging.info("Uploaded %s to scio", filename)
                 nup += 1
