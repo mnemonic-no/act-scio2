@@ -113,10 +113,10 @@ def handle_feed(args: argparse.Namespace,
                      entry_n, len(feed["entries"]), entry['title'])
 
         if partial:
-            filename, html_data = extract.entry_text_to_file(args, entry)
+            filename, html_data = extract.partial_entry_text_to_file(args, entry)
             files.append(filename)
         else:
-            filename, html_data = extract.partial_entry_text_to_file(args, entry)
+            filename, html_data = extract.entry_text_to_file(args, entry)
             files.append(filename)
 
         if not (filename and html_data):
@@ -148,15 +148,25 @@ def download_feed_list(
                          for url in feed_list}
         for future in concurrent.futures.as_completed(future_to_url):
             url = future_to_url[future]
-            try:
-                result, feed, files = future.result()
-            except Exception as exc:  # pylint: disable=W0703
-                logging.error('%r generated an exception: %s', url, exc)
-                exc_info = (type(exc), exc, exc.__traceback__)
-                logging.error('Exception occurred', exc_info=exc_info)
-            else:
-                logging.info("%s returned %s",
-                             feed,
-                             result)
+            result, feed, files = future_result_exception(url, future)
+            logging.info("Feed[%s] returned %s with %s files", feed, result, len(files))
+            files += files
 
     return files
+
+
+def future_result_exception(url: Text,
+                            future: concurrent.futures.Future) -> Tuple[Text, Text, List[Text]]:
+    """Retrieve the result of a future, logging any exception"""
+
+    try:
+        result, feed, files = future.result()
+        logging.info("%s returned %s",
+                     feed,
+                     result)
+        return result, feed, files
+    except Exception as exc:  # pylint: disable=W0703
+        logging.error('%r generated an exception: %s', url, exc)
+        exc_info = (type(exc), exc, exc.__traceback__)
+        logging.error('Exception occurred', exc_info=exc_info)
+        return "EXCEPTION", feed, []
