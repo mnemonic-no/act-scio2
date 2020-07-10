@@ -112,12 +112,9 @@ def handle_feed(args: argparse.Namespace,
         logging.info("Handling : %s of %s : %s",
                      entry_n, len(feed["entries"]), entry['title'])
 
-        if partial:
-            filename, html_data = extract.partial_entry_text_to_file(args, entry)
-            files.append(filename)
-        else:
-            filename, html_data = extract.entry_text_to_file(args, entry)
-            files.append(filename)
+        filename, html_data = (extract.partial_entry_text_to_file(args, entry) if partial else
+                               extract.entry_text_to_file(args, entry))
+        files.append(filename)
 
         if not (filename and html_data):
             continue
