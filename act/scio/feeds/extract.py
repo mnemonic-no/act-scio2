@@ -75,6 +75,14 @@ def safe_filename(path: Text) -> Text:
     return "".join(_safe_char(c) for c in path)
 
 
+def read_stoplist(fname: Text) -> frozenset:
+    """Take a list of words (one pr. line) and create a frozenset
+    for use as stopwords when extracting text with jusText"""
+
+    with open(fname, "r") as stream:
+        return frozenset(line.strip().lower() for line in stream)
+
+
 def partial_entry_text_to_file(
         args: argparse.Namespace,
         entry: Dict) -> Tuple[Optional[Text], Optional[Text]]:
@@ -95,13 +103,16 @@ def partial_entry_text_to_file(
 
     filename = safe_filename(entry['title'])
 
-    html_data = "<html_data>\n<head>\n"
+    html_data = "<html>\n<head>\n"
     html_data += "<title>{0}</title>\n</head>\n".format(entry['title'])
     html_data += "<body>\n"
 
     raw_html = req.text
 
-    paragraphs = justext.justext(raw_html, justext.get_stoplist('English'))
+    stoplist = read_stoplist(args.stoplist) if args.stoplist else justext.get_stoplist('English')
+
+    paragraphs = justext.justext(raw_html, stoplist)
+
     for para in paragraphs:
         if not para.is_boilerplate:
             if para.is_heading:
@@ -109,7 +120,7 @@ def partial_entry_text_to_file(
             else:
                 html_data += "<p>\n{0}\n</p>\n".format(html.escape(para.text))
 
-    html_data += "\n</body>\n</html_data>"
+    html_data += "\n</body>\n</html>"
 
     full_filename = os.path.join(args.store_path, "download", filename + ".html")
     with open(full_filename, "w") as html_file:

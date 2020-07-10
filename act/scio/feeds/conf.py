@@ -25,6 +25,7 @@ def get_args() -> argparse.Namespace:
                         help="feed urls (one pr. line) (default: feeds.txt)")
     parser.add_argument("--cache", default="cache.db", help="sqlite db containing cached hashes")
     parser.add_argument("--scio", default=None, help="Upload to scio engine API url")
+    parser.add_argument("--stoplist", default=None, help="Provided own stoplist for text extraction")
     parser.add_argument('--logfile')
     parser.add_argument('--loglevel', default="info")
 
