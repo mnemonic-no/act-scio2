@@ -5,9 +5,7 @@ from typing import Text, Optional, Tuple, List
 import argparse
 import caep
 import logging
-import os
 
-from act.scio.config import get_cache_dir
 
 FeedType = Enum('FeedType', ['none', 'partial', 'full'])
 
@@ -31,13 +29,6 @@ def get_args() -> argparse.Namespace:
     parser.add_argument('--loglevel', default="info")
 
     args: argparse.Namespace = caep.config.handle_args(parser, "scio/etc", "scio", "feed")
-
-    if not args.store_path:
-        args.store_path = get_cache_dir("scio-feeds", create=True)
-
-    p = os.path.join(args.store_path, "download")
-    if not os.path.isdir(p):
-        os.makedirs(p)
 
     return args
 

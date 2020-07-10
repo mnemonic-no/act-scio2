@@ -25,8 +25,10 @@ from typing import List, Text
 import datetime
 import hashlib
 import logging
+import os
 import urllib3
 
+from act.scio.config import get_cache_dir
 from act.scio.feeds import conf, download, cache, upload
 from act.scio.logging import setup_logging
 
@@ -70,6 +72,13 @@ def main() -> None:
     """Main program loop. entry point"""
 
     args = conf.get_args()
+
+    if not args.store_path:
+        args.store_path = get_cache_dir("scio-feeds", create=True)
+
+    p = os.path.join(args.store_path, "download")
+    if not os.path.isdir(p):
+        os.makedirs(p)
 
     setup_logging(args.loglevel, args.logfile, "scio-feed-download")
 
