@@ -30,7 +30,7 @@ import urllib3
 
 from act.scio.config import get_cache_dir
 from act.scio.feeds import conf, download, cache, upload
-from act.scio.logging import setup_logging
+from act.scio.logsetup import setup_logging
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
