@@ -90,7 +90,7 @@ def download(document_id: constr(regex=r"^[0-9A-Fa-f]{64}$")) -> Response:
 
 
 @app.get("/download_json/{document_id}")
-def download_json(document_id: constr(regex=r"^[0-9A-Fa-f]{64}$")) -> Response:
+def download_json(document_id: constr[regex=r"^[0-9A-Fa-f]{64}$"]) -> Response:
     """ Download document base64 decoded in json struct """
     res = document_lookup(document_id)
 

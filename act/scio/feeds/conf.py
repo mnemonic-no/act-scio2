@@ -30,7 +30,7 @@ def get_args() -> argparse.Namespace:
     parser.add_argument('--logfile')
     parser.add_argument('--loglevel', default="info")
 
-    args: argparse.Namespace = caep.config.handle_args(parser, "scio/etc", "scio", "feed")
+    args: argparse.Namespace = caep.config.handle_args(parser, "scio/etc", "scio", "feeds")
 
     return args
 
