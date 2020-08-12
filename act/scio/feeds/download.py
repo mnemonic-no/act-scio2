@@ -146,7 +146,7 @@ def download_feed_list(
         for future in concurrent.futures.as_completed(future_to_url):
             url = future_to_url[future]
             result, feed, files = future_result_exception(url, future)
-            logging.info("Feed[%s] returned %s with %s files", feed, result, len(files))
+            logging.info("Feed[%s] (%s) returned %s with %s files", feed, url, result, len(files))
             files += files
 
     return files
@@ -166,4 +166,4 @@ def future_result_exception(url: Text,
         logging.error('%r generated an exception: %s', url, exc)
         exc_info = (type(exc), exc, exc.__traceback__)
         logging.error('Exception occurred', exc_info=exc_info)
-        return "EXCEPTION", feed, []
+        return "EXCEPTION", "NA", []
