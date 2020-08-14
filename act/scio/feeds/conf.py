@@ -10,6 +10,8 @@ import logging
 
 FeedType = Enum('FeedType', ['none', 'partial', 'full'])
 
+XDG_CONFIG = os.path.expanduser(os.environ.get("XDG_CONFIG_HOME", "~/.config"))
+XDG_CACHE = os.path.expanduser(os.environ.get("XDG_CACHE_HOME", "~/.cache"))
 
 def get_args() -> argparse.Namespace:
     """initialize argument parser"""
@@ -20,12 +22,12 @@ def get_args() -> argparse.Namespace:
     parser.add_argument("--file-format", nargs="+", default="pdf doc xls csv xml")
     parser.add_argument(
         "--store-path",
-        help="Location for stored files. Default = ~/.cache/scio-feeds (honors $XDG_CACHE_HOME")
+        help=f"Location for stored files. Default {XDG_CACHE}/scio-feeds")
     parser.add_argument("--ignore", type=str, help="file with ignore patterns")
     parser.add_argument("--feeds", default=caep.get_config_dir("scio/etc/feeds.txt"),
-                        type=str, help="feed urls (one pr. line). Default: ~/config/etc/feeds.txt" +
-                        "(honors $XDG_CONFIG)")
-    parser.add_argument("--cache", default=caep.get_cache_dir("scio-feeds/cache.db"), help="sqlite db containing cached hashes")
+                        type=str, help=f"feed urls (one pr. line). Default: {XDG_CONFIG}/scio/etc/feeds.txt")
+    parser.add_argument("--cache", default=caep.get_cache_dir("scio-feeds/cache.db"),
+                        help=f"sqlite db containing cached hashes. Default = {XDG_CACHE}/scio-feeds/cache.db")
     parser.add_argument("--scio", help="Upload to scio engine API url. " +
                         "Set to empty value to not upload files.",
                         default="http://localhost:3000/submit")
