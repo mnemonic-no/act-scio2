@@ -5,11 +5,14 @@ import base64
 import os
 from typing import Dict, Text
 
+import greenstalk  # type: ignore
 import uvicorn
 from fastapi import FastAPI, Response
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, StrictStr
 from pydantic.types import constr
+
+import act.scio.config
 
 STORAGEDIR = "/tmp"
 
@@ -31,17 +34,17 @@ class LookupResponse(BaseModel):
 
 
 def parse_args() -> argparse.Namespace:
-    """ Parse arguments """
-    parser = argparse.ArgumentParser(description="SCIO API")
+    """Helper setting up the argsparse configuration"""
 
-    parser.add_argument('--port', type=int, default=3000,
-                        help="API port to listen on (default=3000)")
-    parser.add_argument('--reload', action="store_true",
-                        help="Reload web server on file change (dev mode)")
-    parser.add_argument('--host', dest='host', default='127.0.0.1',
-                        help="Host interface (default=127.0.0.1)")
+    arg_parser = act.scio.config.parse_args("Scio API")
+    arg_parser.add_argument('--port', type=int, default=3000,
+                            help="API port to listen on (default=3000)")
+    arg_parser.add_argument('--reload', action="store_true",
+                            help="Reload web server on file change (dev mode)")
+    arg_parser.add_argument('--host', dest='host', default='127.0.0.1',
+                            help="Host interface (default=127.0.0.1)")
 
-    return parser.parse_args()
+    return caep.config.handle_args(arg_parser, "scio/etc", "scio.ini", "api")
 
 
 def document_lookup(document_id: Text) -> LookupResponse:
@@ -113,6 +116,13 @@ def download_json(document_id: constr(regex=r"^[0-9A-Fa-f]{64}$")) -> Response:
 def main():
     """ Main API loop """
     args = parse_args()
+
+    beanstalk_client = None
+    if args.beanstalk:
+        logging.info("Connection to beanstalk")
+        beanstalk_client = greenstalk.Client(args.beanstalk, args.beanstalk_port, encoding=None)
+        beanstalk_client.watch('scio_analyze')
+
     uvicorn.run(
         "act.scio.api:app",
         host=args.host,
