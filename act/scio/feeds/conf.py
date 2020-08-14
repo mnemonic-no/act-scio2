@@ -1,5 +1,6 @@
 """Helper function related to feed configuration"""
 
+import os
 from enum import Enum
 from typing import Text, Optional, Tuple, List
 import argparse
@@ -21,8 +22,8 @@ def get_args() -> argparse.Namespace:
         "--store-path",
         help="Location for stored files. Default = ~/.cache/scio-feeds (honors $XDG_CACHE_HOME")
     parser.add_argument("--ignore", type=str, help="file with ignore patterns")
-    parser.add_argument("--feeds", default="feeds.txt", type=str,
-                        help="feed urls (one pr. line) (default: feeds.txt)")
+    parser.add_argument("--feeds", default=caep.get_config_dir("scio/etc/feeds.txt"),
+                        type=str, help="feed urls (one pr. line). Default: ~/config/etc/feeds.txt (honors $XDG_CONFIG)")
     parser.add_argument("--cache", default="cache.db", help="sqlite db containing cached hashes")
     parser.add_argument("--scio", default=None, help="Upload to scio engine API url")
     parser.add_argument("--stoplist", default=None,
@@ -30,7 +31,7 @@ def get_args() -> argparse.Namespace:
     parser.add_argument('--logfile')
     parser.add_argument('--loglevel', default="info")
 
-    args: argparse.Namespace = caep.config.handle_args(parser, "scio/etc", "scio", "feeds")
+    args: argparse.Namespace = caep.config.handle_args(parser, "scio/etc", "scio.ini", "feeds")
 
     return args
 
@@ -70,7 +71,7 @@ def parse_feed_file(filename: Text) -> Tuple[List[Text], List[Text]]:
     full_feeds = []
     partial_feeds = []
 
-    for linenum, feed_line in enumerate(open(filename)):
+    for linenum, feed_line in enumerate(open(os.path.expanduser(filename))):
         feed_type = get_feed_kind(feed_line)
         feed_url = get_feed_url_from_feed_file_line(feed_line)
         if not feed_url:
