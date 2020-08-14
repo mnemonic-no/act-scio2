@@ -132,3 +132,6 @@ dmypy.json
 *.swp
 *.swo
 tags
+
+# Application specific
+cache.db
