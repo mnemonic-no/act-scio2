@@ -25,11 +25,11 @@ def get_args() -> argparse.Namespace:
     parser.add_argument("--feeds", default=caep.get_config_dir("scio/etc/feeds.txt"),
                         type=str, help="feed urls (one pr. line). Default: ~/config/etc/feeds.txt" +
                         "(honors $XDG_CONFIG)")
-    parser.add_argument("--cache", default="cache.db", help="sqlite db containing cached hashes")
+    parser.add_argument("--cache", default=caep.get_cache_dir("scio-feeds/cache.db"), help="sqlite db containing cached hashes")
     parser.add_argument("--scio", help="Upload to scio engine API url. " +
                         "Set to empty value to not upload files.",
                         default="http://localhost:3000/submit")
-    parser.add_argument("--stoplist", default=None,
+    parser.add_argument("--stoplist", default=caep.get_config_dir("scio/etc/secstoplist.txt"),
                         help="Provided own stoplist for text extraction")
     parser.add_argument('--logfile')
     parser.add_argument('--loglevel', default="info")
