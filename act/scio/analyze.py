@@ -28,7 +28,7 @@ def parse_args() -> argparse.Namespace:
     arg_parser.add_argument('--plugins', dest='plugins', type=str)
     arg_parser.add_argument('--webdump', dest='webdump', type=str, help="URI to post result data")
 
-    return caep.config.handle_args(arg_parser, "scio/etc", "scio", "analyze")
+    return caep.config.handle_args(arg_parser, "scio/etc", "scio.ini", "analyze")
 
 
 def get_input(beanstalk_client: Optional[greenstalk.Client] = None) -> addict.Dict:
