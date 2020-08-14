@@ -12,7 +12,7 @@ import time
 import tika
 import gzip
 import caep
-import act.scio.logging
+import act.scio.logsetup
 import act.scio.config
 
 def parse_args() -> argparse.Namespace:
@@ -146,7 +146,7 @@ def main() -> None:
 
     args = parse_args()
 
-    act.scio.logging.setup_logging(args.loglevel, args.logfile, "scio-tika-server")
+    act.scio.logsetup.setup_logging(args.loglevel, args.logfile, "scio-tika-server")
 
     server = Server(args.beanstalk, args.beanstalk_port)
 

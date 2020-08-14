@@ -11,7 +11,7 @@ with open(path.join(this_directory, 'README.md'), "rb") as f:
 
 setup(
     name="act-scio",
-    version="0.0.2",
+    version="0.0.3",
     author="mnemonic AS",
     zip_safe=True,
     author_email="opensource@mnemonic.no",
@@ -25,8 +25,7 @@ setup(
             'scio-analyze = act.scio.analyze:main',
             'scio-api = act.scio.api:main',
             'scio-config = act.scio.scio_config:main',
-            'scio-feed-download = act.scio.feeds.download:main',
-            'scio-feed-submitcache = act.scio.feeds.submitcache:main',
+            'scio-feeds = act.scio.feeds.feeds:main',
             'scio-tika-server = act.scio.tika_engine:main',
             'scio-nltk-download= act.scio.nltk_download:main',
             'scio-upload = act.scio.upload:main',

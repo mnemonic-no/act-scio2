@@ -18,7 +18,7 @@ import sys
 
 import caep
 
-import act.scio.logging
+import act.scio.logsetup
 import act.scio.config
 
 def parse_args() -> argparse.Namespace:
@@ -100,7 +100,7 @@ async def async_main() -> None:
 
     args = parse_args()
 
-    act.scio.logging.setup_logging(args.loglevel, args.logfile, "scio-analyze")
+    act.scio.logsetup.setup_logging(args.loglevel, args.logfile, "scio-analyze")
 
     plugins = plugin.load_default_plugins()
 
