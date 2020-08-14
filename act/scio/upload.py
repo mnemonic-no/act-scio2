@@ -235,7 +235,7 @@ def read_as_base64(obj: IO) -> Text:
 
 def to_scio_submit_post_data(obj: IO, file_name: Text) -> Dict[Text, Text]:
     """Take a file like object, and return a dictionary on the correct form for
-    submitting to the SCIO API (scio-api)"""
+    submitting to the SCIO API"""
 
     return {'content': read_as_base64(obj), 'filename': file_name}
 
