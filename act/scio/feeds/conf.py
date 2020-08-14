@@ -1,5 +1,6 @@
 """Helper function related to feed configuration"""
 
+import os
 from enum import Enum
 from typing import Text, Optional, Tuple, List
 import argparse
@@ -9,6 +10,8 @@ import logging
 
 FeedType = Enum('FeedType', ['none', 'partial', 'full'])
 
+XDG_CONFIG = os.path.expanduser(os.environ.get("XDG_CONFIG_HOME", "~/.config"))
+XDG_CACHE = os.path.expanduser(os.environ.get("XDG_CACHE_HOME", "~/.cache"))
 
 def get_args() -> argparse.Namespace:
     """initialize argument parser"""
@@ -19,18 +22,21 @@ def get_args() -> argparse.Namespace:
     parser.add_argument("--file-format", nargs="+", default="pdf doc xls csv xml")
     parser.add_argument(
         "--store-path",
-        help="Location for stored files. Default = ~/.cache/scio-feeds (honors $XDG_CACHE_HOME")
+        help=f"Location for stored files. Default {XDG_CACHE}/scio-feeds")
     parser.add_argument("--ignore", type=str, help="file with ignore patterns")
-    parser.add_argument("--feeds", default="feeds.txt", type=str,
-                        help="feed urls (one pr. line) (default: feeds.txt)")
-    parser.add_argument("--cache", default="cache.db", help="sqlite db containing cached hashes")
-    parser.add_argument("--scio", default=None, help="Upload to scio engine API url")
-    parser.add_argument("--stoplist", default=None,
+    parser.add_argument("--feeds", default=caep.get_config_dir("scio/etc/feeds.txt"),
+                        type=str, help=f"feed urls (one pr. line). Default: {XDG_CONFIG}/scio/etc/feeds.txt")
+    parser.add_argument("--cache", default=caep.get_cache_dir("scio-feeds/cache.db"),
+                        help=f"sqlite db containing cached hashes. Default = {XDG_CACHE}/scio-feeds/cache.db")
+    parser.add_argument("--scio", help="Upload to scio engine API url. " +
+                        "Set to empty value to not upload files.",
+                        default="http://localhost:3000/submit")
+    parser.add_argument("--stoplist", default=caep.get_config_dir("scio/etc/secstoplist.txt"),
                         help="Provided own stoplist for text extraction")
     parser.add_argument('--logfile')
     parser.add_argument('--loglevel', default="info")
 
-    args: argparse.Namespace = caep.config.handle_args(parser, "scio/etc", "scio", "feeds")
+    args: argparse.Namespace = caep.config.handle_args(parser, "scio/etc", "scio.ini", "feeds")
 
     return args
 
@@ -70,7 +76,7 @@ def parse_feed_file(filename: Text) -> Tuple[List[Text], List[Text]]:
     full_feeds = []
     partial_feeds = []
 
-    for linenum, feed_line in enumerate(open(filename)):
+    for linenum, feed_line in enumerate(open(os.path.expanduser(filename))):
         feed_type = get_feed_kind(feed_line)
         feed_url = get_feed_url_from_feed_file_line(feed_line)
         if not feed_url:
