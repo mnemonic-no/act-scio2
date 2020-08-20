@@ -2,15 +2,19 @@
 
 import argparse
 import base64
+import logging
 import os
+from functools import lru_cache
 from typing import Dict, Text
 
+import caep
 import greenstalk  # type: ignore
 import uvicorn
-from fastapi import FastAPI, Response
+from fastapi import Depends, FastAPI, Response
 from fastapi.responses import FileResponse
-from pydantic import BaseModel, StrictStr
+from pydantic import BaseModel, StrictInt, StrictStr
 from pydantic.types import constr
+from typing import Optional
 
 import act.scio.config
 
@@ -32,7 +36,14 @@ class LookupResponse(BaseModel):
     filename: StrictStr
     content_type: StrictStr
 
+class SubmitResponse(BaseModel):
+    """ Response model for document submit """
+    filename: StrictStr
+    count: StrictInt
+    error: Optional[StrictStr]
 
+
+@lru_cache()
 def parse_args() -> argparse.Namespace:
     """Helper setting up the argsparse configuration"""
 
@@ -44,7 +55,15 @@ def parse_args() -> argparse.Namespace:
     arg_parser.add_argument('--host', dest='host', default='127.0.0.1',
                             help="Host interface (default=127.0.0.1)")
 
-    return caep.config.handle_args(arg_parser, "scio/etc", "scio.ini", "api")
+    args = caep.config.handle_args(arg_parser, "scio/etc", "scio.ini", "api")
+
+    args.beanstalk_client = None
+    if args.beanstalk:
+        logging.info("Connection to beanstalk")
+        args.beanstalk_client = greenstalk.Client(args.beanstalk, args.beanstalk_port, encoding=None)
+        args.beanstalk_client.watch('scio_analyze')
+
+    return args
 
 
 def document_lookup(document_id: Text) -> LookupResponse:
@@ -63,19 +82,21 @@ def document_lookup(document_id: Text) -> LookupResponse:
 
 
 @app.post("/submit")
-async def submit(doc: Document):
+async def submit(doc: Document, args: argparse.Namespace = Depends(parse_args)):
     """ Submit document """
     filename = os.path.join(STORAGEDIR, os.path.basename(doc.filename))
     content: bytes = base64.b64decode(doc.content)
     with open(filename, "bw") as f:
         f.write(content)
 
-    # TODO -> to beanstalk
+    response = SubmitResponse(
+            filename=filename,
+            count=len(doc.content),
+            error=None)
 
-    return {
-        "filename": filename,
-        "bytes": len(doc.content)
-    }
+    args.beanstalk_client.put(response.json().encode("utf8"))
+    return response
+
 
 
 @app.get("/download/{document_id}")
@@ -116,12 +137,6 @@ def download_json(document_id: constr(regex=r"^[0-9A-Fa-f]{64}$")) -> Response:
 def main():
     """ Main API loop """
     args = parse_args()
-
-    beanstalk_client = None
-    if args.beanstalk:
-        logging.info("Connection to beanstalk")
-        beanstalk_client = greenstalk.Client(args.beanstalk, args.beanstalk_port, encoding=None)
-        beanstalk_client.watch('scio_analyze')
 
     uvicorn.run(
         "act.scio.api:app",
