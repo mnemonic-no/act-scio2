@@ -43,9 +43,13 @@ def get_input(beanstalk_client: Optional[greenstalk.Client] = None) -> addict.Di
         # ADD BEANSTALK JOB CONSUMPTION
         logging.info("Waiting for work from beanstalk")
         job = beanstalk_client.reserve()
-        nlpdata = addict.Dict(json.loads(gzip.decompress(job.body)))
-        logging.info(nlpdata.keys())
-        beanstalk_client.delete(job)
+        try:
+            nlpdata = addict.Dict(json.loads(gzip.decompress(job.body)))
+            logging.info(nlpdata.keys())
+        except OSError as e:
+            logging.error(e)
+        finally:
+            beanstalk_client.delete(job)
 
     return nlpdata
 
