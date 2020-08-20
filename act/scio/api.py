@@ -2,10 +2,11 @@
 
 import argparse
 import base64
+import gzip
 import logging
 import os
 from functools import lru_cache
-from typing import Dict, Text
+from typing import Dict, Optional, Text
 
 import caep
 import greenstalk  # type: ignore
@@ -14,7 +15,6 @@ from fastapi import Depends, FastAPI, Response
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, StrictInt, StrictStr
 from pydantic.types import constr
-from typing import Optional
 
 import act.scio.config
 
@@ -35,6 +35,7 @@ class LookupResponse(BaseModel):
     """ Response model for document search """
     filename: StrictStr
     content_type: StrictStr
+
 
 class SubmitResponse(BaseModel):
     """ Response model for document submit """
@@ -60,8 +61,9 @@ def parse_args() -> argparse.Namespace:
     args.beanstalk_client = None
     if args.beanstalk:
         logging.info("Connection to beanstalk")
-        args.beanstalk_client = greenstalk.Client(args.beanstalk, args.beanstalk_port, encoding=None)
-        args.beanstalk_client.watch('scio_analyze')
+        args.beanstalk_client = greenstalk.Client(
+            args.beanstalk, args.beanstalk_port, encoding=None)
+        args.beanstalk_client.use('scio_doc')
 
     return args
 
@@ -90,13 +92,13 @@ async def submit(doc: Document, args: argparse.Namespace = Depends(parse_args)):
         f.write(content)
 
     response = SubmitResponse(
-            filename=filename,
-            count=len(doc.content),
-            error=None)
+        filename=filename,
+        #content=content,
+        count=len(doc.content),
+        error=None)
 
     args.beanstalk_client.put(response.json().encode("utf8"))
     return response
-
 
 
 @app.get("/download/{document_id}")
