@@ -43,7 +43,8 @@ class SubmitResponse(BaseModel):
     count: StrictInt
     error: Optional[StrictStr]
 
-
+# parse_args() is executed the first time and later the cached result
+# is used. In this way, we use to configure settings in API endpoints
 @lru_cache()
 def parse_args() -> argparse.Namespace:
     """Helper setting up the argsparse configuration"""
@@ -84,7 +85,9 @@ def document_lookup(document_id: Text) -> LookupResponse:
 
 
 @app.post("/submit")
-async def submit(doc: Document, args: argparse.Namespace = Depends(parse_args)):
+async def submit(doc: Document, args: argparse.Namespace = Depends(parse_args)) -> SubmitResponse:
+    # Depends on parse_args which are used for settings. The result
+    # is cached the first time it is executed
     """ Submit document """
     filename = os.path.join(STORAGEDIR, os.path.basename(doc.filename))
     content: bytes = base64.b64decode(doc.content)
