@@ -20,6 +20,7 @@ import caep
 
 import act.scio.logsetup
 import act.scio.config
+import act.scio.es
 
 def parse_args() -> argparse.Namespace:
     """Helper setting up the argsparse configuration"""
@@ -124,6 +125,16 @@ async def async_main() -> None:
         beanstalk_client = greenstalk.Client(args.beanstalk, args.beanstalk_port, encoding=None)
         beanstalk_client.watch('scio_analyze')
 
+    elasticsearch_client = None
+    if args.elasticsearch:
+        logging.info("Connection to elasticsearch")
+        elasticsearch_client = act.scio.es.es_client(
+            host=args.elasticsearch,
+            port=args.elasticsearch_port,
+            username=args.elasticsearch_user,
+            password=args.elasticsearch_password,
+        )
+
     loop = asyncio.get_event_loop()
 
     while True:
@@ -134,19 +145,30 @@ async def async_main() -> None:
             logging.error("Got LookupError. If nltk data is missing, run scio-nltk-download, which should download all nltk data to ~/nltk_data.")
             raise
 
-        result = json.dumps(task.result(), indent="  ")
+        result = task.result()
+        result_json = json.dumps(result, indent="  ")
+
         if args.webdump:
             proxies = {
                 'http': args.proxy_string,
                 'https': args.proxy_string
             } if args.proxy_string else None
 
-            r = requests.post(args.webdump, data=result, proxies=proxies)
+            r = requests.post(args.webdump, data=result_json, proxies=proxies)
             if r.status_code != 200:
                 logging.error("Unable to post result data to webdump: %s", r.text)
 
+        elif elasticsearch_client:
+            hexdigest = result.get("hexdigest")
+
+            if not hexdigest:
+                logging.error("Missing hexdigest, skipping elasticsearch storage")
+            else:
+                elasticsearch_client.index(index="scio2", id=hexdigest, body=result)
+                logging.info("Stored %s to elasticsearch", hexdigest)
+
         else:
-            print(result)
+            print(result_json)
 
         # If we are not listening on a beanstalk work queue, behave like a command line
         # utility and exit after one document.

@@ -36,6 +36,13 @@ def parse_args(description: Text) -> argparse.ArgumentParser:
                         type=int,
                         default=11300,
                         help="Default 11300")
+    parser.add_argument('--elasticsearch', help="Elasticsearch host to connect to.")
+    parser.add_argument('--elasticsearch-user', help="Elasticsearch user")
+    parser.add_argument('--elasticsearch-password', help="Elasticsearch password")
+    parser.add_argument('--elasticsearch-port',
+                        type=int,
+                        default=9200,
+                        help="Default 9200")
     parser.add_argument('--config-dir',
                         default=caep.get_config_dir("scio"),
                         help="Default config dir with configurations for scio and plugins")

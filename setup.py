@@ -47,6 +47,7 @@ setup(
         "beautifulsoup4",
         "bs4",
         "caep",
+        "elasticsearch",
         "fastapi",
         "feedparser",
         "greenstalk",
