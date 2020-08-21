@@ -93,7 +93,6 @@ async def submit(doc: Document, args: argparse.Namespace = Depends(parse_args)):
 
     response = SubmitResponse(
         filename=filename,
-        #content=content,
         count=len(doc.content),
         error=None)
 
