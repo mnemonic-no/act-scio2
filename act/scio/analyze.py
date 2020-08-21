@@ -8,7 +8,7 @@ from typing import Optional, List
 import addict  # type: ignore
 import argparse
 import asyncio
-import greenstalk  # type: ignore
+import greenstalk
 import gzip
 import json
 import logging
@@ -20,7 +20,6 @@ import caep
 
 import act.scio.logsetup
 import act.scio.config
-import act.scio.es
 
 def parse_args() -> argparse.Namespace:
     """Helper setting up the argsparse configuration"""
@@ -119,21 +118,8 @@ async def async_main() -> None:
     for p in plugins:
         p.configdir = os.path.join(args.config_dir, "etc/plugins")
 
-    beanstalk_client = None
-    if args.beanstalk:
-        logging.info("Connection to beanstalk")
-        beanstalk_client = greenstalk.Client(args.beanstalk, args.beanstalk_port, encoding=None)
-        beanstalk_client.watch('scio_analyze')
-
-    elasticsearch_client = None
-    if args.elasticsearch:
-        logging.info("Connection to elasticsearch")
-        elasticsearch_client = act.scio.es.es_client(
-            host=args.elasticsearch,
-            port=args.elasticsearch_port,
-            username=args.elasticsearch_user,
-            password=args.elasticsearch_password,
-        )
+    beanstalk_client = act.scio.config.beanstalk_client(args, "scio_analyze")
+    elasticsearch_client = act.scio.config.elasticsearch_client(args)
 
     loop = asyncio.get_event_loop()
 
