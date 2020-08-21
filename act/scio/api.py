@@ -89,23 +89,6 @@ def parse_args() -> argparse.Namespace:
     args.beanstalk_client = act.scio.config.beanstalk_client(args, "scio_doc")
     args.elasticsearch_client = act.scio.config.elasticsearch_client(args)
 
-    args.beanstalk_client = None
-    if args.beanstalk:
-        logging.info("Connection to beanstalk")
-        args.beanstalk_client = greenstalk.Client(
-            args.beanstalk, args.beanstalk_port, encoding=None)
-        args.beanstalk_client.use('scio_doc')
-
-    args.elasticsearch_client = None
-    if args.elasticsearch:
-        logging.info("Connection to elasticsearch")
-        args.elasticsearch_client = act.scio.es.es_client(
-            host=args.elasticsearch,
-            port=args.elasticsearch_port,
-            username=args.elasticsearch_user,
-            password=args.elasticsearch_password,
-        )
-
     return args
 
 
