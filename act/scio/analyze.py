@@ -8,7 +8,7 @@ from typing import Optional, List
 import addict  # type: ignore
 import argparse
 import asyncio
-import greenstalk
+import greenstalk  # type: ignore
 import gzip
 import json
 import logging
