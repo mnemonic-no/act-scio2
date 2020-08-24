@@ -1,0 +1,13 @@
+Description=SCIO api service
+
+[Service]
+User=scio
+ExecStart=scio-api
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=scio-api
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
