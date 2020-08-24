@@ -1,11 +1,11 @@
-Description=SCIO analyze service
+Description=SCIO api service
 
 [Service]
 User=scio
-ExecStart=scio-analyze
+ExecStart=scio-api
 StandardOutput=syslog
 StandardError=syslog
-SyslogIdentifier=scio-analyze
+SyslogIdentifier=scio-api
 Restart=on-failure
 RestartSec=5
 StartLimitIntervalSec=3600
