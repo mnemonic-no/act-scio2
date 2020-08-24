@@ -8,6 +8,12 @@ StandardError=syslog
 SyslogIdentifier=scio-tika-server
 Restart=on-failure
 RestartSec=5
+StartLimitIntervalSec=3600
+StartLimitBurst=3
+
+# Point this to locateion of tika-server.jar + tika-server.jar.md5 if you do not have
+# internet access
+Environment="TIKA_SERVER_JAR="
 
 [Install]
 WantedBy=multi-user.target
