@@ -86,7 +86,7 @@ def parse_args() -> argparse.Namespace:
         os.makedirs(args.document_path)
         logging.info("Created directory: %s", args.document_path)
 
-    args.beanstalk_client = act.scio.config.beanstalk_client(args, "scio_doc")
+    args.beanstalk_client = act.scio.config.beanstalk_client(args, use="scio_doc")
     args.elasticsearch_client = act.scio.config.elasticsearch_client(args)
 
     return args

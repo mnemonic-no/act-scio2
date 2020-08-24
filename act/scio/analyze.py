@@ -120,7 +120,7 @@ async def async_main() -> None:
     for p in plugins:
         p.configdir = os.path.join(args.config_dir, "etc/plugins")
 
-    beanstalk_client = act.scio.config.beanstalk_client(args, "scio_analyze")
+    beanstalk_client = act.scio.config.beanstalk_client(args, watch="scio_analyze")
     elasticsearch_client = act.scio.config.elasticsearch_client(args)
 
     loop = asyncio.get_event_loop()
