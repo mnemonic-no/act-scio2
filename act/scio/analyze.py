@@ -28,7 +28,7 @@ def parse_args() -> argparse.Namespace:
     arg_parser.add_argument('--plugins', dest='plugins', type=str)
     arg_parser.add_argument('--webdump', dest='webdump', type=str, help="URI to post result data")
 
-    return caep.config.handle_args(arg_parser, "scio/etc", "scio", "analyze")
+    return caep.config.handle_args(arg_parser, "scio/etc", "scio.ini", "analyze")
 
 
 def get_input(beanstalk_client: Optional[greenstalk.Client] = None) -> addict.Dict:
@@ -43,9 +43,15 @@ def get_input(beanstalk_client: Optional[greenstalk.Client] = None) -> addict.Di
         # ADD BEANSTALK JOB CONSUMPTION
         logging.info("Waiting for work from beanstalk")
         job = beanstalk_client.reserve()
-        nlpdata = addict.Dict(json.loads(gzip.decompress(job.body)))
-        logging.info(nlpdata.keys())
-        beanstalk_client.delete(job)
+        try:
+            nlpdata = addict.Dict(json.loads(gzip.decompress(job.body)))
+            logging.info(nlpdata.keys())
+        except OSError as e:
+            # File not found - log error
+            logging.error(e)
+        finally:
+            # Remove job, either on success or file not found
+            beanstalk_client.delete(job)
 
     return nlpdata
 
@@ -114,11 +120,8 @@ async def async_main() -> None:
     for p in plugins:
         p.configdir = os.path.join(args.config_dir, "etc/plugins")
 
-    beanstalk_client = None
-    if args.beanstalk:
-        logging.info("Connection to beanstalk")
-        beanstalk_client = greenstalk.Client(args.beanstalk, args.beanstalk_port, encoding=None)
-        beanstalk_client.watch('scio_analyze')
+    beanstalk_client = act.scio.config.beanstalk_client(args, "scio_analyze")
+    elasticsearch_client = act.scio.config.elasticsearch_client(args)
 
     loop = asyncio.get_event_loop()
 
@@ -130,19 +133,30 @@ async def async_main() -> None:
             logging.error("Got LookupError. If nltk data is missing, run scio-nltk-download, which should download all nltk data to ~/nltk_data.")
             raise
 
-        result = json.dumps(task.result(), indent="  ")
+        result = task.result()
+        result_json = json.dumps(result, indent="  ")
+
         if args.webdump:
             proxies = {
                 'http': args.proxy_string,
                 'https': args.proxy_string
             } if args.proxy_string else None
 
-            r = requests.post(args.webdump, data=result, proxies=proxies)
+            r = requests.post(args.webdump, data=result_json, proxies=proxies)
             if r.status_code != 200:
                 logging.error("Unable to post result data to webdump: %s", r.text)
 
+        elif elasticsearch_client:
+            hexdigest = result.get("hexdigest")
+
+            if not hexdigest:
+                logging.error("Missing hexdigest, skipping elasticsearch storage")
+            else:
+                elasticsearch_client.index(index="scio2", id=hexdigest, body=result)
+                logging.info("Stored %s to elasticsearch", hexdigest)
+
         else:
-            print(result)
+            print(result_json)
 
         # If we are not listening on a beanstalk work queue, behave like a command line
         # utility and exit after one document.

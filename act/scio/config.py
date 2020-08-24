@@ -19,10 +19,16 @@ Config utilities for scio
 """
 
 import argparse
+import logging
 import os
-from typing import Text
+from typing import Optional, Text
 
 import caep
+import elasticsearch
+import greenstalk  # type: ignore
+
+import act.scio.es
+
 
 def parse_args(description: Text) -> argparse.ArgumentParser:
     """ Parse default arguments """
@@ -36,6 +42,13 @@ def parse_args(description: Text) -> argparse.ArgumentParser:
                         type=int,
                         default=11300,
                         help="Default 11300")
+    parser.add_argument('--elasticsearch', help="Elasticsearch host to connect to.")
+    parser.add_argument('--elasticsearch-user', help="Elasticsearch user")
+    parser.add_argument('--elasticsearch-password', help="Elasticsearch password")
+    parser.add_argument('--elasticsearch-port',
+                        type=int,
+                        default=9200,
+                        help="Default 9200")
     parser.add_argument('--config-dir',
                         default=caep.get_config_dir("scio"),
                         help="Default config dir with configurations for scio and plugins")
@@ -43,6 +56,33 @@ def parse_args(description: Text) -> argparse.ArgumentParser:
     parser.add_argument('--loglevel', default="info")
 
     return parser
+
+
+def beanstalk_client(
+        args: argparse.Namespace,
+        watch: Optional[Text] = None) -> Optional[greenstalk.Client]:
+    """ Return beanstalk client if args.beanstalk, otherwise, return None """
+    client = None
+    if args.beanstalk:
+        logging.info("Connection to beanstalk")
+        client = greenstalk.Client(args.beanstalk, args.beanstalk_port, encoding=None)
+        if watch:
+            client.watch(watch)
+
+    return client
+
+
+def elasticsearch_client(args: argparse.Namespace) -> Optional[elasticsearch.client.Elasticsearch]:
+    """ Return elasticsearch client if args.elasticsearch, otherwise, return None """
+    if args.elasticsearch:
+        logging.info("Connection to elasticsearch")
+        return act.scio.es.es_client(
+            host=args.elasticsearch,
+            port=args.elasticsearch_port,
+            username=args.elasticsearch_user,
+            password=args.elasticsearch_password,
+        )
+    return None
 
 
 def get_cache_dir(cache_id: str, create: bool = False) -> str:
