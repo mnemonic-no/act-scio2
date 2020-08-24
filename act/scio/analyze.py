@@ -47,8 +47,10 @@ def get_input(beanstalk_client: Optional[greenstalk.Client] = None) -> addict.Di
             nlpdata = addict.Dict(json.loads(gzip.decompress(job.body)))
             logging.info(nlpdata.keys())
         except OSError as e:
+            # File not found - log error
             logging.error(e)
         finally:
+            # Remove job, either on success or file not found
             beanstalk_client.delete(job)
 
     return nlpdata
