@@ -11,7 +11,7 @@ with open(path.join(this_directory, 'README.md'), "rb") as f:
 
 setup(
     name="act-scio",
-    version="0.0.8",
+    version="0.0.9",
     author="mnemonic AS",
     zip_safe=True,
     author_email="opensource@mnemonic.no",
@@ -33,7 +33,7 @@ setup(
     },
 
     # Include ini-file(s) from act/workers/etc
-    package_data={'act.scio': ['etc/*', 'vendor/*']},
+    package_data={'act.scio': ['etc/*', 'etc/plugins/*', 'vendor/*']},
     packages=["act.scio", "act.scio.plugins", "act.scio.feeds"],
 
     # https://packaging.python.org/guides/packaging-namespace-packages/#pkgutil-style-namespace-packages
