@@ -60,7 +60,7 @@ class Server:
             try:
                 logging.info("Trying to connect to beanstalkd on %s:%s",
                              beanstalk_host, beanstalk_port)
-                self.client = greenstalk.Client(host=beanstalk_host, port=beanstalk_port)
+                self.client = greenstalk.Client((beanstalk_host, beanstalk_port))
             except ConnectionRefusedError as err:
                 logging.warning("Server.connect: %s", err)
                 logging.info("Server.connect: waiting 5 seconds")

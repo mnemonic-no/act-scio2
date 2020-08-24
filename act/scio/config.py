@@ -60,14 +60,17 @@ def parse_args(description: Text) -> argparse.ArgumentParser:
 
 def beanstalk_client(
         args: argparse.Namespace,
+        use: Optional[Text] = None,
         watch: Optional[Text] = None) -> Optional[greenstalk.Client]:
     """ Return beanstalk client if args.beanstalk, otherwise, return None """
     client = None
     if args.beanstalk:
         logging.info("Connection to beanstalk")
-        client = greenstalk.Client(args.beanstalk, args.beanstalk_port, encoding=None)
+        client = greenstalk.Client((args.beanstalk, args.beanstalk_port), encoding=None)
         if watch:
             client.watch(watch)
+        if use:
+            client.use(use)
 
     return client
 
