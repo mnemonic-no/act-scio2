@@ -23,6 +23,7 @@ def get_args() -> argparse.Namespace:
     parser.add_argument(
         "--store-path",
         help=f"Location for stored files. Default {XDG_CACHE}/scio-feeds")
+    parser.add_argument('--proxy-string', help="Proxy to use for external queries")
     parser.add_argument("--ignore", type=str, help="file with ignore patterns")
     parser.add_argument("--feeds", default=caep.get_config_dir("scio/etc/feeds.txt"),
                         type=str, help=f"feed urls (one pr. line). Default: {XDG_CONFIG}/scio/etc/feeds.txt")

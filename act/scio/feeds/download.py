@@ -18,6 +18,7 @@ def download_and_store(
         feed_url: Text,
         ignore_file: Optional[Text],
         storage_path: Text,
+        proxy_string: Optional[Text],
         link: urllib.parse.ParseResult) -> Text:
     """Download and store a link. Storage defined in args"""
 
@@ -38,6 +39,7 @@ def download_and_store(
                      link.path, parsed_feed_url.netloc)
 
     req = requests.get(link.geturl(),
+                       proxies=proxies(proxy_string),
                        headers=default_headers(),
                        verify=False,
                        stream=True,
@@ -66,16 +68,32 @@ def download_and_store(
     return fname
 
 
-def get_feed(feed_url: Text) -> Any:
+def get_feed(feed_url: Text, proxy_string: Optional[Text] = None) -> Any:
     """Download and parse a feed"""
 
     feed_url = feed_url.strip()
 
     logging.info("Opening feed : %s", feed_url)
 
-    req = requests.get(feed_url, headers=default_headers(), verify=False, timeout=60)
+    req = requests.get(
+        feed_url,
+        proxies=proxies(proxy_string),
+        headers=default_headers(),
+        verify=False,
+        timeout=60)
 
     return feedparser.parse(req.text)
+
+
+def proxies(proxy_string: Optional[Text]) -> Optional[Dict]:
+    """Return proxy dict to be used by requests if proxy_string is set """
+
+    if proxy_string:
+        return {
+            'http': proxy_string,
+            'https': proxy_string
+        }
+    return None
 
 
 def default_headers() -> Dict:
@@ -97,7 +115,7 @@ def handle_feed(args: argparse.Namespace,
     if specified in the arguments and write the feed entry content
     to disk together with a meta data json file"""
 
-    feed = get_feed(feed_url)
+    feed = get_feed(feed_url, args.proxy_string)
 
     if not feed:
         return "NOT FEED", feed_url, []
@@ -124,7 +142,11 @@ def handle_feed(args: argparse.Namespace,
         # Download all urls that looks like they have the correct file extension
         # and add the filenames of the downloaded files to the list of candidates
         # to upload.
-        files.extend(download_and_store(feed_url, args.ignore, args.store_path, link)
+        files.extend(download_and_store(feed_url,
+                                        args.ignore,
+                                        args.store_path,
+                                        args.proxy_string,
+                                        link)
                      for link in analyze.filter_links(args.file_format, links))
 
     return "OK", feed_url, list(filter(None, files))

@@ -95,7 +95,12 @@ def partial_entry_text_to_file(
 
     url = entry["link"]
 
-    req = requests.get(url, headers=download.default_headers(), verify=False, timeout=60)
+    req = requests.get(
+        url,
+        proxies=download.proxies(args.proxy_string),
+        headers=download.default_headers(),
+        verify=False,
+        timeout=60)
 
     if req.status_code >= 400:
         logging.warning("Unable to download content: %s", url)
