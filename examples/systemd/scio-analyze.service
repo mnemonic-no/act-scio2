@@ -1,14 +1,15 @@
+[Unit]
 Description=SCIO analyze service
 
 [Service]
 User=scio
-ExecStart=scio-analyze
+ExecStart=/usr/local/bin/scio-analyze
 StandardOutput=syslog
 StandardError=syslog
 SyslogIdentifier=scio-analyze
 Restart=on-failure
 RestartSec=5
-StartLimitIntervalSec=3600
+StartLimitInterval=3600
 StartLimitBurst=3
 
 [Install]
