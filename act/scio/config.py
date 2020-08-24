@@ -57,7 +57,10 @@ def parse_args(description: Text) -> argparse.ArgumentParser:
 
     return parser
 
-def beanstalk_client(args: argparse.Namespace, watch: Optional[Text] = None):
+
+def beanstalk_client(
+        args: argparse.Namespace,
+        watch: Optional[Text] = None) -> Optional[greenstalk.Client]:
     """ Return beanstalk client if args.beanstalk, otherwise, return None """
     client = None
     if args.beanstalk:
@@ -69,7 +72,7 @@ def beanstalk_client(args: argparse.Namespace, watch: Optional[Text] = None):
     return client
 
 
-def elasticsearch_client(args: argparse.Namespace) -> elasticsearch.client.Elasticsearch:
+def elasticsearch_client(args: argparse.Namespace) -> Optional[elasticsearch.client.Elasticsearch]:
     """ Return elasticsearch client if args.elasticsearch, otherwise, return None """
     if args.elasticsearch:
         logging.info("Connection to elasticsearch")
@@ -79,8 +82,7 @@ def elasticsearch_client(args: argparse.Namespace) -> elasticsearch.client.Elast
             username=args.elasticsearch_user,
             password=args.elasticsearch_password,
         )
-    else:
-        return None
+    return None
 
 
 def get_cache_dir(cache_id: str, create: bool = False) -> str:
