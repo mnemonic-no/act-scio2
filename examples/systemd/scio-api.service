@@ -1,14 +1,15 @@
+[Unit]
 Description=SCIO api service
 
 [Service]
 User=scio
-ExecStart=scio-api
+ExecStart=/usr/local/bin/scio-api
 StandardOutput=syslog
 StandardError=syslog
 SyslogIdentifier=scio-api
 Restart=on-failure
 RestartSec=5
-StartLimitIntervalSec=3600
+StartLimitInterval=3600
 StartLimitBurst=3
 
 [Install]
