@@ -18,10 +18,12 @@ PERFORMANCE OF THIS SOFTWARE.
 Elasticsearch utilities for scio
 """
 
+from logging import debug
 from typing import Optional, Text, Tuple
 
 import elasticsearch
 from elasticsearch import Elasticsearch
+from elasticsearch_dsl import A, Search
 
 
 def es_client(
@@ -47,3 +49,67 @@ def es_client(
         http_auth = None
 
     return Elasticsearch([connection], timeout=timeout, http_auth=http_auth)
+
+
+def query(client: elasticsearch.client.Elasticsearch,
+          start: Text,
+          end: Text,
+          index: Text = "scio2",
+          size: int = 100) -> Search:
+    """ Return elasticsearch query """
+
+    search = Search(using=client, index=index) \
+        .extra(size=size)
+
+    search = search.query("range", {
+        "insert-date": {
+            "gte": start,
+            "lte": end,
+        }})
+
+    debug("ES-query: {}".format(search.to_dict()))
+
+    return search
+
+
+def composite_aggs(search, terms, size=100, histogram=False, missing=False):
+    """
+    Helper function used to iterate over all possible bucket combinations of
+    fields, using composite aggregation.
+    """
+
+    def run_search(**kwargs):
+        s = search[:0]
+
+        s.aggs.bucket(
+            'comp', 'composite',
+            sources=[{field: A("terms", field=field, missing_bucket=missing)}
+                     for i, field
+                     in enumerate(terms)],
+            size=size, **kwargs)
+
+        return s.execute()
+
+    response = run_search()
+    while response.aggregations.comp.buckets:
+        for b in response.aggregations.comp.buckets:
+            yield b
+        if 'after_key' in response.aggregations.comp:
+            after = response.aggregations.comp.after_key
+        else:
+            after = response.aggregations.comp.buckets[-1].key
+        response = run_search(after=after)
+
+
+def aggregation(client, terms, missing=False) -> Generator[Tuple, None, None]:
+    """ Aggregation """
+    search = query(client, start, end, size=0)
+
+    res = composite_aggs(search, terms, missing=missing)
+
+    for hit in res:
+        path = hit.key.to_dict()
+
+        path["path"] = "/".join(path.values())
+
+        yield (path, hit.doc_count)
