@@ -64,6 +64,15 @@ class SubmitResponse(BaseModel):
     count: StrictInt
     error: Optional[StrictStr]
 
+
+class IndicatorsResponse(BaseModel):
+    """ Response model for indicator search """
+    filename: StrictStr
+    hexdigest: StrictStr
+    count: StrictInt
+    error: Optional[StrictStr]
+
+
 # parse_args() is executed the first time and later the cached result
 # is used. In this way, we use to configure settings in API endpoints
 @lru_cache()
@@ -130,6 +139,17 @@ async def submit(doc: Document, args: argparse.Namespace = Depends(parse_args)) 
 
     args.beanstalk_client.put(response.json().encode("utf8"))
     return response
+
+
+@ app.get("/indicators")
+def download(indicator_type: constr(regex=r"^(ipv4|email|fqdn|ipv4|md5|sha1|sha256)$"),
+             args: argparse.Namespace = Depends(parse_args)) -> IndicatorsResponse:
+    """ Download document as original content"""
+
+    # TODO - search
+
+    return IndicatorResponse()
+
 
 
 @ app.get("/download/{document_id}")

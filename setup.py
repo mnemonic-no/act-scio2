@@ -48,6 +48,7 @@ setup(
         "bs4",
         "caep",
         "elasticsearch",
+        "elasticsearch_dsl",
         "fastapi",
         "feedparser",
         "greenstalk>=2.0.0",
