@@ -145,7 +145,7 @@ def get_reg_ex_set(config_file_name: Text) -> Set[Text]:
     alias_set = alias_set_from_config(config_file_name)
     for alias in alias_set:
         if alias.isdigit():
-            sys.stderr.write(f"WARNING: Unable to create regex from all digit alais {alias}\n")
+            sys.stderr.write(f"WARNING: Unable to create regex from all digit alias {alias}\n")
             continue
         regex_set.add(regex_from_alias(alias))
 
