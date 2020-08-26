@@ -23,20 +23,20 @@ import base64
 import hashlib
 import logging
 import os
+import re
 from functools import lru_cache
 from typing import Dict, Optional, Text, Union
 
+import act.scio.config
+import act.scio.es
 import caep
 import elasticsearch
 import greenstalk  # type: ignore
 import uvicorn
-from fastapi import Depends, FastAPI, Response
-from fastapi.responses import FileResponse
+from fastapi import Depends, FastAPI, HTTPException, Response
+from fastapi.responses import FileResponse, PlainTextResponse
 from pydantic import BaseModel, StrictInt, StrictStr
 from pydantic.types import constr
-
-import act.scio.config
-import act.scio.es
 
 XDG_CACHE = os.path.expanduser(os.environ.get("XDG_CACHE_HOME", "~/.cache"))
 
@@ -63,6 +63,7 @@ class SubmitResponse(BaseModel):
     hexdigest: StrictStr
     count: StrictInt
     error: Optional[StrictStr]
+
 
 # parse_args() is executed the first time and later the cached result
 # is used. In this way, we use to configure settings in API endpoints
@@ -130,6 +131,61 @@ async def submit(doc: Document, args: argparse.Namespace = Depends(parse_args)) 
 
     args.beanstalk_client.put(response.json().encode("utf8"))
     return response
+
+
+@ app.get("/indicators/{indicator_type}", response_class=PlainTextResponse)
+def indicators(indicator_type: constr(regex=r"^(ipv4|ipv6|uri|email|fqdn|md5|sha1|sha256)$"),
+             last: constr(regex=r'^\d+[yMwdhms]?$') = "90d",
+             args: argparse.Namespace = Depends(parse_args)) -> PlainTextResponse:
+    """ Download indicators
+
+    Allowed indicator types:
+    * ipv4
+    * ipv6
+    * uri
+    * email
+    * fqdn
+    * md5
+    * sha1
+    * sha256
+
+    You can also specify the maximum age of the document you want to
+    get indicators from with the `last` argument (default=90d). The
+    format should be either be <NUM><TIME UNIT>, where TIME UNIT can be one of:
+
+    y (year)
+    M (month)
+    w (week)
+    d (day)
+    h (hour)
+    m (minute)
+    s (second)
+
+    OR <EPOC> (only digits) where the EPOC is a unix timestamp in milliseconds
+
+    """
+
+    if not args.elasticsearch_client:
+        raise HTTPException(status_code=412, detail="Elasticsearch is not configured")
+
+    if re.search(r"^\d+$", last):
+        # Only digits - assume unix timestamp
+        start = last
+    else:
+        start = f"now-{last}"
+
+    term = f"indicators.{indicator_type}.keyword"
+
+    res = act.scio.es.aggregation(
+        args.elasticsearch_client,
+        terms=[term],
+        start=start,
+        end="now",
+    )
+
+    return PlainTextResponse(
+            "\n".join(row[0].get(term) for row in res)
+    )
 
 
 @ app.get("/download/{document_id}")
