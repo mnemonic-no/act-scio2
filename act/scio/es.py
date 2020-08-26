@@ -19,9 +19,10 @@ Elasticsearch utilities for scio
 """
 
 from logging import debug
-from typing import Optional, Text, Tuple
+from typing import Dict, Generator, List, Optional, Text, Tuple
 
 import elasticsearch
+import elasticsearch_dsl
 from elasticsearch import Elasticsearch
 from elasticsearch_dsl import A, Search
 
@@ -61,8 +62,9 @@ def query(client: elasticsearch.client.Elasticsearch,
     search = Search(using=client, index=index) \
         .extra(size=size)
 
-    search = search.query("range", {
-        "insert-date": {
+    # pylint: disable=no-member
+    search = search.query("range", **{
+        "metadata.created": {
             "gte": start,
             "lte": end,
         }})
@@ -72,13 +74,19 @@ def query(client: elasticsearch.client.Elasticsearch,
     return search
 
 
-def composite_aggs(search, terms, size=100, histogram=False, missing=False):
+def composite_aggs(
+        search: Search,
+        terms: List[Text],
+        size: int = 100,
+        missing: bool = False) -> Generator[elasticsearch_dsl.response.aggs.Bucket,
+                                            None,
+                                            None]:
     """
     Helper function used to iterate over all possible bucket combinations of
     fields, using composite aggregation.
     """
 
-    def run_search(**kwargs):
+    def run_search(**kwargs: Dict) -> Search:
         s = search[:0]
 
         s.aggs.bucket(
@@ -101,7 +109,13 @@ def composite_aggs(search, terms, size=100, histogram=False, missing=False):
         response = run_search(after=after)
 
 
-def aggregation(client, terms, missing=False) -> Generator[Tuple, None, None]:
+def aggregation(
+        client: elasticsearch.client.Elasticsearch,
+        terms: List[Text],
+        start: Text,
+        end: Text,
+        missing:
+        bool = False) -> Generator[Tuple, None, None]:
     """ Aggregation """
     search = query(client, start, end, size=0)
 
