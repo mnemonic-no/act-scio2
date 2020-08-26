@@ -172,7 +172,7 @@ def indicators(indicator_type: constr(regex=r"^(ipv4|ipv6|uri|email|fqdn|md5|sha
         # Only digits - assume unix timestamp
         start = last
     else:
-        start=f"now-{last}"
+        start = f"now-{last}"
 
     term = f"indicators.{indicator_type}.keyword"
 
