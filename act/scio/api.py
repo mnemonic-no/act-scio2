@@ -161,7 +161,7 @@ def indicators(indicator_type: constr(regex=r"^(ipv4|ipv6|uri|email|fqdn|md5|sha
     m (minute)
     s (second)
 
-    OR <EPOC> (only digits) where the EPOC is a unix timestamp (in seconds)
+    OR <EPOC> (only digits) where the EPOC is a unix timestamp in milliseconds
 
     """
 
