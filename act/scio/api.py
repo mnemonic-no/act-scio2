@@ -23,6 +23,7 @@ import base64
 import hashlib
 import logging
 import os
+import re
 from functools import lru_cache
 from typing import Dict, Optional, Text, Union
 
@@ -134,7 +135,7 @@ async def submit(doc: Document, args: argparse.Namespace = Depends(parse_args)) 
 
 @ app.get("/indicators/{indicator_type}", response_class=PlainTextResponse)
 def indicators(indicator_type: constr(regex=r"^(ipv4|ipv6|uri|email|fqdn|md5|sha1|sha256)$"),
-             last: constr(regex=r'\d+[yMwdhms]') = "90d",
+             last: constr(regex=r'^\d+[yMwdhms]?$') = "90d",
              args: argparse.Namespace = Depends(parse_args)) -> PlainTextResponse:
     """ Download indicators
 
@@ -150,7 +151,7 @@ def indicators(indicator_type: constr(regex=r"^(ipv4|ipv6|uri|email|fqdn|md5|sha
 
     You can also specify the maximum age of the document you want to
     get indicators from with the `last` argument (default=90d). The
-    format should be <NUM><TIME UNIT>, where TIME UNIT can be one of:
+    format should be either be <NUM><TIME UNIT>, where TIME UNIT can be one of:
 
     y (year)
     M (month)
@@ -160,17 +161,25 @@ def indicators(indicator_type: constr(regex=r"^(ipv4|ipv6|uri|email|fqdn|md5|sha
     m (minute)
     s (second)
 
+    OR <EPOC> (only digits) where the EPOC is a unix timestamp (in seconds)
+
     """
 
     if not args.elasticsearch_client:
         raise HTTPException(status_code=412, detail="Elasticsearch is not configured")
+
+    if re.search(r"^\d+$", last):
+        # Only digits - assume unix timestamp
+        start = last
+    else:
+        start=f"now-{last}"
 
     term = f"indicators.{indicator_type}.keyword"
 
     res = act.scio.es.aggregation(
         args.elasticsearch_client,
         terms=[term],
-        start=f"now-{last}",
+        start=start,
         end="now",
     )
 
