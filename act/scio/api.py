@@ -26,17 +26,16 @@ import os
 from functools import lru_cache
 from typing import Dict, Optional, Text, Union
 
+import act.scio.config
+import act.scio.es
 import caep
 import elasticsearch
 import greenstalk  # type: ignore
 import uvicorn
-from fastapi import Depends, FastAPI, Response
-from fastapi.responses import FileResponse
+from fastapi import Depends, FastAPI, HTTPException, Response
+from fastapi.responses import FileResponse, PlainTextResponse
 from pydantic import BaseModel, StrictInt, StrictStr
 from pydantic.types import constr
-
-import act.scio.config
-import act.scio.es
 
 XDG_CACHE = os.path.expanduser(os.environ.get("XDG_CACHE_HOME", "~/.cache"))
 
@@ -59,14 +58,6 @@ class LookupResponse(BaseModel):
 
 class SubmitResponse(BaseModel):
     """ Response model for document submit """
-    filename: StrictStr
-    hexdigest: StrictStr
-    count: StrictInt
-    error: Optional[StrictStr]
-
-
-class IndicatorsResponse(BaseModel):
-    """ Response model for indicator search """
     filename: StrictStr
     hexdigest: StrictStr
     count: StrictInt
@@ -141,15 +132,47 @@ async def submit(doc: Document, args: argparse.Namespace = Depends(parse_args)) 
     return response
 
 
-@ app.get("/indicators")
-def download(indicator_type: constr(regex=r"^(ipv4|email|fqdn|ipv4|md5|sha1|sha256)$"),
-             args: argparse.Namespace = Depends(parse_args)) -> IndicatorsResponse:
-    """ Download document as original content"""
+@ app.get("/indicators/{indicator_type}", response_class=PlainTextResponse)
+def indicators(indicator_type: constr(regex=r"^(ipv4|email|fqdn|md5|sha1|sha256)$"),
+             last: constr(regex=r'\d+[yMwdhms]') = "90d",
+             args: argparse.Namespace = Depends(parse_args)) -> PlainTextResponse:
+    """ Download indicators
 
-    # TODO - search
+    Allowed indicator types:
+    * ipv4
+    * email
+    * fqdn
+    * md5
+    * sha1
+    * sha256
 
-    return IndicatorResponse()
+    You can also specify the maximum age of the document you want to
+    get indicators from with the `last` argument (default=90d). The
+    format should be <NUM><TIME UNIT>, where TIME UNIT can be one of:
 
+    y (year)
+    M (month)
+    w (week)
+    d (day)
+    h (hour)
+    m (minute)
+    s (second)
+
+    """
+
+    if not args.elasticsearch_client:
+        raise HTTPException(status_code=412, detail="Elasticsearch is not configured")
+
+    term = f"indicators.{indicator_type}.keyword"
+
+    res = act.scio.es.aggregation(
+        args.elasticsearch_client,
+        terms=[term],
+        start=f"now-{last}",
+        end="now",
+    )
+
+    return "\n".join(row[0].get(term) for row in res)
 
 
 @ app.get("/download/{document_id}")
