@@ -18,7 +18,7 @@ async def test_plugins(monkeypatch) -> None:
 
     monkeypatch.setattr('sys.stdin', io.StringIO('This is a test. And this is another one.'))
 
-    res = await analyze.analyze(plugins, beanstalk=False)
+    res = await analyze.analyze(plugins, beanstalk_client=False)
 
     # Two plugins + text
     assert len(res.keys()) == 3
