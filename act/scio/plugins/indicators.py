@@ -10,7 +10,6 @@ class Plugin(BasePlugin):
     version = "0.1"
     dependencies: List[Text] = []
 
-
     md5 = re.compile("\\b[0-9a-fA-F]{32}\\b")
     sha1 = re.compile("\\b[.0-9a-fA-F]{40}\\b")
     sha256 = re.compile("\\b[0-9a-fA-F]{64}\\b")
