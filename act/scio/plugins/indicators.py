@@ -4,6 +4,7 @@ from typing import Text, List, Dict, Set
 import ipaddress
 import re
 
+
 class Plugin(BasePlugin):
     name = "indicators"
     info = "Extracting Atomic indicators like ip/fqdn/hash from body of text"
@@ -44,7 +45,6 @@ class Plugin(BasePlugin):
         res.email = self.email.findall(text)
         res.fqdn = [dn for dn in self.fqdn.findall(text)
                     if dn.split(".")[-1] in TLDS]
-        res.ipv4 = ['.'.join(ip) for ip in self.ipv4.findall(text)]
         res.ipv4 = ['.'.join(ip) for ip in self.ipv4.findall(text)]
 
         res.uri = [re.sub("^hxxp", "http", uri, 0, re.I) for uri in self.uri.findall(text)]
