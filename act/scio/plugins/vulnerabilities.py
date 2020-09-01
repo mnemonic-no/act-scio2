@@ -12,7 +12,7 @@ class Plugin(BasePlugin):
     dependencies: List[Text] = []
 
     cve = re.compile("\\b(?:CVE|cve)-\d{4}-\d{4,7}\\b")
-    ms = re.compile("\\b(?:MS|ms)\d{2}-\d+\\b")
+    msid = re.compile("\\b(?:MS|ms)\d{2}-\d+\\b")
 
     async def analyze(self, nlpdata: addict.Dict) -> Result:
 
@@ -21,7 +21,7 @@ class Plugin(BasePlugin):
         res = addict.Dict()
 
         res.cve = self.cve.findall(text)
-        res.ms = self.ms.findall(text)
+        res.msid = self.msid.findall(text)
 
         return Result(name=self.name, version=self.version, result=res)
 

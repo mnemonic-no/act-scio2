@@ -29,7 +29,7 @@ async def test_vulnerabilites() -> None:
     assert 'CVE-1992-12345' in res.result.cve
     assert 'CVE-1993-123456' in res.result.cve
     assert 'CVE-1994-1234567' in res.result.cve
-    assert 'MS15-132' in res.result.ms
+    assert 'MS15-132' in res.result.msid
     assert 'CVE-123-1234' not in res.result.cve
     assert 'CVE-1994-12' not in res.result.cve
     assert 'CVE-1995-12345678' not in res.result.cve
