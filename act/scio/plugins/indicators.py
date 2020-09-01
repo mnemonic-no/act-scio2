@@ -19,11 +19,23 @@ class Plugin(BasePlugin):
     email = re.compile("\\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}\\b")
     fqdn = re.compile("\\b([a-zA-Z0-9\\.\\-]+\\.[a-zA-Z0-9\\.\\-]+)\\b")
 
+    uri = re.compile(r"(?:[a-zA-Z][a-zA-Z\d+-.]*):\/\/(?:(?:(?:[a-zA-Z\d\-._~\!$&'()*+,;=%]*)(?::(?:[a-zA-Z\d\-._~\!$&'()*+,;=:%]*))?)@)?(?:(?:\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})|(?:\[(?:[a-fA-F\d.:]+)\])|(?:[a-zA-Z\d\-.%]+))?(?::(?:\d{1,5}))?(?:(?:\/(?:[a-zA-Z\d\-._~\!$&'()*+,;=:@%]*\/)*(?:[a-zA-Z\d\-._~\!$&'()*+,;=:@%]*))?)(?:\?(?:[a-zA-Z\d\-._~\!$&'()*+,;=:@%\/?]*))?(?:\#(?:[a-zA-Z\d\-._~\!$&'()*+,;=:@%\/?]*))?")
+
+    ipv4net = re.compile(r"\b[0-2]?[0-9]?[0-9]\.[0-2]?[0-9]?[0-9]\.[0-2]?[0-9]?[0-9]\.[0-2]?[0-9]?[0-9]\/\d{1,2}\b")
+
     allposipv6 = re.compile("\\b[a-f0-9:.]+:[a-f0-9:.]+:[a-f0-9:.]+\\b")
 
     async def analyze(self, nlpdata: addict.Dict) -> Result:
 
-        text = nlpdata.content
+        # refang to allo match on e.g. 127[.]0[.]0[.]1
+        text = nlpdata.content \
+                .replace("[.]", ".") \
+                .replace("{.}", ".") \
+                .replace("(.)", ".") \
+                .replace("\\.", ".") \
+
+        # Replace to make sure URLencoded URLs are supported
+        text = re.sub("%2[fF]", "/", text)
 
         res = addict.Dict()
 
@@ -35,11 +47,14 @@ class Plugin(BasePlugin):
                     if dn.split(".")[-1] in TLDS]
         res.ipv4 = ['.'.join(ip) for ip in self.ipv4.findall(text)]
 
+        res.uri = [re.sub("^hxxp", "http", uri, 0, re.I) for uri in self.uri.findall(text)]
+        res.ipv4net = self.ipv4net.findall(text)
+
         pos_ipv6 = []
         for candidate in self.allposipv6.findall(text):
             try:
                 addr = ipaddress.ip_address(candidate)
-                if addr.version != 6:
+                if addr.version == 6:
                     pos_ipv6.append(candidate)
             except ValueError:
                 pass
