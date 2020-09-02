@@ -1,14 +1,15 @@
+"""Plugin for finding possible threat actors based on sentences"""
+
 import addict
-from act.scio.vocabulary import Vocabulary
 from act.scio.plugin import BasePlugin, Result
 from typing import Text, List, Set
-import configparser
 import nltk
 import nltk.stem
-import os
 
 
 class Plugin(BasePlugin):
+    """Plugin to detect threat actors"""
+
     name = "nlp_actors"
     info = "Extract actors based on language from a body of text"
     version = "0.1"
@@ -68,15 +69,15 @@ class Plugin(BasePlugin):
                     n -= 1
 
                 current_actor: List[Text] = []
-                for (token, pos_tag) in nlpdata.pos_tag.tokens[n:i-1]:
+                for (subtoken, pos_tag) in nlpdata.pos_tag.tokens[n:i-1]:
                     if pos_tag in chain_tags:
                         if current_actor:
                             pos_actors.append(" ".join(current_actor))
                             current_actor = []
                     elif pos_tag in possible_ta_tag_types:
-                        if token in false_positive_filter:
+                        if subtoken in false_positive_filter:
                             continue
-                        current_actor.append(token)
+                        current_actor.append(subtoken)
                 if current_actor:
                     pos_actors.append(" ".join(current_actor))
 
