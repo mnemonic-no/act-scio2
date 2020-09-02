@@ -65,14 +65,15 @@ class Plugin(BasePlugin):
                 current_actor: List[Text] = []
                 for (token, pos_tag) in nlpdata.pos_tag.tokens[n:i-1]:
                     if pos_tag in chain_tags:
-                        pos_actors.append(" ".join(current_actor))
-                        current_actor = []
+                        if current_actor:
+                            pos_actors.append(" ".join(current_actor))
+                            current_actor = []
                     elif pos_tag in posible_tag_types:
                         if token in false_positive_filter:
-                            print("continue", token, pos_tag)
                             continue
                         current_actor.append(token)
-                pos_actors.append(" ".join(current_actor))
+                if pos_actors:
+                    pos_actors.append(" ".join(current_actor))
 
             first_stage_found = bool(tag in posible_tag_types and
                                      ps.stem(token) in threat_stem_postfix)

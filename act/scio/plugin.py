@@ -55,6 +55,7 @@ def load_default_plugins() -> List[BasePlugin]:
     prefix = plugins.__name__ + "."
     for _, modname, _ in pkgutil.iter_modules(plugins.__path__, prefix):
 
+        logging.info("loading plugin %s [%s]", modname, plugins.__path__)
         p = load_plugin(modname)
         if p:
             myplugins.append(p)
