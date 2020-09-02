@@ -27,6 +27,7 @@ class Plugin(BasePlugin):
             'hacker',     # hacker, hackers
             'crack',      # cracking, crack
             'cracker',    # cracker, crackers
+            'adversari',  # adversary, adversaries
             'terrorist'   # terrorist, terrorists
         }
 
@@ -42,11 +43,12 @@ class Plugin(BasePlugin):
                                  "unknown",
                                  "cyber"]  # "top threat groups", "cyber threat actors" etc...
 
-        posible_tag_types = {"NNP", "NNPS", "NN", "NNS"}
+        possible_ta_tag_types = {"NNP", "NNPS", "NN", "NNS"}
+        possible_tag_types = {"NNP", "NNPS", "NN", "NNS", "JJ", "JJS"}
         chain_tags = {",", ":", "CC"}
         lookbefore_tags: Set[Text] = set()
         lookbefore_tags.update(chain_tags)
-        lookbefore_tags.update(posible_tag_types)
+        lookbefore_tags.update(possible_tag_types)
 
         ps = nltk.stem.PorterStemmer()
 
@@ -57,8 +59,8 @@ class Plugin(BasePlugin):
         # found, look-before and collect all nouns while the tokens are nouns
         # or part of a listing.
         for i, (token, tag) in enumerate(nlpdata.pos_tag.tokens):
-            if first_stage_found and tag in posible_tag_types and ps.stem(token) in group_stem_postfix:
-                if nlpdata.pos_tag.tokens[i - 2][1] not in posible_tag_types:
+            if first_stage_found and tag in possible_tag_types and ps.stem(token) in group_stem_postfix:
+                if nlpdata.pos_tag.tokens[i - 2][1] not in possible_tag_types:
                     first_stage_found = False
                     continue
                 n = i - 1
@@ -71,14 +73,14 @@ class Plugin(BasePlugin):
                         if current_actor:
                             pos_actors.append(" ".join(current_actor))
                             current_actor = []
-                    elif pos_tag in posible_tag_types:
+                    elif pos_tag in possible_ta_tag_types:
                         if token in false_positive_filter:
                             continue
                         current_actor.append(token)
-                if pos_actors:
+                if current_actor:
                     pos_actors.append(" ".join(current_actor))
 
-            first_stage_found = bool(tag in posible_tag_types and
+            first_stage_found = bool(tag in possible_tag_types and
                                      ps.stem(token) in threat_stem_postfix)
 
         res.actors = pos_actors
