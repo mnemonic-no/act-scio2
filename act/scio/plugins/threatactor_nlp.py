@@ -42,7 +42,7 @@ class Plugin(BasePlugin):
                                  "unknown",
                                  "cyber"]  # "top threat groups", "cyber threat actors" etc...
 
-        posible_tag_types = {"NNP", "NNPS", "NN", "NNS", "JJ", "JJS"}
+        posible_tag_types = {"NNP", "NNPS", "NN", "NNS"}
         chain_tags = {",", ":", "CC"}
         lookbefore_tags: Set[Text] = set()
         lookbefore_tags.update(chain_tags)
@@ -58,6 +58,9 @@ class Plugin(BasePlugin):
         # or part of a listing.
         for i, (token, tag) in enumerate(nlpdata.pos_tag.tokens):
             if first_stage_found and tag in posible_tag_types and ps.stem(token) in group_stem_postfix:
+                if nlpdata.pos_tag.tokens[i - 2][1] not in posible_tag_types:
+                    first_stage_found = False
+                    continue
                 n = i - 1
                 while nlpdata.pos_tag.tokens[n][1] in lookbefore_tags:
                     n -= 1
