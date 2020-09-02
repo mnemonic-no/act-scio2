@@ -112,6 +112,7 @@ async def async_main() -> None:
 
     if args.plugins:
         try:
+            logging.info("loading plugins from %s", args.plugins)
             plugins += plugin.load_external_plugins(args.plugins)
         except FileNotFoundError:
             logging.warning("Unable to load plugins from %s", args.plugins)
