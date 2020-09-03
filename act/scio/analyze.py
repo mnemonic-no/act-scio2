@@ -8,6 +8,7 @@ from typing import Optional, List
 import addict  # type: ignore
 import argparse
 import asyncio
+import datetime
 import greenstalk  # type: ignore
 import gzip
 import json
@@ -64,6 +65,13 @@ async def analyze(plugins: List[plugin.BasePlugin],
     loop = asyncio.get_event_loop()
 
     nlpdata: addict.Dict = get_input(beanstalk_client)
+
+    nlpdata["Analyzed-Date"] = datetime.datetime.now().isoformat()
+
+    # make sure we have a Creation-Date field even though the
+    # document did not contain one. When missing, use current time.
+    if "Creation-Date" not in nlpdata:
+        nlpdata["Creation-Date"] = nlpdata["Analyzed-Date"]
 
     staged = []  # for plugins with dependencies
     pipeline = []  # for plugins to be run now
