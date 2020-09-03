@@ -26,6 +26,7 @@ def parse_args() -> argparse.Namespace:
 
     arg_parser = act.scio.config.parse_args("Scio 2 Analyzer")
     arg_parser.add_argument('--plugins', dest='plugins', type=str)
+    arg_parser.add_argument('--proxy-string', help="Proxy to use webdump upload")
     arg_parser.add_argument('--webdump', dest='webdump', type=str, help="URI to post result data")
 
     return caep.config.handle_args(arg_parser, "scio/etc", "scio.ini", "analyze")
