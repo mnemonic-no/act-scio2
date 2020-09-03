@@ -22,6 +22,7 @@ import caep
 import act.scio.logsetup
 import act.scio.config
 
+
 def parse_args() -> argparse.Namespace:
     """Helper setting up the argsparse configuration"""
 
@@ -139,8 +140,10 @@ async def async_main() -> None:
         task = loop.create_task(analyze(plugins, beanstalk_client))
         try:
             await task
-        except LookupError as e:
-            logging.error("Got LookupError. If nltk data is missing, run scio-nltk-download, which should download all nltk data to ~/nltk_data.")
+        except LookupError:
+            logging.error("Got LookupError. If nltk data is missing, "
+                          "run scio-nltk-download, which should download "
+                          "all nltk data to ~/nltk_data.")
             raise
 
         result = task.result()
