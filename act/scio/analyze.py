@@ -71,8 +71,10 @@ async def analyze(plugins: List[plugin.BasePlugin],
 
     # make sure we have a Creation-Date field even though the
     # document did not contain one. When missing, use current time.
-    if "Creation-Date" not in nlpdata:
+    if "metadata" in nlpdata and "Creation-Date" not in nlpdata['metadata']:
         nlpdata["Creation-Date"] = nlpdata["Analyzed-Date"]
+    else:
+        nlpdata["Creation-Date"] = nlpdata["metadata"]["Creation-Date"]
 
     staged = []  # for plugins with dependencies
     pipeline = []  # for plugins to be run now
