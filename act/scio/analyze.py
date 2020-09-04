@@ -8,6 +8,7 @@ from typing import Optional, List
 import addict  # type: ignore
 import argparse
 import asyncio
+import datetime
 import greenstalk  # type: ignore
 import gzip
 import json
@@ -20,6 +21,7 @@ import caep
 
 import act.scio.logsetup
 import act.scio.config
+
 
 def parse_args() -> argparse.Namespace:
     """Helper setting up the argsparse configuration"""
@@ -64,6 +66,13 @@ async def analyze(plugins: List[plugin.BasePlugin],
     loop = asyncio.get_event_loop()
 
     nlpdata: addict.Dict = get_input(beanstalk_client)
+
+    nlpdata["Analyzed-Date"] = datetime.datetime.now().isoformat()
+
+    # make sure we have a Creation-Date field even though the
+    # document did not contain one. When missing, use current analyzed time.
+    nlpdata["Creation-Date"] = (nlpdata.get("metadata", {})
+                                .get("Creation-Date", nlpdata["Analyzed-Date"]))
 
     staged = []  # for plugins with dependencies
     pipeline = []  # for plugins to be run now
@@ -131,8 +140,10 @@ async def async_main() -> None:
         task = loop.create_task(analyze(plugins, beanstalk_client))
         try:
             await task
-        except LookupError as e:
-            logging.error("Got LookupError. If nltk data is missing, run scio-nltk-download, which should download all nltk data to ~/nltk_data.")
+        except LookupError:
+            logging.error("Got LookupError. If nltk data is missing, "
+                          "run scio-nltk-download, which should download "
+                          "all nltk data to ~/nltk_data.")
             raise
 
         result = task.result()
