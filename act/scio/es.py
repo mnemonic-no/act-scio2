@@ -64,7 +64,7 @@ def query(client: elasticsearch.client.Elasticsearch,
 
     # pylint: disable=no-member
     search = search.query("range", **{
-        "metadata.created": {
+        "Analyzed-Date": {
             "gte": start,
             "lte": end,
         }})
