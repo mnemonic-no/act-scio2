@@ -159,7 +159,8 @@ def init() -> argparse.Namespace:
     parser.add_argument("--cache", type=str,
                         help=("Which database used for caching allready " +
                               "uploaded files (default: ~/.cache/scio-feeds/upload.db)"))
-    parser.add_argument("--scio", type=str, default="http://localhost:3000/submit", help="URL to scio for submit (default=http://localhost:3000)")
+    parser.add_argument("--scio", type=str, default="http://localhost:3000/submit",
+                        help="URL to scio for submit (default=http://localhost:3000)")
     parser.add_argument("directories", metavar="DIR", type=str, nargs='*',
                         help="Which directories to scan")
 
@@ -203,25 +204,16 @@ def get_files(directories: List[Text]) -> List[CandidateFile]:
     CandidateFile object containing the path to the .html content
     file and the parsed meta data"""
 
-    def rewrite_meta(file_path):
-        """take a path with a .html extension and replace the
-        extension with .meta"""
-
-        return file_path[:-4] + "meta"
-
-    LOGGER.debug("Scanning %s", directories)
-
-    res = []
+    if not directories:
+        LOGGER.warning("Directories are emtpy")
+        return []
 
     for directory in directories:
         LOGGER.debug("Scanning %s", directory)
         files = os.listdir(directory)
         files = [os.path.join(directory, x) for x in files]
-        html = [x for x in files if x[-5:] == ".html"]
-        meta = list(map(rewrite_meta, html))
 
-        for pair in metadata(list(zip(html, meta))):
-            res.append(CandidateFile(*pair))
+        res = [CandidateFile(cf, {}) for cf in files]
 
     return res
 
