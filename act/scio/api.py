@@ -188,11 +188,11 @@ def indicators(indicator_type: constr(regex=r"^(ipv4|ipv6|uri|email|fqdn|md5|sha
     )
 
 
-@ app.get("/download/{document_id}")
-def download(document_id: constr(regex=r"^[0-9A-Fa-f]{64}$"),
+@ app.get("/download")
+def download(id: constr(regex=r"^[0-9A-Fa-f]{64}$"),
              args: argparse.Namespace = Depends(parse_args)) -> Response:
     """ Download document as original content"""
-    res = document_lookup(document_id, args.elasticsearch_client)
+    res = document_lookup(id, args.elasticsearch_client)
 
     if not os.path.isfile(res.filename):
         return Response(content="File not found", media_type="application/text")
@@ -203,11 +203,11 @@ def download(document_id: constr(regex=r"^[0-9A-Fa-f]{64}$"),
         media_type=res.content_type)
 
 
-@ app.get("/download_json/{document_id}")
-def download_json(document_id: constr(regex=r"^[0-9A-Fa-f]{64}$"),
+@ app.get("/download_json")
+def download_json(id: constr(regex=r"^[0-9A-Fa-f]{64}$"),
                   args: argparse.Namespace = Depends(parse_args)) -> Union[Response, Dict]:
     """ Download document base64 decoded in json struct """
-    res = document_lookup(document_id, args.elasticsearch_client)
+    res = document_lookup(id, args.elasticsearch_client)
 
     if not os.path.isfile(res.filename):
         return {
