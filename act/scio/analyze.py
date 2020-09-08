@@ -164,7 +164,7 @@ async def async_main() -> None:
             if r.status_code != 200:
                 logging.error("Unable to post result data to webdump: %s", r.text)
 
-        elif elasticsearch_client:
+        if elasticsearch_client:
             hexdigest = result.get("hexdigest")
 
             if not hexdigest:
@@ -173,7 +173,8 @@ async def async_main() -> None:
                 elasticsearch_client.index(index="scio2", id=hexdigest, body=result)
                 logging.info("Stored %s to elasticsearch", hexdigest)
 
-        else:
+        if not (args.webdump or elasticsearch_client):
+            # Print to stdout if we do not send to webdump or elasticsearch
             print(result_json)
 
         # If we are not listening on a beanstalk work queue, behave like a command line
