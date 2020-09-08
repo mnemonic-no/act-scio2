@@ -48,7 +48,7 @@ def get_input(beanstalk_client: Optional[greenstalk.Client] = None) -> addict.Di
         job = beanstalk_client.reserve()
         try:
             nlpdata = addict.Dict(json.loads(gzip.decompress(job.body)))
-            logging.info(nlpdata.keys())
+            logging.info("Started work on %s", nlpdata.get("hexdigest", "No Hexdigest"))
         except OSError as e:
             # File not found - log error
             logging.error(e)
@@ -66,6 +66,9 @@ async def analyze(plugins: List[plugin.BasePlugin],
     loop = asyncio.get_event_loop()
 
     nlpdata: addict.Dict = get_input(beanstalk_client)
+    if not nlpdata.content:
+        logging.error("Missing content")
+        return addict.Dict({})
 
     nlpdata["Analyzed-Date"] = datetime.datetime.now().isoformat()
 
@@ -147,6 +150,8 @@ async def async_main() -> None:
             raise
 
         result = task.result()
+        if not result:
+            continue
         result_json = json.dumps(result, indent="  ")
 
         if args.webdump:
