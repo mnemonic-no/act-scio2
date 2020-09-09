@@ -58,6 +58,7 @@ setup(
         "pytest-asyncio",
         "pytest",
         "python-magic",
+        "pytz",
         "requests",
         "tika",
         "urllib3",

@@ -15,6 +15,7 @@ import json
 import logging
 import os.path
 import requests
+import pytz
 import sys
 
 import caep
@@ -70,7 +71,7 @@ async def analyze(plugins: List[plugin.BasePlugin],
         logging.error("Missing content")
         return addict.Dict({})
 
-    nlpdata["Analyzed-Date"] = datetime.datetime.utcnow().isoformat()
+    nlpdata["Analyzed-Date"] = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC).isoformat()
 
     # make sure we have a Creation-Date field even though the
     # document did not contain one. When missing, use current analyzed time.
