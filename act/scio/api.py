@@ -25,7 +25,7 @@ import logging
 import os
 import re
 from functools import lru_cache
-from typing import Dict, Optional, Text, Union
+from typing import Dict, List, Optional, Text, Union
 
 import act.scio.config
 import act.scio.es
@@ -43,6 +43,18 @@ XDG_CACHE = os.path.expanduser(os.environ.get("XDG_CACHE_HOME", "~/.cache"))
 app = FastAPI()
 
 # pylint: disable=too-few-public-methods
+
+
+def max_current_jobs_ready(client: greenstalk.Client, tubes: List[Text]) -> int:
+    """ Get max current-jobs-ready from tubes specified """
+    max_jobs = 0
+    for tube in tubes:
+        stats = client.stats_tube(tube)
+
+        if stats:
+            max_jobs = max(max_jobs, stats.get("current-jobs-ready", 0))
+
+    return max_jobs
 
 
 class Document(BaseModel):
@@ -74,6 +86,9 @@ def parse_args() -> argparse.Namespace:
     arg_parser = act.scio.config.parse_args("Scio API")
     arg_parser.add_argument('--port', type=int, default=3000,
                             help="API port to listen on (default=3000)")
+    arg_parser.add_argument('--max-jobs', type=int, default=10,
+                            help="Max jobs in queue before submit responds " +
+                            "with backpressure (429)")
     arg_parser.add_argument('--reload', action="store_true",
                             help="Reload web server on file change (dev mode)")
     arg_parser.add_argument('--document-path', default=caep.get_cache_dir("scio/documents"),
@@ -118,6 +133,13 @@ async def submit(doc: Document, args: argparse.Namespace = Depends(parse_args)) 
     # Depends on parse_args which are used for settings. The result
     # is cached the first time it is executed
     """ Submit document """
+
+    max_jobs = max_current_jobs_ready(args.beanstalk_client, ["scio_doc", "scio_analyze"])
+
+    if max_jobs >= args.max_jobs:
+        logging.warning("%s jobs in queue", max_jobs)
+        raise HTTPException(status_code=429, detail="To many jobs in queue, try again later")
+
     filename = os.path.join(args.document_path, os.path.basename(doc.filename))
     content: bytes = base64.b64decode(doc.content)
     with open(filename, "bw") as f:
