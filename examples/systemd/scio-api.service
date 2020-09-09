@@ -1,5 +1,7 @@
 [Unit]
 Description=SCIO api service
+After=beanstalkd.service elasticsearch.service
+Wants=beanstalkd.service elasticsearch.service
 
 [Service]
 User=scio

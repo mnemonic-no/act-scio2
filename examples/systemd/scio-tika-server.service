@@ -1,5 +1,7 @@
 [Unit]
 Description=SCIO tika server service
+After=beanstalkd.service
+Wants=beanstalkd.service
 
 [Service]
 User=scio
