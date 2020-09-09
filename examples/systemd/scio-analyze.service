@@ -1,5 +1,8 @@
 [Unit]
 Description=SCIO analyze service
+After=beanstalkd.service elasticsearch.service
+Wants=beanstalkd.service elasticsearch.service
+
 
 [Service]
 User=scio
