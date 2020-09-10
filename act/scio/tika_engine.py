@@ -112,8 +112,11 @@ class Server:
 
             self.client.delete(job)  # type: ignore
             logging.info("Worker [%s] waiting to post result.", worker_id)
-            self.client.put(gzip.compress(json.dumps({**data, **meta_data}).encode('utf8')))  # type: ignore
-            logging.info("Worker [%s] job done.", worker_id)
+            try:
+                self.client.put(gzip.compress(json.dumps({**data, **meta_data}).encode('utf8')))  # type: ignore
+                logging.info("Worker [%s] job done.", worker_id)
+            except greenstalk.JobTooBigError:
+                logging.error("Job to big: %s.", meta_data['filename'])
 
     async def _start(self, n: int) -> None:
         """Start the server, create n number of workers and wait for data on the queue"""
