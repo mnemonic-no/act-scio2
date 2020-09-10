@@ -5,6 +5,7 @@ from typing import Text, Optional, Any
 import argparse
 import asyncio
 import greenstalk
+import html
 import json
 import logging
 import os
@@ -106,8 +107,11 @@ class Server:
                 self.client.delete(job)  # type: ignore
                 continue
 
-            with open(meta_data['filename'], 'rb') as buffer:
-                data = parser.from_buffer(buffer)
+            with open(meta_data['filename'], 'rb') as fh:
+                content = fh.read()
+                if meta_data['filename'].endswith(".html"):
+                    content = html.unescape(content.decode("utf8")).encode("utf8")
+                data = parser.from_buffer(content)
                 data.update(meta_data)
 
             self.client.delete(job)  # type: ignore
