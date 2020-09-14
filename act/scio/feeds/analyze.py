@@ -56,6 +56,8 @@ def in_ignore_file(fname: Text, ignore_file: Optional[Text]) -> bool:
     if not ignore_file:
         return False
 
+    ignore_file = os.path.expanduser(ignore_file)
+
     if not os.path.isfile(ignore_file):
         logging.warning("Ignore file not found: %s", ignore_file)
         return False
