@@ -92,11 +92,11 @@ async def analyze(plugins: List[plugin.BasePlugin],
         for p in pipeline:
             tasks.append(loop.create_task(p.analyze(nlpdata)))
 
-        await asyncio.gather(*tasks)
+        await asyncio.gather(*tasks, return_exceptions=True)
 
         for task in tasks:
             if task.exception():
-                logging.warning("%s return an exception: %s", task, task.exception())
+                logging.error("%s returned an exception: %s", task, task.exception())
             else:
                 res = task.result()
                 nlpdata[res.name] = res.result
