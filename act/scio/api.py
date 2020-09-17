@@ -49,6 +49,11 @@ def max_current_jobs_ready(client: greenstalk.Client, tubes: List[Text]) -> int:
     """ Get max current-jobs-ready from tubes specified """
     max_jobs = 0
     for tube in tubes:
+        # We need to check for the existense of a beanstalk tube
+        # to avoid "NOT_FOUND" exceptions in the case where the tubes
+        # are empty before first init
+        if tube not in client.tubes():
+            continue
         stats = client.stats_tube(tube)
 
         if stats:
@@ -61,6 +66,7 @@ class Document(BaseModel):
     """ Document model """
     content: StrictStr
     filename: StrictStr
+    uri: StrictStr
 
 
 class LookupResponse(BaseModel):
