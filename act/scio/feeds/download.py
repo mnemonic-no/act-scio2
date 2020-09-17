@@ -19,13 +19,13 @@ def download_and_store(
         ignore_file: Optional[Text],
         storage_path: Text,
         proxy_string: Optional[Text],
-        link: urllib.parse.ParseResult) -> Text:
+        link: urllib.parse.ParseResult) -> Dict:
     """Download and store a link. Storage defined in args"""
 
     # check if the actual url is in the ignore file. If so, no download will take place.
     if analyze.in_ignore_file(link.geturl(), ignore_file):
         logging.info("Download link [%s] in ignore file.", link.geturl())
-        return ""
+        return {}
 
     logging.info("downloading %s", link.geturl())
 
@@ -47,7 +47,7 @@ def download_and_store(
 
     if req.status_code >= 400:
         logging.info("Status %s - %s", req.status_code, link)
-        return ""
+        return {}
 
     fname = os.path.join(storage_path,
                          "download",
@@ -58,14 +58,14 @@ def download_and_store(
     # the feed worker, but not uploaded to Scio.
     if analyze.in_ignore_file(fname, ignore_file):
         logging.info("Ignoring %s based on %s", fname, ignore_file)
-        return ""
+        return {}
 
     with open(fname, "wb") as download_file:
         logging.info("Writing %s", fname)
         req.raw.decode_content = True
         shutil.copyfileobj(req.raw, download_file)
 
-    return fname
+    return {'filename': fname, 'uri': link.geturl()}
 
 
 def get_feed(feed_url: Text, proxy_string: Optional[Text] = None) -> Any:
@@ -109,7 +109,7 @@ def default_headers() -> Dict:
 
 def handle_feed(args: argparse.Namespace,
                 feed_url: Text,
-                partial: bool) -> Tuple[Text, Text, List[Text]]:
+                partial: bool) -> Tuple[Text, Text, List[Dict]]:
     """Take a feed, extract all entries, download the full original
     web page if partial , extract links and download any documents references
     if specified in the arguments and write the feed entry content
@@ -120,7 +120,7 @@ def handle_feed(args: argparse.Namespace,
     if not feed:
         return "NOT FEED", feed_url, []
 
-    files = []
+    files: List[Dict] = []
 
     logging.info("%s contains %s entries",
                  feed_url,
@@ -132,7 +132,7 @@ def handle_feed(args: argparse.Namespace,
 
         filename, html_data = (extract.partial_entry_text_to_file(args, entry) if partial else
                                extract.entry_text_to_file(args, entry))
-        files.append(filename)
+        files.append({'filename': filename, 'uri': feed_url})
 
         if not (filename and html_data):
             continue
@@ -155,11 +155,11 @@ def handle_feed(args: argparse.Namespace,
 def download_feed_list(
         args: argparse.Namespace,
         feed_list: List[Text],
-        partial: bool) -> List[Text]:
+        partial: bool) -> List[Dict]:
 
     """Download and analyze a list of feeds concurrently"""
 
-    files: List[Text] = []
+    files: List[Dict] = []
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=32) as executor:
         # Start the load operations and mark each future with its URL
@@ -175,7 +175,7 @@ def download_feed_list(
 
 
 def future_result_exception(url: Text,
-                            future: concurrent.futures.Future) -> Tuple[Text, Text, List[Text]]:
+                            future: concurrent.futures.Future) -> Tuple[Text, Text, List[Dict]]:
     """Retrieve the result of a future, logging any exception"""
 
     try:
