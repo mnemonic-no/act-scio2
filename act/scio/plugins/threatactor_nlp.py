@@ -60,19 +60,29 @@ class Plugin(BasePlugin):
         # found, look-before and collect all nouns while the tokens are nouns
         # or part of a listing.
         for i, (token, tag) in enumerate(nlpdata.pos_tag.tokens):
-            if first_stage_found and tag in possible_tag_types and ps.stem(token) in group_stem_postfix:
+            if first_stage_found:
+                second_stage_found = bool(tag in possible_tag_types and
+                                          ps.stem(token) in group_stem_postfix)
+                if not second_stage_found:
+                    first_stage_found = False
+                    continue
+
                 if nlpdata.pos_tag.tokens[i - 2][1] not in possible_tag_types:
                     first_stage_found = False
                     continue
                 n = i - 1
-                while nlpdata.pos_tag.tokens[n][1] in lookbefore_tags:
+                while n > 0 and len(nlpdata.pos_tag.tokens[n]) == 2 and  nlpdata.pos_tag.tokens[n][1] in lookbefore_tags:
                     n -= 1
 
                 current_actor: List[Text] = []
-                for (subtoken, pos_tag) in nlpdata.pos_tag.tokens[n:i-1]:
+                for (subtoken, pos_tag) in nlpdata.pos_tag.tokens[n:i - 1]:
+                    # check if we have reached a separator (comma, 'and' etc)
+                    # if so, we need to create a result of what we have found thus
+                    # far and look for more.
                     if pos_tag in chain_tags:
                         if current_actor:
-                            pos_actors.append(" ".join(current_actor))
+                            if valid_actor(current_actor):
+                                pos_actors.append(" ".join(current_actor))
                             current_actor = []
                     elif pos_tag in possible_ta_tag_types:
                         if subtoken in false_positive_filter:
@@ -81,8 +91,23 @@ class Plugin(BasePlugin):
                 if current_actor:
                     pos_actors.append(" ".join(current_actor))
 
+            # check wether the current tag is of a type and in the accepted list of
+            # threat group postfixes.
             first_stage_found = bool(tag in possible_tag_types and
                                      ps.stem(token) in threat_stem_postfix)
 
         res.actors = pos_actors
         return Result(name=self.name, version=self.version, result=res)
+
+
+def valid_actor(actor: List[Text]):
+    """Check that the list of elements are actualy
+    valid formatted"""
+
+    if not actor:
+        return False
+    for e in actor:
+        # Check that all elements start with an upper case letter
+        if e and not e[0].isupper():
+            return False
+    return True

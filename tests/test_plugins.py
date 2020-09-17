@@ -21,7 +21,7 @@ async def test_plugins(monkeypatch) -> None:
     res = await analyze.analyze(plugins, beanstalk_client=False)
 
     # Two plugins + text
-    assert len(res.keys()) == 3
+    assert len(res.keys()) == 5
 
     assert "count" in res
     assert "sentences" in res
