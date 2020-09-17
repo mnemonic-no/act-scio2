@@ -25,6 +25,7 @@ def to_scio_submit_post_data(obj: IO, filemap: Dict) -> Dict[Text, Text]:
 
     assert 'content' in metadata
     assert 'filename' in metadata
+    assert 'uri' in metadata
 
     return metadata
 
