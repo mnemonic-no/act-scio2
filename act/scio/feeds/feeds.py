@@ -20,7 +20,7 @@ Download feeds from the feeds.txt file, store feed content in .html and feed
 metadata in .meta files. Also attempts to download links to certain document
 types"""
 
-from typing import List, Text
+from typing import List, Text, Dict
 
 import datetime
 import hashlib
@@ -43,7 +43,7 @@ def sha256_of_file(filename: Text) -> Text:
         return hashlib.sha256(data).hexdigest()
 
 
-def upload_uncached_files(cache_file: Text, files: List[Text], scio_url: Text) -> int:
+def upload_uncached_files(cache_file: Text, files: List[Dict], scio_url: Text) -> int:
     """Check each downloaded file hexdigest against a cache of previously uploaded
     files. Only upload "new" files."""
 
@@ -51,14 +51,15 @@ def upload_uncached_files(cache_file: Text, files: List[Text], scio_url: Text) -
 
     nup = 0
 
-    for filename in files:
+    for filemap in files:
 
+        filename: Text = filemap['filename']
         sha256 = sha256_of_file(filename)
 
         if not mycache.contains(sha256):
             try:
                 if scio_url != "dummy.url":
-                    upload.upload(scio_url, filename)
+                    upload.upload(scio_url, filemap)
                 mycache.insert(filename, sha256, str(datetime.datetime.now()))
                 logging.info("Uploaded %s to scio", filename)
                 nup += 1
@@ -82,7 +83,8 @@ def main() -> None:
 
     setup_logging(args.loglevel, args.logfile, "scio-feed-download")
 
-    files: List[Text] = []
+    files: List[Dict] = []
+
     try:
         full_feeds, partial_feeds = conf.parse_feed_file(args.feeds)
         files += download.download_feed_list(args, full_feeds, partial=False)
