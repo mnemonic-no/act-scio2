@@ -66,7 +66,7 @@ class Document(BaseModel):
     """ Document model """
     content: StrictStr
     filename: StrictStr
-    uri: StrictStr
+    uri: Optional[StrictStr]
 
 
 class LookupResponse(BaseModel):
@@ -80,6 +80,7 @@ class SubmitResponse(BaseModel):
     filename: StrictStr
     hexdigest: StrictStr
     count: StrictInt
+    uri: Optional[StrictStr]
     error: Optional[StrictStr]
 
 
@@ -155,7 +156,8 @@ async def submit(doc: Document, args: argparse.Namespace = Depends(parse_args)) 
         filename=filename,
         hexdigest=hashlib.sha256(content).hexdigest(),
         count=len(content),
-        error=None)
+        error=None,
+        uri=doc.uri)
 
     args.beanstalk_client.put(response.json().encode("utf8"))
     return response
