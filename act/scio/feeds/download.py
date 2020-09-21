@@ -49,14 +49,15 @@ def download_and_store(
         logging.info("Status %s - %s", req.status_code, link)
         return {}
 
+    basename = extract.safe_filename(os.path.basename(link.path))
     fname = os.path.join(storage_path,
                          "download",
-                         extract.safe_filename(os.path.basename(link.path)))
+                         basename)
 
     # check if the filename on disk is in the ignore file. If so, do not return filename
     # for upload. This differ from URL in the ignore file as the file is in fact downloaded by
     # the feed worker, but not uploaded to Scio.
-    if analyze.in_ignore_file(fname, ignore_file):
+    if analyze.in_ignore_file(basename, ignore_file):
         logging.info("Ignoring %s based on %s", fname, ignore_file)
         return {}
 
