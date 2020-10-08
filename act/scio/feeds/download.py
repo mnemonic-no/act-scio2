@@ -133,7 +133,7 @@ def handle_feed(args: argparse.Namespace,
 
     for entry_n, entry in enumerate(feed["entries"]):
         logging.info("Handling : %s of %s : %s",
-                     entry_n, len(feed["entries"]), entry.get('title', f"No title : {feed_url}")
+                     entry_n, len(feed["entries"]), entry.get('title', f"No title : {feed_url}"))
 
         filename, html_data = (extract.partial_entry_text_to_file(args, entry) if partial else
                                extract.entry_text_to_file(args, entry))
