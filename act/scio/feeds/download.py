@@ -51,6 +51,9 @@ def download_and_store(
     except requests.exceptions.ConnectionError:
         logging.info("%s connection error", link.geturl())
         return {}
+    except requests.exceptions.MissingSchema:
+        logging.info("%s missing schema", link.geturl())
+        return {}
 
     if req.status_code >= 400:
         logging.info("Status %s - %s", req.status_code, link)
