@@ -86,12 +86,22 @@ def get_feed(feed_url: Text, proxy_string: Optional[Text] = None) -> Any:
 
     logging.info("Opening feed : %s", feed_url)
 
-    req = requests.get(
-        feed_url,
-        proxies=proxies(proxy_string),
-        headers=default_headers(),
-        verify=False,
-        timeout=60)
+    try:
+        req = requests.get(
+            feed_url,
+            proxies=proxies(proxy_string),
+            headers=default_headers(),
+            verify=False,
+            timeout=60)
+    except requests.exceptions.ReadTimeout:
+        logging.error("%s timed out", feed_url)
+        return None
+    except requests.exceptions.ConnectionError:
+        logging.error("%s connection error", feed_url)
+        return None
+    except requests.exceptions.MissingSchema:
+        logging.error("%s missing schema", feed_url)
+        return None
 
     return feedparser.parse(req.text)
 
