@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 import html
 import justext
 import requests
+import uuid
 
 from act.scio.feeds import download, analyze
 
@@ -52,7 +53,7 @@ def create_html(entry: Dict) -> Text:
     content = get_content_from_entry(entry)
     summary = get_summary_from_entry(entry)
 
-    return html_data.format(title=entry["title"],
+    return html_data.format(title=entry.get("title", "NO TITLE"),
                             content=content,
                             summary=summary)
 
@@ -106,10 +107,10 @@ def partial_entry_text_to_file(
         logging.warning("Unable to download content: %s", url)
         return None, None
 
-    filename = safe_filename(entry['title'])
+    filename = safe_filename(entry.get('title', str(uuid.uuid4())))
 
     html_data = "<html>\n<head>\n"
-    html_data += "<title>{0}</title>\n</head>\n".format(entry['title'])
+    html_data += "<title>{0}</title>\n</head>\n".format(entry.get('title', "NO TITLE"))
     html_data += "<body>\n"
 
     raw_html = req.text
@@ -142,7 +143,7 @@ def entry_text_to_file(
     """Extract the entry content and write it to the proper file.
     Return the wrapped HTML"""
 
-    filename = safe_filename(entry['title'])
+    filename = safe_filename(entry.get('title', str(uuid.uuid4())))
 
     html_data = create_html(entry)
 
@@ -161,6 +162,6 @@ def get_links(entry: Dict, html_data: Text) -> List[urllib.parse.ParseResult]:
     if soup:
         links = [a['href'] for a in soup.findAll('a', href=True)]
     else:
-        logging.warning("soup is none : %s", entry['title'])
+        logging.warning("soup is none : %s", entry.get('title', "NO TITLE"))
 
     return [analyze.parse_and_correct_link(link) for link in links]
