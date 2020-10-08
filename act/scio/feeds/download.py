@@ -38,12 +38,16 @@ def download_and_store(
         logging.info("possible relative path %s, trying to append host: %s",
                      link.path, parsed_feed_url.netloc)
 
-    req = requests.get(link.geturl(),
-                       proxies=proxies(proxy_string),
-                       headers=default_headers(),
-                       verify=False,
-                       stream=True,
-                       timeout=60)
+    try:
+        req = requests.get(link.geturl(),
+                           proxies=proxies(proxy_string),
+                           headers=default_headers(),
+                           verify=False,
+                           stream=True,
+                           timeout=60)
+    except requests.exceptions.ReadTimeout:
+        logging.info("%s timed out", link.geturl())
+        return {}
 
     if req.status_code >= 400:
         logging.info("Status %s - %s", req.status_code, link)
@@ -129,11 +133,17 @@ def handle_feed(args: argparse.Namespace,
 
     for entry_n, entry in enumerate(feed["entries"]):
         logging.info("Handling : %s of %s : %s",
-                     entry_n, len(feed["entries"]), entry['title'])
+                     entry_n, len(feed["entries"]), entry.get('title', f"No title : {feed_url}")
 
         filename, html_data = (extract.partial_entry_text_to_file(args, entry) if partial else
                                extract.entry_text_to_file(args, entry))
-        files.append({'filename': filename, 'uri': feed_url})
+        if filename:
+            entry = {'filename': filename, 'uri': feed_url}
+            files.append(entry)
+            logging.debug('Added entry %s to list of files', entry)
+        else:
+            logging.info('entry "%s" [partial=%s] returned no filename',
+                         entry.get('title', 'NA'), partial)
 
         if not (filename and html_data):
             continue
