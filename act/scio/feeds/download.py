@@ -194,9 +194,9 @@ def download_feed_list(
                          for url in feed_list}
         for future in concurrent.futures.as_completed(future_to_url):
             url = future_to_url[future]
-            result, feed, files = future_result_exception(url, future)
+            result, feed, feed_files = future_result_exception(url, future)
             logging.info("Feed[%s] (%s) returned %s with %s files", feed, url, result, len(files))
-            files += files
+            files += feed_files
 
     return files
 
