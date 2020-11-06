@@ -3,7 +3,7 @@
 """ SCIO Analyze module """
 
 from act.scio import plugin
-from typing import Optional, List
+from typing import Optional, List, Dict, Text
 
 import addict  # type: ignore
 import argparse
@@ -16,6 +16,7 @@ import logging
 import os.path
 import requests
 import pytz
+import re
 import sys
 
 import caep
@@ -23,16 +24,61 @@ import caep
 import act.scio.logsetup
 import act.scio.config
 
+DEFAULT_METADATA_DATE_FIELDS = [
+    "Creation-Date",
+    "Last-Modified",
+    "Last-Save-Date",
+    "article:modified_time",
+    "article:published_time",
+    "citation_publication_date",
+    "created",
+    "date",
+    "dcterms:created",
+    "dcterms:modified",
+    "meta:creation-date",
+    "meta:save-date",
+    "modified",
+    "og:updated_time",
+    "pdf:docinfo:created",
+    "pdf:docinfo:custom:date",
+    "pdf:docinfo:modified",
+    "xmpMM:History:When",
+]
+
+ISO8601_DATE_RE = re.compile(r'^\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ$')
+
 
 def parse_args() -> argparse.Namespace:
     """Helper setting up the argsparse configuration"""
 
     arg_parser = act.scio.config.parse_args("Scio 2 Analyzer")
     arg_parser.add_argument('--plugins', dest='plugins', type=str)
+    arg_parser.add_argument('--metadata-date-fields', default=",".join(DEFAULT_METADATA_DATE_FIELDS))
     arg_parser.add_argument('--proxy-string', help="Proxy to use webdump upload")
     arg_parser.add_argument('--webdump', dest='webdump', type=str, help="URI to post result data")
 
-    return caep.config.handle_args(arg_parser, "scio/etc", "scio.ini", "analyze")
+    args = caep.config.handle_args(arg_parser, "scio/etc", "scio.ini", "analyze")
+
+    args.metadata_date_fields = [field.strip() for field in args.metadata_date_fields.split(",")]
+
+    return args
+
+
+def remove_non_iso_dates(metadata: Dict, isodate_fields: List[Text]) -> Dict:
+    filtered = {}
+
+    for key, value in metadata.items():
+
+        if key in isodate_fields:
+            if not isinstance(value, str):
+                logging.warning("date value is not string %s:%s", key, value)
+                continue
+            if not ISO8601_DATE_RE.search(value):
+                logging.warning("Illegal date value in %s:%s", key, value)
+                continue
+        filtered[key] = value
+
+    return filtered
 
 
 def get_input(beanstalk_client: Optional[greenstalk.Client] = None) -> addict.Dict:
@@ -171,7 +217,16 @@ async def async_main() -> None:
             if not hexdigest:
                 logging.error("Missing hexdigest, skipping elasticsearch storage")
             else:
-                elasticsearch_client.index(index="scio2", id=hexdigest, body=result)
+                result["metadata"] = remove_non_iso_dates(
+                        result["metadata"],
+                        args.metadata_date_fields)
+
+                try:
+                    elasticsearch_client.index(index="scio2", id=hexdigest, body=result)
+                except Exception as e:
+                    logging.error("Error storing %s to elasticsearch: %s", hexdigest, e)
+                    raise
+
                 logging.info("Stored %s to elasticsearch", hexdigest)
 
         if not (args.webdump or elasticsearch_client):
