@@ -221,7 +221,12 @@ async def async_main() -> None:
                         result["metadata"],
                         args.metadata_date_fields)
 
-                elasticsearch_client.index(index="scio2", id=hexdigest, body=result)
+                try:
+                    elasticsearch_client.index(index="scio2", id=hexdigest, body=result)
+                except Exception as e:
+                    logging.error("Error storing %s to elasticsearch: %s", hexdigest, e)
+                    raise
+
                 logging.info("Stored %s to elasticsearch", hexdigest)
 
         if not (args.webdump or elasticsearch_client):
