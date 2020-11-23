@@ -51,7 +51,7 @@ async def test_noun_phrase_search() -> None:
     assert nf is not None
     assert i == 23
 
-    
+
 def test_next_cc():
     idx, token = search.next_cc(token_tags, 0)
     assert token
@@ -87,7 +87,10 @@ def test_find_list():
     assert idx == 21
     assert len(mylist) == 4
 
+    org_list = ["Tinky Winky", "Laa-Laa", "Dipsy", "Poo"]
+    print(mylist)
     for e in mylist:
+        assert e in org_list
         i, nf = search.noun_frase(e, 0)
         assert nf
         assert i == len(e)
