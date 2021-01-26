@@ -53,3 +53,4 @@ p https://www.cyber.gov.au/rssfeed/2
 p https://blog.checkpoint.com/feed/
 p https://redalert.nshc.net/category/monthly-report/feed/
 f https://feeds.feedburner.com/TroyHunt
+f https://blog.google/threat-analysis-group/rss
