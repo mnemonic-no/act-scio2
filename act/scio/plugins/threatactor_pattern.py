@@ -20,6 +20,16 @@ def normalize_ta(name: Text, uppercase_abbr: List[Text]) -> Text:
     return res
 
 
+def abbreviation_list(abbs: Text) -> List[Text]:
+    """Split the abbrivation string on |, and return a list of
+    abbreviations"""
+
+    uppercase_abbr = [x.strip() for x in abbs.split("|")]
+    uppercase_abbr = list(filter(bool, uppercase_abbr))
+
+    return uppercase_abbr
+
+
 class Plugin(BasePlugin):
     name = "threatactor"
     info = "Extracting references to known threat actors from a body of text"
@@ -32,7 +42,8 @@ class Plugin(BasePlugin):
         ini.read([os.path.join(self.configdir, "threatactor_pattern.ini")])
         ini['threat_actor']['alias'] = os.path.join(self.configdir, ini['threat_actor']['alias'])
 
-        uppercase_abbr = [x.strip() for x in ini['threat_actor'].get('uppercase_abbr', "").split("|")]
+        uppercase_abbr = abbreviation_list(ini['threat_actor'].get('uppercase_abbr', ""))
+
         vocab = Vocabulary(ini['threat_actor'])
 
         res = addict.Dict()
