@@ -32,7 +32,7 @@ class Plugin(BasePlugin):
         ini.read([os.path.join(self.configdir, "threatactor_pattern.ini")])
         ini['threat_actor']['alias'] = os.path.join(self.configdir, ini['threat_actor']['alias'])
 
-        uppercase_abbr = [x.strip() for x in ini['threat_actor']['uppercase_abbr'].split("|")]
+        uppercase_abbr = [x.strip() for x in ini['threat_actor'].get('uppercase_abbr', "").split("|")]
         vocab = Vocabulary(ini['threat_actor'])
 
         res = addict.Dict()
