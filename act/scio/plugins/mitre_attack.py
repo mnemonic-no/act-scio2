@@ -29,5 +29,6 @@ class Plugin(BasePlugin):  # pylint: disable=r0903
         res.Tactics = self.tactic_re.findall(nlpdata.content)
         res.Techniques = self.technique_re.findall(nlpdata.content)
         res.SubTechniques = self.subtechnique_re.findall(nlpdata.content)
+        res.Software = self.software_re.findall(nlpdata.content)
 
         return Result(name=self.name, version=self.version, result=res)
