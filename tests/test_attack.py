@@ -26,6 +26,7 @@ Application Layer Protocol: Web Proto
 
 G1234
 G4321.
+S1234,S4321.
 TA1234.
 TA4321
 """
@@ -58,3 +59,6 @@ async def test_sectors() -> None:
     assert "T1566.002" in res.result.SubTechniques
     assert "T1204.001" in res.result.SubTechniques
     assert "T1053.005" in res.result.SubTechniques
+    assert len(res.result.Software) == 2
+    assert "S1234" in res.result.Software
+    assert "S4321" in res.result.Software
