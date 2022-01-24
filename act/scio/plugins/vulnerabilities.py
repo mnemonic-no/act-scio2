@@ -1,6 +1,5 @@
-import ipaddress
 import re
-from typing import Dict, List, Set, Text
+from typing import List, Text
 
 import addict
 
@@ -13,8 +12,8 @@ class Plugin(BasePlugin):
     version = "0.1"
     dependencies: List[Text] = []
 
-    cve = re.compile("\\b(?:CVE|cve)-\d{4}-\d{4,7}\\b")
-    msid = re.compile("\\b(?:MS|ms)\d{2}-\d+\\b")
+    cve = re.compile(r"\b(?:CVE|cve)-\d{4}-\d{4,7}\b")
+    msid = re.compile(r"\b(?:MS|ms)\d{2}-\d+\b")
 
     async def analyze(self, nlpdata: addict.Dict) -> Result:
 
