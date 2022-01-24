@@ -31,39 +31,34 @@ submit utility.
 
 import logging
 import sys
-from typing import Optional, Text
 from logging.handlers import RotatingFileHandler
+from typing import Optional, Text
 
 
 def setup_logging(
-        loglevel: Text = "debug",
-        logfile: Optional[Text] = None,
-        prefix: Text = "scio",
-        maxBytes: int = 100000000,  # 100 MB
-        backupCount: int = 6):
-    """ Setup loglevel and optional log to file """
+    loglevel: Text = "debug",
+    logfile: Optional[Text] = None,
+    prefix: Text = "scio",
+    maxBytes: int = 100000000,  # 100 MB
+    backupCount: int = 6,
+):
+    """Setup loglevel and optional log to file"""
     numeric_level = getattr(logging, loglevel.upper(), None)
     if not isinstance(numeric_level, int):
-        raise ValueError('Invalid log level: %s' % loglevel)
+        raise ValueError("Invalid log level: %s" % loglevel)
 
     datefmt = "%Y-%m-%d %H:%M:%S"
     formatter = "[%(asctime)s] app=" + prefix + " level=%(levelname)s msg=%(message)s"
 
     if logfile:
         handlers = [
-            RotatingFileHandler(
-                logfile,
-                maxBytes=maxBytes,
-                backupCount=backupCount)]
+            RotatingFileHandler(logfile, maxBytes=maxBytes, backupCount=backupCount)
+        ]
 
         logging.basicConfig(
-            level=numeric_level,
-            handlers=handlers,
-            format=formatter,
-            datefmt=datefmt)
+            level=numeric_level, handlers=handlers, format=formatter, datefmt=datefmt
+        )
     else:
         logging.basicConfig(
-            level=numeric_level,
-            stream=sys.stdout,
-            format=formatter,
-            datefmt=datefmt)
+            level=numeric_level, stream=sys.stdout, format=formatter, datefmt=datefmt
+        )

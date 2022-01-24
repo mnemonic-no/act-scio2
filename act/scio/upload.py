@@ -42,10 +42,10 @@ import requests
 
 from act.scio.config import get_cache_dir
 
-LOGGER = logging.getLogger('root')
+LOGGER = logging.getLogger("root")
 
 
-class CandidateFile():
+class CandidateFile:
     """
     CandidateFile holds the metadata related to an .html file
     describing when the feed was published etc.
@@ -97,13 +97,15 @@ class Cache:
 
         self.conn = sqlite3.connect(filename)
 
-        self.conn.execute("""
+        self.conn.execute(
+            """
         CREATE TABLE IF NOT EXISTS upload (
             id integer PRIMARY KEY,
             filename text NOT NULL,
             sha256 text NOT NULL,
             description text)
-        """)
+        """
+        )
 
     def uploaded(self, sha256):
         """Check if a particular digest is allready uploaded. Returns
@@ -124,15 +126,18 @@ class Cache:
         """insert a new file in the metadata cache"""
 
         sql = "INSERT INTO upload(filename, sha256, description) VALUES(?,?,?)"
-        LOGGER.debug("Inserting %s, %s, %s into database",
-                     filename, sha256, description)
+        LOGGER.debug(
+            "Inserting %s, %s, %s into database", filename, sha256, description
+        )
         self.conn.execute(sql, (filename, sha256, description))
         self.conn.commit()
 
     def info(self, sha256):
         """Get stored info about a digest. Returns a list of Dictionaries"""
 
-        sql = "SELECT filename, sha256, description FROM upload WHERE sha256 = ?"  # NOQA
+        sql = (
+            "SELECT filename, sha256, description FROM upload WHERE sha256 = ?"  # NOQA
+        )
 
         cur = self.conn.execute(sql, (sha256,))
 
@@ -142,8 +147,7 @@ class Cache:
         result_dictionaries = []
 
         for result in results:
-            key_value_pairs = list(zip(["filename", "sha256", "description"],
-                                       result))
+            key_value_pairs = list(zip(["filename", "sha256", "description"], result))
             result_dictionaries.append(dict(key_value_pairs))
 
         return result_dictionaries
@@ -153,21 +157,39 @@ def init() -> argparse.Namespace:
     """initialize argument parser"""
 
     parser = argparse.ArgumentParser(description="Upload html to Scio")
-    parser.add_argument("-l", "--log", type=str, help="Which file to log to (default: stdout)")
+    parser.add_argument(
+        "-l", "--log", type=str, help="Which file to log to (default: stdout)"
+    )
     parser.add_argument("-v", "--verbose", action="store_true", help="Log level INFO")
     parser.add_argument("--debug", action="store_true", help="Log level DEBUG")
-    parser.add_argument("--cache", type=str,
-                        help=("Which database used for caching allready " +
-                              "uploaded files (default: ~/.cache/scio-feeds/upload.db)"))
-    parser.add_argument("--scio", type=str, default="http://localhost:3000/submit",
-                        help="URL to scio for submit (default=http://localhost:3000)")
-    parser.add_argument("directories", metavar="DIR", type=str, nargs='*',
-                        help="Which directories to scan")
+    parser.add_argument(
+        "--cache",
+        type=str,
+        help=(
+            "Which database used for caching allready "
+            + "uploaded files (default: ~/.cache/scio-feeds/upload.db)"
+        ),
+    )
+    parser.add_argument(
+        "--scio",
+        type=str,
+        default="http://localhost:3000/submit",
+        help="URL to scio for submit (default=http://localhost:3000)",
+    )
+    parser.add_argument(
+        "directories",
+        metavar="DIR",
+        type=str,
+        nargs="*",
+        help="Which directories to scan",
+    )
 
     args = parser.parse_args()
 
     if not args.directories:
-        args.directories = [os.path.join(get_cache_dir("scio-feeds", create=True), "download")]
+        args.directories = [
+            os.path.join(get_cache_dir("scio-feeds", create=True), "download")
+        ]
 
     if not args.cache:
         args.cache = os.path.join(get_cache_dir("scio-feeds", create=True), "upload.db")
@@ -222,14 +244,14 @@ def read_as_base64(obj: IO) -> Text:
     """Create a base64 encoded string from a file like object"""
 
     encoded_bytes = base64.b64encode(obj.read())
-    return encoded_bytes.decode('ascii')
+    return encoded_bytes.decode("ascii")
 
 
 def to_scio_submit_post_data(obj: IO, file_name: Text) -> Dict[Text, Text]:
     """Take a file like object, and return a dictionary on the correct form for
     submitting to the SCIO API"""
 
-    return {'content': read_as_base64(obj), 'filename': file_name}
+    return {"content": read_as_base64(obj), "filename": file_name}
 
 
 def upload(args: argparse.Namespace) -> None:
@@ -246,17 +268,22 @@ def upload(args: argparse.Namespace) -> None:
         partial_feed = candidate.metadata.get("partial_feed", False)
         if partial_feed:
             LOGGER.info("Partial feed: %s", candidate.filename)  # NOQA
-            hexdigest = hashlib.sha256(candidate.metadata["link"].encode("utf-8")).hexdigest()
+            hexdigest = hashlib.sha256(
+                candidate.metadata["link"].encode("utf-8")
+            ).hexdigest()
             LOGGER.info("Partial feed: %s", hexdigest)  # NOQA
         else:
             hexdigest = candidate.sha256()
 
         if not submit_cache.uploaded(hexdigest):
             LOGGER.debug("submit %s", candidate.filename)
-            submit_cache.insert(candidate.filename, hexdigest,
-                                candidate.metadata.get("creation-date", "NA"))
+            submit_cache.insert(
+                candidate.filename,
+                hexdigest,
+                candidate.metadata.get("creation-date", "NA"),
+            )
             my_metadata = candidate.metadata
-            my_metadata['filename'] = candidate.filename
+            my_metadata["filename"] = candidate.filename
             if candidate.uploadable():
                 with open(candidate.filename, "rb") as file_h:
                     post_data = to_scio_submit_post_data(file_h, candidate.filename)
@@ -265,12 +292,14 @@ def upload(args: argparse.Namespace) -> None:
                     session.trust_env = False
                     session.post(args.scio, json=my_metadata)
             else:
-                LOGGER.info("Not uploading %s (wrong mimetype)", candidate.filename)  # NOQA
+                LOGGER.info(
+                    "Not uploading %s (wrong mimetype)", candidate.filename
+                )  # NOQA
 
 
 def main() -> None:
     args = init()
-    logformat = '%(asctime)-15s [%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s'  # NOQA
+    logformat = "%(asctime)-15s [%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"  # NOQA
 
     logcfg = {
         "format": logformat,
@@ -278,13 +307,13 @@ def main() -> None:
     }
 
     if args.verbose:
-        logcfg['level'] = logging.INFO
+        logcfg["level"] = logging.INFO
 
     if args.debug:
-        logcfg['level'] = logging.DEBUG
+        logcfg["level"] = logging.DEBUG
 
     if args.log:
-        logcfg['filename'] = args.log
+        logcfg["filename"] = args.log
 
     logging.basicConfig(**logcfg)
 

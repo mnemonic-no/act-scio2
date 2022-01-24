@@ -2,27 +2,26 @@
 
 """ SCIO Analyze module """
 
-from act.scio import plugin
-from typing import Optional, List, Dict, Text
-
-import addict  # type: ignore
 import argparse
 import asyncio
 import datetime
-import greenstalk  # type: ignore
 import gzip
 import json
 import logging
 import os.path
-import requests
-import pytz
 import re
 import sys
+from typing import Dict, List, Optional, Text
 
+import addict  # type: ignore
 import caep
+import greenstalk  # type: ignore
+import pytz
+import requests
 
-import act.scio.logsetup
 import act.scio.config
+import act.scio.logsetup
+from act.scio import plugin
 
 DEFAULT_METADATA_DATE_FIELDS = [
     "Creation-Date",
@@ -45,21 +44,27 @@ DEFAULT_METADATA_DATE_FIELDS = [
     "xmpMM:History:When",
 ]
 
-ISO8601_DATE_RE = re.compile(r'^\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ$')
+ISO8601_DATE_RE = re.compile(r"^\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ$")
 
 
 def parse_args() -> argparse.Namespace:
     """Helper setting up the argsparse configuration"""
 
     arg_parser = act.scio.config.parse_args("Scio 2 Analyzer")
-    arg_parser.add_argument('--plugins', dest='plugins', type=str)
-    arg_parser.add_argument('--metadata-date-fields', default=",".join(DEFAULT_METADATA_DATE_FIELDS))
-    arg_parser.add_argument('--proxy-string', help="Proxy to use webdump upload")
-    arg_parser.add_argument('--webdump', dest='webdump', type=str, help="URI to post result data")
+    arg_parser.add_argument("--plugins", dest="plugins", type=str)
+    arg_parser.add_argument(
+        "--metadata-date-fields", default=",".join(DEFAULT_METADATA_DATE_FIELDS)
+    )
+    arg_parser.add_argument("--proxy-string", help="Proxy to use webdump upload")
+    arg_parser.add_argument(
+        "--webdump", dest="webdump", type=str, help="URI to post result data"
+    )
 
     args = caep.config.handle_args(arg_parser, "scio/etc", "scio.ini", "analyze")
 
-    args.metadata_date_fields = [field.strip() for field in args.metadata_date_fields.split(",")]
+    args.metadata_date_fields = [
+        field.strip() for field in args.metadata_date_fields.split(",")
+    ]
 
     return args
 
@@ -106,8 +111,10 @@ def get_input(beanstalk_client: Optional[greenstalk.Client] = None) -> addict.Di
     return nlpdata
 
 
-async def analyze(plugins: List[plugin.BasePlugin],
-                  beanstalk_client: Optional[greenstalk.Client] = None) -> addict.Dict:
+async def analyze(
+    plugins: List[plugin.BasePlugin],
+    beanstalk_client: Optional[greenstalk.Client] = None,
+) -> addict.Dict:
     """Main analyze loop running all plugins on the text"""
 
     loop = asyncio.get_event_loop()
@@ -117,12 +124,15 @@ async def analyze(plugins: List[plugin.BasePlugin],
         logging.error("Missing content")
         return addict.Dict({})
 
-    nlpdata["Analyzed-Date"] = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC).isoformat()
+    nlpdata["Analyzed-Date"] = (
+        datetime.datetime.utcnow().replace(tzinfo=pytz.UTC).isoformat()
+    )
 
     # make sure we have a Creation-Date field even though the
     # document did not contain one. When missing, use current analyzed time.
-    nlpdata["Creation-Date"] = (nlpdata.get("metadata", {})
-                                .get("Creation-Date", nlpdata["Analyzed-Date"]))
+    nlpdata["Creation-Date"] = nlpdata.get("metadata", {}).get(
+        "Creation-Date", nlpdata["Analyzed-Date"]
+    )
 
     staged = []  # for plugins with dependencies
     pipeline = []  # for plugins to be run now
@@ -154,9 +164,11 @@ async def analyze(plugins: List[plugin.BasePlugin],
                 staged.remove(candidate)
 
     for candidate in staged:
-        logging.warning("Candidate %s did not run due to unmet dependency %s",
-                        candidate.name,
-                        candidate.dependencies)
+        logging.warning(
+            "Candidate %s did not run due to unmet dependency %s",
+            candidate.name,
+            candidate.dependencies,
+        )
 
     return nlpdata
 
@@ -191,9 +203,11 @@ async def async_main() -> None:
         try:
             await task
         except LookupError:
-            logging.error("Got LookupError. If nltk data is missing, "
-                          "run scio-nltk-download, which should download "
-                          "all nltk data to ~/nltk_data.")
+            logging.error(
+                "Got LookupError. If nltk data is missing, "
+                "run scio-nltk-download, which should download "
+                "all nltk data to ~/nltk_data."
+            )
             raise
 
         result = task.result()
@@ -202,10 +216,11 @@ async def async_main() -> None:
         result_json = json.dumps(result, indent="  ")
 
         if args.webdump:
-            proxies = {
-                'http': args.proxy_string,
-                'https': args.proxy_string
-            } if args.proxy_string else None
+            proxies = (
+                {"http": args.proxy_string, "https": args.proxy_string}
+                if args.proxy_string
+                else None
+            )
 
             r = requests.post(args.webdump, data=result_json, proxies=proxies)
             if r.status_code != 200:
@@ -218,8 +233,8 @@ async def async_main() -> None:
                 logging.error("Missing hexdigest, skipping elasticsearch storage")
             else:
                 result["metadata"] = remove_non_iso_dates(
-                        result["metadata"],
-                        args.metadata_date_fields)
+                    result["metadata"], args.metadata_date_fields
+                )
 
                 try:
                     elasticsearch_client.index(index="scio2", id=hexdigest, body=result)

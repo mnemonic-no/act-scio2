@@ -31,38 +31,38 @@ import act.scio.es
 
 
 def parse_args(description: Text) -> argparse.ArgumentParser:
-    """ Parse default arguments """
+    """Parse default arguments"""
     parser = argparse.ArgumentParser(description=description)
 
-    parser.add_argument('--beanstalk',
-                        help="Connect to beanstalk server. " +
-                        "If not specified, read from stdin",
-                        default="localhost")
-    parser.add_argument('--beanstalk-port',
-                        type=int,
-                        default=11300,
-                        help="Default 11300")
-    parser.add_argument('--elasticsearch', help="Elasticsearch host to connect to.")
-    parser.add_argument('--elasticsearch-user', help="Elasticsearch user")
-    parser.add_argument('--elasticsearch-password', help="Elasticsearch password")
-    parser.add_argument('--elasticsearch-port',
-                        type=int,
-                        default=9200,
-                        help="Default 9200")
-    parser.add_argument('--config-dir',
-                        default=caep.get_config_dir("scio"),
-                        help="Default config dir with configurations for scio and plugins")
-    parser.add_argument('--logfile')
-    parser.add_argument('--loglevel', default="info")
+    parser.add_argument(
+        "--beanstalk",
+        help="Connect to beanstalk server. " + "If not specified, read from stdin",
+        default="localhost",
+    )
+    parser.add_argument(
+        "--beanstalk-port", type=int, default=11300, help="Default 11300"
+    )
+    parser.add_argument("--elasticsearch", help="Elasticsearch host to connect to.")
+    parser.add_argument("--elasticsearch-user", help="Elasticsearch user")
+    parser.add_argument("--elasticsearch-password", help="Elasticsearch password")
+    parser.add_argument(
+        "--elasticsearch-port", type=int, default=9200, help="Default 9200"
+    )
+    parser.add_argument(
+        "--config-dir",
+        default=caep.get_config_dir("scio"),
+        help="Default config dir with configurations for scio and plugins",
+    )
+    parser.add_argument("--logfile")
+    parser.add_argument("--loglevel", default="info")
 
     return parser
 
 
 def beanstalk_client(
-        args: argparse.Namespace,
-        use: Optional[Text] = None,
-        watch: Optional[Text] = None) -> Optional[greenstalk.Client]:
-    """ Return beanstalk client if args.beanstalk, otherwise, return None """
+    args: argparse.Namespace, use: Optional[Text] = None, watch: Optional[Text] = None
+) -> Optional[greenstalk.Client]:
+    """Return beanstalk client if args.beanstalk, otherwise, return None"""
     client = None
     if args.beanstalk:
         logging.info("Connection to beanstalk")
@@ -75,8 +75,10 @@ def beanstalk_client(
     return client
 
 
-def elasticsearch_client(args: argparse.Namespace) -> Optional[elasticsearch.client.Elasticsearch]:
-    """ Return elasticsearch client if args.elasticsearch, otherwise, return None """
+def elasticsearch_client(
+    args: argparse.Namespace,
+) -> Optional[elasticsearch.client.Elasticsearch]:
+    """Return elasticsearch client if args.elasticsearch, otherwise, return None"""
     if args.elasticsearch:
         logging.info("Connection to elasticsearch")
         return act.scio.es.es_client(
@@ -90,15 +92,15 @@ def elasticsearch_client(args: argparse.Namespace) -> Optional[elasticsearch.cli
 
 def get_cache_dir(cache_id: str, create: bool = False) -> str:
     """
-    Get cache dir.
+        Get cache dir.
 
-    Honors $XDG_CACHE_HOME, but fallbacks to $HOME/.cache
+        Honors $XDG_CACHE_HOME, but fallbacks to $HOME/.cache
 
-Args:
-    cache_id [str]: directory under CACHE that will be used
-    create [bool]: create directory if not exists
+    Args:
+        cache_id [str]: directory under CACHE that will be used
+        create [bool]: create directory if not exists
 
-Return path to cache_directory
+    Return path to cache_directory
     """
 
     home = os.environ["HOME"]

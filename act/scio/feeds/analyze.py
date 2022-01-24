@@ -30,11 +30,11 @@ submit utility.
 Helper functions used for making desitions and modifications
 """
 
-from typing import List, Text, Optional
 import logging
 import os
 import urllib
 import urllib.parse
+from typing import List, Optional, Text
 
 
 def parse_and_correct_link(link: Text) -> urllib.parse.ParseResult:
@@ -42,7 +42,7 @@ def parse_and_correct_link(link: Text) -> urllib.parse.ParseResult:
 
     parsed = urllib.parse.urlparse(link)
 
-    if parsed.netloc == 'github.com':
+    if parsed.netloc == "github.com":
         parsed = parsed._replace(netloc="raw.githubusercontent.com")
         parsed = parsed._replace(path=parsed.path.replace("/blob/", "/", 1))
         logging.info("found github link. Modify to get raw content")
@@ -80,8 +80,9 @@ def extract_file_extension(url: urllib.parse.ParseResult) -> Text:
     return ""
 
 
-def filter_links(file_formats: List[Text],
-                 links: List[urllib.parse.ParseResult]) -> List[urllib.parse.ParseResult]:
+def filter_links(
+    file_formats: List[Text], links: List[urllib.parse.ParseResult]
+) -> List[urllib.parse.ParseResult]:
     """Run though a list of urls, checking if they contains certain
     elements that looks like possible file download possibilities"""
 

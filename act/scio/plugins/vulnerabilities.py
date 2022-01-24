@@ -1,8 +1,10 @@
-from act.scio.plugin import BasePlugin, Result
-import addict
-from typing import Text, List, Dict, Set
 import ipaddress
 import re
+from typing import Dict, List, Set, Text
+
+import addict
+
+from act.scio.plugin import BasePlugin, Result
 
 
 class Plugin(BasePlugin):
@@ -24,4 +26,3 @@ class Plugin(BasePlugin):
         res.msid = self.msid.findall(text)
 
         return Result(name=self.name, version=self.version, result=res)
-

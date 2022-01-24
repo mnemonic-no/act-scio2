@@ -4,6 +4,7 @@ import re
 from typing import List, Text
 
 import addict
+
 from act.scio.plugin import BasePlugin, Result
 
 

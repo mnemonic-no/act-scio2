@@ -1,10 +1,12 @@
-import addict
-from act.scio.aliasregex import normalize
-from act.scio.vocabulary import Vocabulary
-from act.scio.plugin import BasePlugin, Result
-from typing import Text, List
 import configparser
 import os.path
+from typing import List, Text
+
+import addict
+
+from act.scio.aliasregex import normalize
+from act.scio.plugin import BasePlugin, Result
+from act.scio.vocabulary import Vocabulary
 
 
 def normalize_ta(name: Text, uppercase_abbr: List[Text]) -> Text:
@@ -40,17 +42,22 @@ class Plugin(BasePlugin):
 
         ini = configparser.ConfigParser()
         ini.read([os.path.join(self.configdir, "threatactor_pattern.ini")])
-        ini['threat_actor']['alias'] = os.path.join(self.configdir, ini['threat_actor']['alias'])
+        ini["threat_actor"]["alias"] = os.path.join(
+            self.configdir, ini["threat_actor"]["alias"]
+        )
 
-        uppercase_abbr = abbreviation_list(ini['threat_actor'].get('uppercase_abbr', ""))
+        uppercase_abbr = abbreviation_list(
+            ini["threat_actor"].get("uppercase_abbr", "")
+        )
 
-        vocab = Vocabulary(ini['threat_actor'])
+        vocab = Vocabulary(ini["threat_actor"])
 
         res = addict.Dict()
 
         res.ThreatActors = vocab.regex_search(
             nlpdata.content,
             normalize_result=(lambda x: normalize_ta(x, uppercase_abbr)),
-            debug=self.debug)
+            debug=self.debug,
+        )
 
         return Result(name=self.name, version=self.version, result=res)

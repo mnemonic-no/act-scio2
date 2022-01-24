@@ -1,8 +1,10 @@
-from act.scio.plugin import BasePlugin, Result
-import addict
-from typing import Text, List, Dict, Set
 import ipaddress
 import re
+from typing import Dict, List, Set, Text
+
+import addict
+
+from act.scio.plugin import BasePlugin, Result
 
 
 class Plugin(BasePlugin):
@@ -14,26 +16,32 @@ class Plugin(BasePlugin):
     md5 = re.compile("\\b[0-9a-fA-F]{32}\\b")
     sha1 = re.compile("\\b[.0-9a-fA-F]{40}\\b")
     sha256 = re.compile("\\b[0-9a-fA-F]{64}\\b")
-    ipv4 = re.compile("\\b([0-2]?[0-9]?[0-9])\\.([0-2]?[0-9]?[0-9])\\.([0-2]?[0-9]?[0-9])" +
-                      "\\.([0-2]?[0-9]?[0-9])\\b")
+    ipv4 = re.compile(
+        "\\b([0-2]?[0-9]?[0-9])\\.([0-2]?[0-9]?[0-9])\\.([0-2]?[0-9]?[0-9])"
+        + "\\.([0-2]?[0-9]?[0-9])\\b"
+    )
     email = re.compile("\\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}\\b")
     fqdn = re.compile("\\b([a-zA-Z0-9\\.\\-]+\\.[a-zA-Z0-9\\.\\-]+)\\b")
 
-    uri = re.compile(r"(?:[a-zA-Z][a-zA-Z\d+-.]*):\/\/(?:(?:(?:[a-zA-Z\d\-._~\!$&'()*+,;=%]*)(?::(?:[a-zA-Z\d\-._~\!$&'()*+,;=:%]*))?)@)?(?:(?:\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})|(?:\[(?:[a-fA-F\d.:]+)\])|(?:[a-zA-Z\d\-.%]+))?(?::(?:\d{1,5}))?(?:(?:\/(?:[a-zA-Z\d\-._~\!$&'()*+,;=:@%]*\/)*(?:[a-zA-Z\d\-._~\!$&'()*+,;=:@%]*))?)(?:\?(?:[a-zA-Z\d\-._~\!$&'()*+,;=:@%\/?]*))?(?:\#(?:[a-zA-Z\d\-._~\!$&'()*+,;=:@%\/?]*))?")
+    uri = re.compile(
+        r"(?:[a-zA-Z][a-zA-Z\d+-.]*):\/\/(?:(?:(?:[a-zA-Z\d\-._~\!$&'()*+,;=%]*)(?::(?:[a-zA-Z\d\-._~\!$&'()*+,;=:%]*))?)@)?(?:(?:\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})|(?:\[(?:[a-fA-F\d.:]+)\])|(?:[a-zA-Z\d\-.%]+))?(?::(?:\d{1,5}))?(?:(?:\/(?:[a-zA-Z\d\-._~\!$&'()*+,;=:@%]*\/)*(?:[a-zA-Z\d\-._~\!$&'()*+,;=:@%]*))?)(?:\?(?:[a-zA-Z\d\-._~\!$&'()*+,;=:@%\/?]*))?(?:\#(?:[a-zA-Z\d\-._~\!$&'()*+,;=:@%\/?]*))?"
+    )
 
-    ipv4net = re.compile(r"\b[0-2]?[0-9]?[0-9]\.[0-2]?[0-9]?[0-9]\.[0-2]?[0-9]?[0-9]\.[0-2]?[0-9]?[0-9]\/\d{1,2}\b")
+    ipv4net = re.compile(
+        r"\b[0-2]?[0-9]?[0-9]\.[0-2]?[0-9]?[0-9]\.[0-2]?[0-9]?[0-9]\.[0-2]?[0-9]?[0-9]\/\d{1,2}\b"
+    )
 
     allposipv6 = re.compile("\\b[a-f0-9:.]+:[a-f0-9:.]+:[a-f0-9:.]+\\b")
 
     async def analyze(self, nlpdata: addict.Dict) -> Result:
 
         # refang to allo match on e.g. 127[.]0[.]0[.]1
-        text = nlpdata.content \
-                .replace("[.]", ".") \
-                .replace("{.}", ".") \
-                .replace("(.)", ".") \
-                .replace("\\.", ".") \
-
+        text = (
+            nlpdata.content.replace("[.]", ".")
+            .replace("{.}", ".")
+            .replace("(.)", ".")
+            .replace("\\.", ".")
+        )
         # Replace to make sure URLencoded URLs are supported
         text = re.sub("%2[fF]", "/", text)
 
@@ -43,11 +51,12 @@ class Plugin(BasePlugin):
         res.sha1 = self.sha1.findall(text)
         res.sha256 = self.sha256.findall(text)
         res.email = self.email.findall(text)
-        res.fqdn = [dn for dn in self.fqdn.findall(text)
-                    if dn.split(".")[-1] in TLDS]
-        res.ipv4 = ['.'.join(ip) for ip in self.ipv4.findall(text)]
+        res.fqdn = [dn for dn in self.fqdn.findall(text) if dn.split(".")[-1] in TLDS]
+        res.ipv4 = [".".join(ip) for ip in self.ipv4.findall(text)]
 
-        res.uri = [re.sub("^hxxp", "http", uri, 0, re.I) for uri in self.uri.findall(text)]
+        res.uri = [
+            re.sub("^hxxp", "http", uri, 0, re.I) for uri in self.uri.findall(text)
+        ]
         res.ipv4net = self.ipv4net.findall(text)
 
         pos_ipv6 = []

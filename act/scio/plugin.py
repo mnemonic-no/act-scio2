@@ -3,17 +3,18 @@
 It also contains the work functions used to load the plugins both from disc and
 from the resources."""
 
-from act.scio import plugins
-import addict
-from importlib import import_module
-from importlib.machinery import ModuleSpec
-from importlib.util import module_from_spec, spec_from_file_location
-from pydantic import BaseModel, StrictStr
-from typing import Text, List, Optional
 import logging
 import os
 import pkgutil
+from importlib import import_module
+from importlib.machinery import ModuleSpec
+from importlib.util import module_from_spec, spec_from_file_location
+from typing import List, Optional, Text
 
+import addict
+from pydantic import BaseModel, StrictStr
+
+from act.scio import plugins
 
 module_interface = ["name", "analyze", "info", "version", "dependencies"]
 
@@ -42,7 +43,11 @@ class BasePlugin:
 
     async def analyze(self, nlpdata: addict.Dict) -> Result:
         """Main analyzis method"""
-        return Result(name=self.name, version=self.version, result=addict.Dict({"test": nlpdata.content}))
+        return Result(
+            name=self.name,
+            version=self.version,
+            result=addict.Dict({"test": nlpdata.content}),
+        )
 
 
 def load_default_plugins() -> List[BasePlugin]:
