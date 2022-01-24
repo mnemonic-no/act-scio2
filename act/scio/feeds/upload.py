@@ -1,10 +1,9 @@
 """All functions related to scio upload"""
 
-from typing import IO, Text, Dict
-from logging import warning
-
 import base64
 import time
+from logging import error, warning
+from typing import IO, Dict, Text
 
 import requests
 
@@ -13,7 +12,7 @@ def read_as_base64(obj: IO) -> Text:
     """Create a base64 encoded string from a file like object"""
 
     encoded_bytes = base64.b64encode(obj.read())
-    return encoded_bytes.decode('ascii')
+    return encoded_bytes.decode("ascii")
 
 
 def to_scio_submit_post_data(obj: IO, filemap: Dict) -> Dict[Text, Text]:
@@ -21,11 +20,11 @@ def to_scio_submit_post_data(obj: IO, filemap: Dict) -> Dict[Text, Text]:
     submitting to the SCIO API (https://github.com/mnemonic-no/act-scio-api)"""
 
     metadata = filemap.copy()
-    metadata['content'] = read_as_base64(obj)
+    metadata["content"] = read_as_base64(obj)
 
-    assert 'content' in metadata
-    assert 'filename' in metadata
-    assert 'uri' in metadata
+    assert "content" in metadata
+    assert "filename" in metadata
+    assert "uri" in metadata
 
     return metadata
 
@@ -35,7 +34,7 @@ def upload(url: Text, filemap: Dict) -> None:
 
     retry_codes = [429, None]
 
-    with open(filemap['filename'], "rb") as file_h:
+    with open(filemap["filename"], "rb") as file_h:
         post_data = to_scio_submit_post_data(file_h, filemap)
 
         # Disable all proxy settings from environment
@@ -44,7 +43,19 @@ def upload(url: Text, filemap: Dict) -> None:
 
         status_code = None
         while status_code in retry_codes:
-            req = session.post(url, json=post_data)
+            started = time.time()
+            try:
+                req = session.post(url, json=post_data)
+            except requests.exceptions.ConnectionError as e:
+                msg = (
+                    f"Failed to upload to {url}. Time since upload started: "
+                    + f"{time.time() - started} seconds. "
+                    + f"Exception: {e}. post_data[filename]={post_data['filename']}, "
+                    + f"post_data[uri]={post_data['uri']}"
+                )
+                error(msg)
+                raise UploadError(msg)
+
             status_code = req.status_code
 
             if status_code not in retry_codes and status_code != 200:
