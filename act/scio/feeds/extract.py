@@ -1,27 +1,27 @@
 """Helper function for data extraction"""
 
-from typing import Dict, Text, Tuple, Optional, List
-import logging
 import argparse
+import html
+import logging
 import os.path
 import urllib.parse
+import uuid
+from typing import Dict, List, Optional, Text, Tuple
 
-from bs4 import BeautifulSoup
-import html
 import justext
 import requests
-import uuid
+from bs4 import BeautifulSoup
 
-from act.scio.feeds import download, analyze
+from act.scio.feeds import analyze, download
 
 
 def get_content_from_entry(entry: Dict) -> Text:
     """Extract and concatenate the content portion of a feed entry"""
 
     if "content" in entry:
-        return "\n".join([x["value"] for x in entry['content']])
+        return "\n".join([x["value"] for x in entry["content"]])
 
-    logging.warning("No content for %s", entry['link'])
+    logging.warning("No content for %s", entry["link"])
 
     return ""
 
@@ -30,7 +30,7 @@ def get_summary_from_entry(entry: Dict) -> Text:
     """Extract summary from feed entry"""
 
     if "summary_detail" in entry:
-        value: Text = entry['summary_detail']['value']
+        value: Text = entry["summary_detail"]["value"]
         return value
     return ""
 
@@ -53,9 +53,9 @@ def create_html(entry: Dict) -> Text:
     content = get_content_from_entry(entry)
     summary = get_summary_from_entry(entry)
 
-    return html_data.format(title=entry.get("title", "NO TITLE"),
-                            content=content,
-                            summary=summary)
+    return html_data.format(
+        title=entry.get("title", "NO TITLE"), content=content, summary=summary
+    )
 
 
 def safe_filename(path: Text) -> Text:
@@ -85,8 +85,8 @@ def read_stoplist(fname: Text) -> frozenset:
 
 
 def partial_entry_text_to_file(
-        args: argparse.Namespace,
-        entry: Dict) -> Tuple[Optional[Text], Optional[Text]]:
+    args: argparse.Namespace, entry: Dict
+) -> Tuple[Optional[Text], Optional[Text]]:
     """Download the original content and write it to the proper file.
     Return the html."""
 
@@ -101,21 +101,26 @@ def partial_entry_text_to_file(
         proxies=download.proxies(args.proxy_string),
         headers=download.default_headers(),
         verify=False,
-        timeout=60)
+        timeout=60,
+    )
 
     if req.status_code >= 400:
         logging.warning("Unable to download content: %s", url)
         return None, None
 
-    filename = safe_filename(entry.get('title', str(uuid.uuid4())))
+    filename = safe_filename(entry.get("title", str(uuid.uuid4())))
 
     html_data = "<html>\n<head>\n"
-    html_data += "<title>{0}</title>\n</head>\n".format(entry.get('title', "NO TITLE"))
+    html_data += "<title>{0}</title>\n</head>\n".format(entry.get("title", "NO TITLE"))
     html_data += "<body>\n"
 
     raw_html = req.text
 
-    stoplist = read_stoplist(args.stoplist) if args.stoplist else justext.get_stoplist('English')
+    stoplist = (
+        read_stoplist(args.stoplist)
+        if args.stoplist
+        else justext.get_stoplist("English")
+    )
 
     paragraphs = justext.justext(raw_html, stoplist)
 
@@ -138,16 +143,18 @@ def partial_entry_text_to_file(
 
 
 def entry_text_to_file(
-        args: argparse.Namespace,
-        entry: Dict) -> Tuple[Optional[Text], Optional[Text]]:
+    args: argparse.Namespace, entry: Dict
+) -> Tuple[Optional[Text], Optional[Text]]:
     """Extract the entry content and write it to the proper file.
     Return the wrapped HTML"""
 
-    filename = safe_filename(entry.get('title', str(uuid.uuid4())))
+    filename = safe_filename(entry.get("title", str(uuid.uuid4())))
 
     html_data = create_html(entry)
 
-    full_filename = os.path.join(os.path.join(args.store_path, "download"), filename + ".html")
+    full_filename = os.path.join(
+        os.path.join(args.store_path, "download"), filename + ".html"
+    )
     with open(full_filename, "w") as html_file:
         html_file.write(html_data)
 
@@ -160,8 +167,8 @@ def get_links(entry: Dict, html_data: Text) -> List[urllib.parse.ParseResult]:
     links = []
     soup = BeautifulSoup(html_data, "html.parser")
     if soup:
-        links = [a['href'] for a in soup.findAll('a', href=True)]
+        links = [a["href"] for a in soup.findAll("a", href=True)]
     else:
-        logging.warning("soup is none : %s", entry.get('title', "NO TITLE"))
+        logging.warning("soup is none : %s", entry.get("title", "NO TITLE"))
 
     return [analyze.parse_and_correct_link(link) for link in links]

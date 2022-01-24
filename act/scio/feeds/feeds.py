@@ -20,16 +20,16 @@ Download feeds from the feeds.txt file, store feed content in .html and feed
 metadata in .meta files. Also attempts to download links to certain document
 types"""
 
-from typing import List, Text, Dict
-
 import datetime
 import hashlib
 import logging
 import os
+from typing import Dict, List, Text
+
 import urllib3
 
 from act.scio.config import get_cache_dir
-from act.scio.feeds import conf, download, cache, upload
+from act.scio.feeds import cache, conf, download, upload
 from act.scio.logsetup import setup_logging
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -53,7 +53,7 @@ def upload_uncached_files(cache_file: Text, files: List[Dict], scio_url: Text) -
 
     for filemap in files:
 
-        filename: Text = filemap['filename']
+        filename: Text = filemap["filename"]
         sha256 = sha256_of_file(filename)
 
         if not mycache.contains(sha256):

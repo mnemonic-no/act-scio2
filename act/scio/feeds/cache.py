@@ -30,12 +30,7 @@ submit utility.
 
 import logging
 import sqlite3
-
-from typing import (
-    Dict,
-    List,
-    Text,
-)
+from typing import Dict, List, Text
 
 
 class Cache:
@@ -48,12 +43,14 @@ class Cache:
         self.conn = sqlite3.connect(filename)
         try:
             # create table if it does not exsit
-            self.conn.execute("""CREATE TABLE upload (
+            self.conn.execute(
+                """CREATE TABLE upload (
                                               id integer PRIMARY KEY,
                                               filename text NOT NULL,
                                               sha256 text NOT NULL,
                                               description text);
-                              """)
+                              """
+            )
         except sqlite3.OperationalError:
             pass
 
@@ -76,15 +73,18 @@ class Cache:
         """insert a new file in the metadata cache"""
 
         sql = "INSERT INTO upload(filename, sha256, description) VALUES(?,?,?)"
-        logging.debug("Inserting %s, %s, %s into database",
-                      filename, sha256, description)
+        logging.debug(
+            "Inserting %s, %s, %s into database", filename, sha256, description
+        )
         self.conn.execute(sql, (filename, sha256, description))
         self.conn.commit()
 
     def info(self, sha256: Text) -> List[Dict]:
         """Get stored info about a digest. Returns a list of Dictionaries"""
 
-        sql = "SELECT filename, sha256, description FROM upload WHERE sha256 = ?" # NOQA
+        sql = (
+            "SELECT filename, sha256, description FROM upload WHERE sha256 = ?"  # NOQA
+        )
 
         cur = self.conn.execute(sql, (sha256,))
 
@@ -94,8 +94,7 @@ class Cache:
         result_dictionaries = []
 
         for result in results:
-            key_value_pairs = list(zip(["filename", "sha256", "description"],
-                                       result))
+            key_value_pairs = list(zip(["filename", "sha256", "description"], result))
             result_dictionaries.append(dict(key_value_pairs))
 
         return result_dictionaries

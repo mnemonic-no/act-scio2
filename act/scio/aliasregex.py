@@ -3,9 +3,9 @@
 This module contains function to convert an alias config file an/or an alias into
 regular expressions for matching purposes"""
 
-from typing import Set, Text
 import re
 import sys
+from typing import Set, Text
 
 
 def alias_set_from_config(config_file_name: Text) -> Set[Text]:
@@ -13,10 +13,10 @@ def alias_set_from_config(config_file_name: Text) -> Set[Text]:
 
     alias_set = set()
     for line in open(config_file_name):
-        pri, rest = re.split(r'(?<!\\):', line, maxsplit=1)
-        aliases = re.split(r'(?<!\\),', rest)
+        pri, rest = re.split(r"(?<!\\):", line, maxsplit=1)
+        aliases = re.split(r"(?<!\\),", rest)
         aliases.append(pri)
-        aliases = [alias.strip() for alias in aliases if alias.strip() != '']
+        aliases = [alias.strip() for alias in aliases if alias.strip() != ""]
         for alias in aliases:
             alias_set.add(alias)
     return alias_set
@@ -74,16 +74,17 @@ def regex_from_alias(alias: Text) -> Text:
     return tmp_re
 
 
-def normalize(name: Text,
-        space_before_numbers=True,
-        space_before_capitalized=True,
-        remove_non_alphanumeric=True,
-        remove_multiple_whitespace=True,
-        lower=True,
-        upper=False,
-        capitalize=False,
-        uppercase_abbr=None,
-        ) -> str:
+def normalize(
+    name: Text,
+    space_before_numbers=True,
+    space_before_capitalized=True,
+    remove_non_alphanumeric=True,
+    remove_multiple_whitespace=True,
+    lower=True,
+    upper=False,
+    capitalize=False,
+    uppercase_abbr=None,
+) -> str:
     """
 
     Args:
@@ -127,7 +128,7 @@ def normalize(name: Text,
 
     if capitalize:
         # https://stackoverflow.com/questions/6251463/regex-capitalize-first-letter-every-word-also-after-a-special-character-like-a
-        name = re.sub(r'(((?<=\s)|^|-)[a-z])', lambda x: x.group().upper(), name)
+        name = re.sub(r"(((?<=\s)|^|-)[a-z])", lambda x: x.group().upper(), name)
 
     for abbr in uppercase_abbr:
         name = re.sub(abbr, abbr.upper(), name, 0, re.IGNORECASE)
@@ -145,13 +146,15 @@ def get_reg_ex_set(config_file_name: Text) -> Set[Text]:
     alias_set = alias_set_from_config(config_file_name)
     for alias in alias_set:
         if alias.isdigit():
-            sys.stderr.write(f"WARNING: Unable to create regex from all digit alias {alias}\n")
+            sys.stderr.write(
+                f"WARNING: Unable to create regex from all digit alias {alias}\n"
+            )
             continue
         regex_set.add(regex_from_alias(alias))
 
     return regex_set
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     for regex in sorted(list(get_reg_ex_set("aliases.cfg"))):
         print(regex)

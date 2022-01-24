@@ -2,6 +2,7 @@ import os
 
 import addict
 import pytest
+
 from act.scio.plugins import mitre_attack
 
 TEST_TEXT = """
@@ -34,11 +35,13 @@ TA4321
 
 @pytest.mark.asyncio
 async def test_sectors() -> None:
-    """ test for plugins """
+    """test for plugins"""
 
     nlpdata = addict.Dict()
     plugin = mitre_attack.Plugin()
-    plugin.configdir = os.path.join(os.path.dirname(__file__), "../act/scio/etc/plugins")
+    plugin.configdir = os.path.join(
+        os.path.dirname(__file__), "../act/scio/etc/plugins"
+    )
 
     nlpdata.content = TEST_TEXT
 

@@ -3,18 +3,19 @@ Vocabulary tests
 """
 
 import os
-from typing import Text, List
+from typing import List, Text
+
+import addict
 
 from act.scio.alias import parse_aliases
 from act.scio.aliasregex import normalize
-import addict
 from act.scio.vocabulary import Vocabulary
 
 VOCABULARY_DATADIR = os.path.join(os.path.dirname(__file__), "vocabulary")
 
 
 def test_vocabulary_sector() -> None:
-    """ Sector tests """
+    """Sector tests"""
 
     config = addict.Dict()
     config.alias = os.path.join(VOCABULARY_DATADIR, "sector_aliases.cfg")
@@ -37,20 +38,21 @@ def normalize_ta(name: Text) -> Text:
 
 
 def test_vocabulary_threat_actor() -> None:
-    """ Threat actor vocabulary tests """
+    """Threat actor vocabulary tests"""
 
     config = addict.Dict()
     config.alias = os.path.join(VOCABULARY_DATADIR, "ta_aliases.cfg")
     config.regexfromalias = True
-    config.regexmanual = r'''
+    config.regexmanual = r"""
         \b([a-zA-Z]{4,}\s?[-_. ](?:dragon|duke|falcon|cedar|viper|panda|bear|jackal|spider|chollima|kitten|tiger))\b
-        \b((?:BRONZE|IRON|GOLD)(?:\s+|[-_.]+)[A-Z]{3,})\b'''
+        \b((?:BRONZE|IRON|GOLD)(?:\s+|[-_.]+)[A-Z]{3,})\b"""
 
     ta = Vocabulary(config)
 
     matches: List[Text] = ta.regex_search(
         "Observed threat actors apt_32, apt_28 and Crazy Kitten",
-        normalize_result=normalize_ta)
+        normalize_result=normalize_ta,
+    )
 
     assert "APT 32" in matches
     assert "APT 28" in matches
@@ -66,7 +68,7 @@ def test_vocabulary_threat_actor() -> None:
 
 
 def test_vocabulary_tool() -> None:
-    """ Tool vocabulary test """
+    """Tool vocabulary test"""
 
     config = addict.Dict()
     config.alias = os.path.join(VOCABULARY_DATADIR, "tool_aliases.cfg")
@@ -78,7 +80,7 @@ def test_vocabulary_tool() -> None:
 
 
 def test_vocabulary_aliases() -> None:
-    """ Parse alias config test """
+    """Parse alias config test"""
 
     alias_line1 = "my\\:tool: "
     alias_line2 = "thetool: backdoor\\:java/adwind,comma\\,tool"

@@ -28,46 +28,52 @@ from elasticsearch_dsl import A, Search
 
 
 def es_client(
-        host: Text,
-        port: int = 9200,
-        url_prefix: Optional[Text] = None,
-        username: Optional[Text] = None,
-        password: Optional[Text] = None,
-        timeout: int = 180) -> elasticsearch.client.Elasticsearch:
-    """ Elasticsearch client """
+    host: Text,
+    port: int = 9200,
+    url_prefix: Optional[Text] = None,
+    username: Optional[Text] = None,
+    password: Optional[Text] = None,
+    timeout: int = 180,
+) -> elasticsearch.client.Elasticsearch:
+    """Elasticsearch client"""
 
-    connection = {
-        "host": host,
-        "port": port
-    }
+    connection = {"host": host, "port": port}
 
     if url_prefix:
         connection["url_prefx"] = url_prefix
 
     if username or password:
-        http_auth: Optional[Tuple[Optional[Text], Optional[Text]]] = (username, password)
+        http_auth: Optional[Tuple[Optional[Text], Optional[Text]]] = (
+            username,
+            password,
+        )
     else:
         http_auth = None
 
     return Elasticsearch([connection], timeout=timeout, http_auth=http_auth)
 
 
-def query(client: elasticsearch.client.Elasticsearch,
-          start: Text,
-          end: Text,
-          index: Text = "scio2",
-          size: int = 100) -> Search:
-    """ Return elasticsearch query """
+def query(
+    client: elasticsearch.client.Elasticsearch,
+    start: Text,
+    end: Text,
+    index: Text = "scio2",
+    size: int = 100,
+) -> Search:
+    """Return elasticsearch query"""
 
-    search = Search(using=client, index=index) \
-        .extra(size=size)
+    search = Search(using=client, index=index).extra(size=size)
 
     # pylint: disable=no-member
-    search = search.query("range", **{
-        "Analyzed-Date": {
-            "gte": start,
-            "lte": end,
-        }})
+    search = search.query(
+        "range",
+        **{
+            "Analyzed-Date": {
+                "gte": start,
+                "lte": end,
+            }
+        }
+    )
 
     debug("ES-query: {}".format(search.to_dict()))
 
@@ -75,12 +81,8 @@ def query(client: elasticsearch.client.Elasticsearch,
 
 
 def composite_aggs(
-        search: Search,
-        terms: List[Text],
-        size: int = 100,
-        missing: bool = False) -> Generator[elasticsearch_dsl.response.aggs.Bucket,
-                                            None,
-                                            None]:
+    search: Search, terms: List[Text], size: int = 100, missing: bool = False
+) -> Generator[elasticsearch_dsl.response.aggs.Bucket, None, None]:
     """
     Helper function used to iterate over all possible bucket combinations of
     fields, using composite aggregation.
@@ -90,11 +92,15 @@ def composite_aggs(
         s = search[:0]
 
         s.aggs.bucket(
-            'comp', 'composite',
-            sources=[{field: A("terms", field=field, missing_bucket=missing)}
-                     for i, field
-                     in enumerate(terms)],
-            size=size, **kwargs)
+            "comp",
+            "composite",
+            sources=[
+                {field: A("terms", field=field, missing_bucket=missing)}
+                for i, field in enumerate(terms)
+            ],
+            size=size,
+            **kwargs
+        )
 
         return s.execute()
 
@@ -102,7 +108,7 @@ def composite_aggs(
     while response.aggregations.comp.buckets:
         for b in response.aggregations.comp.buckets:
             yield b
-        if 'after_key' in response.aggregations.comp:
+        if "after_key" in response.aggregations.comp:
             after = response.aggregations.comp.after_key
         else:
             after = response.aggregations.comp.buckets[-1].key
@@ -110,13 +116,13 @@ def composite_aggs(
 
 
 def aggregation(
-        client: elasticsearch.client.Elasticsearch,
-        terms: List[Text],
-        start: Text,
-        end: Text,
-        missing:
-        bool = False) -> Generator[Tuple, None, None]:
-    """ Aggregation """
+    client: elasticsearch.client.Elasticsearch,
+    terms: List[Text],
+    start: Text,
+    end: Text,
+    missing: bool = False,
+) -> Generator[Tuple, None, None]:
+    """Aggregation"""
     search = query(client, start, end, size=0)
 
     res = composite_aggs(search, terms, missing=missing)

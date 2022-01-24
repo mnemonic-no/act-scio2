@@ -2,14 +2,19 @@
 """ Handle worker config"""
 
 
-from pkg_resources import resource_exists, resource_isdir, Requirement
-from pkg_resources import resource_string, resource_listdir
-from typing import Text, List, Union, Tuple
 import argparse
-import caep
 import os
 import sys
+from typing import List, Text, Tuple, Union
 
+import caep
+from pkg_resources import (
+    Requirement,
+    resource_exists,
+    resource_isdir,
+    resource_listdir,
+    resource_string,
+)
 
 CONFIG_ID = "scio"
 CONFIG_NAME = "scio.ini"
@@ -23,16 +28,21 @@ def resource_isfile(*x: Union[str, Requirement]) -> bool:
 
 
 def parseargs() -> argparse.Namespace:
-    """ Parse arguments """
+    """Parse arguments"""
 
-    parser = argparse.ArgumentParser("ACT SCIO config", epilog="""
+    parser = argparse.ArgumentParser(
+        "ACT SCIO config",
+        epilog="""
     show - Print default config
     user - Copy default config to {0}/{1}
     system - Copy default config to /etc/{1}
-""".format(caep.get_config_dir(CONFIG_ID), CONFIG_NAME),
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+""".format(
+            caep.get_config_dir(CONFIG_ID), CONFIG_NAME
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
 
-    parser.add_argument('action', nargs=1, choices=["show", "user", "system"])
+    parser.add_argument("action", nargs=1, choices=["show", "user", "system"])
 
     return parser.parse_args()
 
@@ -43,14 +53,23 @@ def default_ini() -> List[Tuple[Text, Text]]:
     files: List[Tuple[Text, Text]] = []
 
     for resource_dir in ["etc", "etc/plugins", "vendor"]:
-        if resource_exists(PKG_NAME, resource_dir) and resource_isdir(PKG_NAME, resource_dir):
-            for fname in [x for x in resource_listdir(PKG_NAME, resource_dir)
-                          if resource_isfile(PKG_NAME, x)]:
+        if resource_exists(PKG_NAME, resource_dir) and resource_isdir(
+            PKG_NAME, resource_dir
+        ):
+            for fname in [
+                x
+                for x in resource_listdir(PKG_NAME, resource_dir)
+                if resource_isfile(PKG_NAME, x)
+            ]:
                 try:
-                    files.append((f"{resource_dir}/{fname}",
-                                  resource_string(
-                                      PKG_NAME,
-                                      f"{resource_dir}/" + fname).decode("utf-8")))
+                    files.append(
+                        (
+                            f"{resource_dir}/{fname}",
+                            resource_string(
+                                PKG_NAME, f"{resource_dir}/" + fname
+                            ).decode("utf-8"),
+                        )
+                    )
                 except UnicodeDecodeError as err:
                     sys.stderr.write(f"WARNING: Skipping file {fname} [{err}]\n")
 
@@ -58,7 +77,7 @@ def default_ini() -> List[Tuple[Text, Text]]:
 
 
 def make_path(configdir: Text, path: Text) -> None:
-    """ Make sure the config directories exists before storing files. """
+    """Make sure the config directories exists before storing files."""
     plugin_path = os.path.join(configdir, path)
     try:
         os.mkdir(plugin_path)
@@ -71,7 +90,7 @@ def make_path(configdir: Text, path: Text) -> None:
 
 
 def save_config(configdir: Text) -> None:
-    """ Save config to specified directory """
+    """Save config to specified directory"""
 
     # Make sure the config directories exists before storing files.
     make_path(configdir, "etc")
@@ -81,7 +100,9 @@ def save_config(configdir: Text) -> None:
     for filename, content in default_ini():
         full_filename = os.path.join(configdir, filename)
         if os.path.isfile(full_filename):
-            sys.stderr.write("WARNING: Config already exists: {}\n".format(full_filename))
+            sys.stderr.write(
+                "WARNING: Config already exists: {}\n".format(full_filename)
+            )
             continue
         try:
             with open(full_filename, "w") as f:
@@ -109,5 +130,5 @@ def main() -> None:
         save_config("/etc/")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

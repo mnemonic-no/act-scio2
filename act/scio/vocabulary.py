@@ -9,29 +9,30 @@
 import configparser
 import re
 import sys
+from logging import info
 from typing import Any, Callable, Dict, List, Optional, Pattern, Union
 
-from logging import info
-
+import addict
 import nltk  # type: ignore
 
-from act.scio.alias import parse_aliases
-import addict
 import act.scio.aliasregex as aliasregex
+from act.scio.alias import parse_aliases
 
-DEFAULT_CONFIG = addict.Dict({
-    "alias": None,
-    "default": None,
-    "regexfromalias": False,
-    "primary": False,
-    "key_mod": "lower",
-    "regexmanual": "",
-    "object_type": None
-})
+DEFAULT_CONFIG = addict.Dict(
+    {
+        "alias": None,
+        "default": None,
+        "regexfromalias": False,
+        "primary": False,
+        "key_mod": "lower",
+        "regexmanual": "",
+        "object_type": None,
+    }
+)
 
 
 def identity(x: Any) -> Any:
-    """ Identity function. Used as default to return same value as input """
+    """Identity function. Used as default to return same value as input"""
     return x
 
 
@@ -70,13 +71,15 @@ class IllegalVocabularyKeyType(Exception):
 
 class Vocabulary:
     """
-        Support for vocularies with support for
-        - aliases
-        - automatic generate regular expression from aliases
-        - NLP stemming
+    Support for vocularies with support for
+    - aliases
+    - automatic generate regular expression from aliases
+    - NLP stemming
     """
 
-    def __init__(self, config: Union[addict.Dict, Dict, configparser.SectionProxy]) -> None:
+    def __init__(
+        self, config: Union[addict.Dict, Dict, configparser.SectionProxy]
+    ) -> None:
         """
         Args:
             config (addict.Dict):  addict.Dict with the following keys
@@ -96,7 +99,7 @@ class Vocabulary:
             none=addict.Dict(),
             lower=addict.Dict(),
             stem=addict.Dict(),
-            norm=addict.Dict()
+            norm=addict.Dict(),
         )
 
         self.stemmer = nltk.stem.PorterStemmer().stem
@@ -105,8 +108,11 @@ class Vocabulary:
             self.load_alias(self.config.alias)  # type: ignore
 
         if self.config.regexmanual:
-            self.regex = [re.compile(entry.strip(), re.I)
-                          for entry in self.config.regexmanual.split("\n") if entry.strip()]
+            self.regex = [
+                re.compile(entry.strip(), re.I)
+                for entry in self.config.regexmanual.split("\n")
+                if entry.strip()
+            ]
         else:
             self.regex = []
 
@@ -143,12 +149,16 @@ class Vocabulary:
                     # primary name
 
                     self.vocab["none"][name] = addict.Dict(value=name, primary=primary)
-                    self.vocab["lower"][name.lower()] = addict.Dict(value=name, primary=primary)
-                    self.vocab["stem"][self.stemmer(name)] = addict.Dict(value=name, primary=primary)
+                    self.vocab["lower"][name.lower()] = addict.Dict(
+                        value=name, primary=primary
+                    )
+                    self.vocab["stem"][self.stemmer(name)] = addict.Dict(
+                        value=name, primary=primary
+                    )
 
                     self.vocab["norm"][aliasregex.normalize(name)] = addict.Dict(
-                        value=name,
-                        primary=primary)
+                        value=name, primary=primary
+                    )
 
     def __getitem__(self, key: str) -> Optional[str]:
         """
@@ -157,11 +167,13 @@ class Vocabulary:
 
         return self.get(key)
 
-    def regex_search(self,
-                     text,
-                     key_mod: str = "DEFAULT",
-                     normalize_result: Callable = identity,
-                     debug: bool = False) -> List[str]:
+    def regex_search(
+        self,
+        text,
+        key_mod: str = "DEFAULT",
+        normalize_result: Callable = identity,
+        debug: bool = False,
+    ) -> List[str]:
         """
         Find all matches in vocabulary from regex search
 
@@ -182,7 +194,7 @@ class Vocabulary:
         return result
 
     def get_key_mod(self, key_mod: Optional[str]) -> str:
-        """ Verify and get key_mod """
+        """Verify and get key_mod"""
 
         # Get key modifier from config
         if key_mod == "DEFAULT":
@@ -195,8 +207,13 @@ class Vocabulary:
             raise IllegalVocabularyKeyType("Illegal key: {}".format(key_mod))
         return key_mod
 
-    def get(self, key: str, key_mod: str = "DEFAULT", primary: Optional[bool] = None,
-            default: Optional[str] = None) -> Optional[str]:
+    def get(
+        self,
+        key: str,
+        key_mod: str = "DEFAULT",
+        primary: Optional[bool] = None,
+        default: Optional[str] = None,
+    ) -> Optional[str]:
         """
         Search for entry in vocabulary
 

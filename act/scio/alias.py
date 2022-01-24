@@ -53,35 +53,35 @@ def parse_aliases(line: str) -> Tuple[str, List[str]]:
     """
 
     # Split on ":" unless they are escaped
-    vocab, aliases_str = re.split(r'(?<!\\):', line, maxsplit=1)
+    vocab, aliases_str = re.split(r"(?<!\\):", line, maxsplit=1)
 
     # Split aliases on ",", unless they are escaped
-    aliases = [unescape(a.strip())
-               for a in re.split(r'(?<!\\),', aliases_str)
-               if a.strip()]
+    aliases = [
+        unescape(a.strip()) for a in re.split(r"(?<!\\),", aliases_str) if a.strip()
+    ]
 
     return unescape(vocab.strip()), aliases
 
 
 def parseargs() -> argparse.ArgumentParser:
-    """ Parse arguments """
+    """Parse arguments"""
     parser = argparse.ArgumentParser(description="Fetch ISO 3166 data")
-    parser.add_argument('--http-timeout', dest='timeout', type=int,
-                        default=120, help="Timeout")
     parser.add_argument(
-        '--proxy-string',
-        dest='proxy_string',
-        help="Proxy to use for external queries")
+        "--http-timeout", dest="timeout", type=int, default=120, help="Timeout"
+    )
     parser.add_argument(
-        '--data-dir',
-        dest='data_dir',
-        required=True,
-        help="Output path for data")
+        "--proxy-string", dest="proxy_string", help="Proxy to use for external queries"
+    )
+    parser.add_argument(
+        "--data-dir", dest="data_dir", required=True, help="Output path for data"
+    )
 
     return parser
 
 
-def output_alias(filename: str, alias_map: Dict, exclude: Optional[List] = None) -> None:
+def output_alias(
+    filename: str, alias_map: Dict, exclude: Optional[List] = None
+) -> None:
     """
     Output alias to file
     """
@@ -91,8 +91,11 @@ def output_alias(filename: str, alias_map: Dict, exclude: Optional[List] = None)
     with open(filename, "w") as f:
         for key in sorted(alias_map.keys()):
             aliases = alias_map[key]
-            aliases = [escape(alias).strip() for alias in sorted(aliases)
-                       if alias not in exclude and alias != key]
+            aliases = [
+                escape(alias).strip()
+                for alias in sorted(aliases)
+                if alias not in exclude and alias != key
+            ]
             f.write("{}:{}\n".format(escape(key).strip(), ",".join(aliases)))
 
 
@@ -124,26 +127,21 @@ def merge(*lists: Dict, lower: bool = False) -> Dict:
 
 
 def fetch_json(
-        url: str,
-        proxy_string: str = "",
-        timeout: int = 60,
-        verify_https: bool = True) -> Dict:
+    url: str, proxy_string: str = "", timeout: int = 60, verify_https: bool = True
+) -> Dict:
     """Fetch remote URL as JSON
     url (string):                    URL to fetch
     proxy_string (string, optional): Optional proxy string on format host:port
     timeout (int, optional):         Timeout value for query (default=60 seconds)
     """
 
-    proxies = {
-        'http': proxy_string,
-        'https': proxy_string
-    }
+    proxies = {"http": proxy_string, "https": proxy_string}
 
     options = {
         "verify": verify_https,
         "timeout": timeout,
         "proxies": proxies,
-        "params": {}
+        "params": {},
     }
 
     if not verify_https:

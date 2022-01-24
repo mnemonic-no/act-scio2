@@ -2,21 +2,25 @@
 
 import io
 import os
+
 import pytest
 
-from act.scio import analyze
-from act.scio import plugin
+from act.scio import analyze, plugin
 
 
 @pytest.mark.asyncio
 async def test_plugins(monkeypatch) -> None:
-    """ test for plugins """
+    """test for plugins"""
 
-    plugin_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "plugins_deps")
+    plugin_dir = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), "plugins_deps"
+    )
 
     plugins = plugin.load_external_plugins(plugin_dir)
 
-    monkeypatch.setattr('sys.stdin', io.StringIO('This is a test. And this is another one.'))
+    monkeypatch.setattr(
+        "sys.stdin", io.StringIO("This is a test. And this is another one.")
+    )
 
     res = await analyze.analyze(plugins, beanstalk_client=False)
 

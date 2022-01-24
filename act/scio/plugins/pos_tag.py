@@ -1,7 +1,9 @@
+from typing import List, Text
+
 import addict
 import nltk
+
 from act.scio.plugin import BasePlugin, Result
-from typing import Text, List
 
 
 class Plugin(BasePlugin):

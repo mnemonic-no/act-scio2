@@ -6,8 +6,8 @@ import nltk
 
 
 def main() -> None:
-    """ Main funtion - download NLTK files """
-    nltk.download('all')
+    """Main funtion - download NLTK files"""
+    nltk.download("all")
 
 
 if __name__ == "__main__":

@@ -1,10 +1,12 @@
 """Plugin for finding possible threat actors based on sentences"""
 
+from typing import List, Set, Text
+
 import addict
-from act.scio.plugin import BasePlugin, Result
-from typing import Text, List, Set
 import nltk
 import nltk.stem
+
+from act.scio.plugin import BasePlugin, Result
 
 
 class Plugin(BasePlugin):
@@ -20,29 +22,31 @@ class Plugin(BasePlugin):
         res = addict.Dict()
 
         threat_stem_postfix = {
-            'threat',     # threat
-            'crimin',     # criminal, criminals
-            'crime',      # crime
-            'espionage',  # espionage
-            'hack',       # hack, hacking,
-            'hacker',     # hacker, hackers
-            'crack',      # cracking, crack
-            'cracker',    # cracker, crackers
-            'adversari',  # adversary, adversaries
-            'terrorist'   # terrorist, terrorists
+            "threat",  # threat
+            "crimin",  # criminal, criminals
+            "crime",  # crime
+            "espionage",  # espionage
+            "hack",  # hack, hacking,
+            "hacker",  # hacker, hackers
+            "crack",  # cracking, crack
+            "cracker",  # cracker, crackers
+            "adversari",  # adversary, adversaries
+            "terrorist",  # terrorist, terrorists
         }
 
         group_stem_postfix = {
-            'group',  # group, groups
-            'actor',  # actor, actors
-            'unit',   # unit, untis
-            'agent',  # agent, agents
-            'organ'   # organization, organizations
+            "group",  # group, groups
+            "actor",  # actor, actors
+            "unit",  # unit, untis
+            "agent",  # agent, agents
+            "organ",  # organization, organizations
         }
 
-        false_positive_filter = ["top",
-                                 "unknown",
-                                 "cyber"]  # "top threat groups", "cyber threat actors" etc...
+        false_positive_filter = [
+            "top",
+            "unknown",
+            "cyber",
+        ]  # "top threat groups", "cyber threat actors" etc...
 
         possible_ta_tag_types = {"NNP", "NNPS", "NN", "NNS"}
         possible_tag_types = {"NNP", "NNPS", "NN", "NNS", "JJ", "JJS"}
@@ -61,8 +65,9 @@ class Plugin(BasePlugin):
         # or part of a listing.
         for i, (token, tag) in enumerate(nlpdata.pos_tag.tokens):
             if first_stage_found:
-                second_stage_found = bool(tag in possible_tag_types and
-                                          ps.stem(token) in group_stem_postfix)
+                second_stage_found = bool(
+                    tag in possible_tag_types and ps.stem(token) in group_stem_postfix
+                )
                 if not second_stage_found:
                     first_stage_found = False
                     continue
@@ -71,11 +76,15 @@ class Plugin(BasePlugin):
                     first_stage_found = False
                     continue
                 n = i - 1
-                while n > 0 and len(nlpdata.pos_tag.tokens[n]) == 2 and  nlpdata.pos_tag.tokens[n][1] in lookbefore_tags:
+                while (
+                    n > 0
+                    and len(nlpdata.pos_tag.tokens[n]) == 2
+                    and nlpdata.pos_tag.tokens[n][1] in lookbefore_tags
+                ):
                     n -= 1
 
                 current_actor: List[Text] = []
-                for (subtoken, pos_tag) in nlpdata.pos_tag.tokens[n:i - 1]:
+                for (subtoken, pos_tag) in nlpdata.pos_tag.tokens[n : i - 1]:
                     # check if we have reached a separator (comma, 'and' etc)
                     # if so, we need to create a result of what we have found thus
                     # far and look for more.
@@ -93,8 +102,9 @@ class Plugin(BasePlugin):
 
             # check wether the current tag is of a type and in the accepted list of
             # threat group postfixes.
-            first_stage_found = bool(tag in possible_tag_types and
-                                     ps.stem(token) in threat_stem_postfix)
+            first_stage_found = bool(
+                tag in possible_tag_types and ps.stem(token) in threat_stem_postfix
+            )
 
         res.actors = pos_actors
         return Result(name=self.name, version=self.version, result=res)

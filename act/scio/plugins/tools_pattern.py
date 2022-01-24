@@ -1,9 +1,11 @@
-import addict
-from act.scio.vocabulary import Vocabulary
-from act.scio.plugin import BasePlugin, Result
-from typing import Text, List
 import configparser
 import os.path
+from typing import List, Text
+
+import addict
+
+from act.scio.plugin import BasePlugin, Result
+from act.scio.vocabulary import Vocabulary
 
 
 class Plugin(BasePlugin):
@@ -16,9 +18,9 @@ class Plugin(BasePlugin):
 
         ini = configparser.ConfigParser()
         ini.read([os.path.join(self.configdir, "tools_pattern.ini")])
-        ini['tools']['alias'] = os.path.join(self.configdir, ini['tools']['alias'])
+        ini["tools"]["alias"] = os.path.join(self.configdir, ini["tools"]["alias"])
 
-        vocab = Vocabulary(ini['tools'])
+        vocab = Vocabulary(ini["tools"])
 
         res = addict.Dict()
 

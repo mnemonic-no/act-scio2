@@ -4,6 +4,7 @@ import os
 
 import addict
 import pytest
+
 from act.scio.plugins import indicators
 
 TEST_TEXT = """
@@ -38,20 +39,24 @@ TEST_TEXT = """
 
 @pytest.mark.asyncio
 async def test_sectors() -> None:
-    """ test for plugins """
+    """test for plugins"""
 
     nlpdata = addict.Dict()
     plugin = indicators.Plugin()
-    plugin.configdir = os.path.join(os.path.dirname(__file__), "../act/scio/etc/plugins")
+    plugin.configdir = os.path.join(
+        os.path.dirname(__file__), "../act/scio/etc/plugins"
+    )
 
     nlpdata.content = TEST_TEXT
 
     res = await plugin.analyze(nlpdata)
 
-    #print(res.result)
+    # print(res.result)
 
     assert res.result.md5 == ["be5ee729563fa379e71d82d61cc3fdcf"]
-    assert res.result.sha256 == ["103cb6c404ba43527c2deac40fbe984f7d72f0b2366c0b6af01bd0b4f1a30c74"]
+    assert res.result.sha256 == [
+        "103cb6c404ba43527c2deac40fbe984f7d72f0b2366c0b6af01bd0b4f1a30c74"
+    ]
     assert res.result.sha1 == ["3c07cb361e053668b4686de6511d6a904a9c4495"]
 
     assert "http://my.test.no/hxxp/" in res.result.uri

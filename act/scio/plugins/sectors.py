@@ -1,11 +1,13 @@
-import addict
-from act.scio.vocabulary import Vocabulary
-from act.scio.plugin import BasePlugin, Result
-from typing import Text, List
 import configparser
+import os
+from typing import List, Text
+
+import addict
 import nltk
 import nltk.stem
-import os
+
+from act.scio.plugin import BasePlugin, Result
+from act.scio.vocabulary import Vocabulary
 
 
 class Plugin(BasePlugin):
@@ -19,12 +21,12 @@ class Plugin(BasePlugin):
         res = addict.Dict()
 
         sector_stem_postfix = {
-            'compani',  # company, companies, [...],
-            'industri',  # industry, industries, [...],
-            'sector',   # sector, sectors, [...],
-            'servic',   # service, services, [...],
-            'organ',   # organization, organizations, [...],
-            'provid',  # provider, providers, [...],
+            "compani",  # company, companies, [...],
+            "industri",  # industry, industries, [...],
+            "sector",  # sector, sectors, [...],
+            "servic",  # service, services, [...],
+            "organ",  # organization, organizations, [...],
+            "provid",  # provider, providers, [...],
         }
 
         posible_tag_types = {"NNP", "NNPS", "NN", "NNS"}
@@ -42,15 +44,17 @@ class Plugin(BasePlugin):
                 n = i - 1
                 while nlpdata.pos_tag.tokens[n][1] in lookbefore_tags:
                     n -= 1
-                pos_sectors += [token for (token, pos_tag)
-                                in nlpdata.pos_tag.tokens[n:i]
-                                if pos_tag in posible_tag_types]
+                pos_sectors += [
+                    token
+                    for (token, pos_tag) in nlpdata.pos_tag.tokens[n:i]
+                    if pos_tag in posible_tag_types
+                ]
 
         ini = configparser.ConfigParser()
         ini.read([os.path.join(self.configdir, "sectors.ini")])
-        ini['sectors']['alias'] = os.path.join(self.configdir, ini['sectors']['alias'])
+        ini["sectors"]["alias"] = os.path.join(self.configdir, ini["sectors"]["alias"])
 
-        vocab = Vocabulary(ini['sectors'])
+        vocab = Vocabulary(ini["sectors"])
         sectors = []
         unknown_sectors = []
         for pos_sector in pos_sectors:

@@ -1,20 +1,23 @@
 """Tika/Scio integration. This module contains the scio tike server and service code"""
 
-from tika import parser
-from typing import Text, Optional, Any
 import argparse
 import asyncio
-import greenstalk
+import gzip
 import html
 import json
 import logging
 import os
 import time
-import tika
-import gzip
+from typing import Any, Optional, Text
+
 import caep
-import act.scio.logsetup
+import greenstalk
+import tika
+from tika import parser
+
 import act.scio.config
+import act.scio.logsetup
+
 
 def parse_args() -> argparse.Namespace:
     """Helper setting up the argsparse configuration"""
@@ -22,13 +25,12 @@ def parse_args() -> argparse.Namespace:
     arg_parser = act.scio.config.parse_args("Scio 2 Tika server")
     return caep.config.handle_args(arg_parser, "scio/etc", "scio.ini", "tika")
 
+
 class Server:
     """The server class listening for new work on beanstalk and sending it to
     Apache Tika for text extraction and den sending it to Scio for text analyzis."""
 
-    def __init__(self,
-                 beanstalk_host: Text = "127.0.0.1",
-                 beanstalk_port: int = 11300):
+    def __init__(self, beanstalk_host: Text = "127.0.0.1", beanstalk_port: int = 11300):
 
         self.client: Optional[greenstalk.Client] = None
         self.connect(beanstalk_host, beanstalk_port)
@@ -48,9 +50,9 @@ class Server:
         except (OSError, BrokenPipeError, ConnectionError, ConnectionRefusedError):
             return False
 
-    def connect(self,
-                beanstalk_host: Text = "127.0.0.1",
-                beanstalk_port: int = 11300) -> None:
+    def connect(
+        self, beanstalk_host: Text = "127.0.0.1", beanstalk_port: int = 11300
+    ) -> None:
         """Try to create a beanstalk connection"""
 
         if self.client:
@@ -59,8 +61,11 @@ class Server:
 
         while not self.client_ready():
             try:
-                logging.info("Trying to connect to beanstalkd on %s:%s",
-                             beanstalk_host, beanstalk_port)
+                logging.info(
+                    "Trying to connect to beanstalkd on %s:%s",
+                    beanstalk_host,
+                    beanstalk_port,
+                )
                 self.client = greenstalk.Client((beanstalk_host, beanstalk_port))
             except ConnectionRefusedError as err:
                 logging.warning("Server.connect: %s", err)
@@ -69,9 +74,9 @@ class Server:
 
         # We only want to receive messages specifically to scio. The default
         # beanstalk tube is ignored.
-        self.client.watch('scio_doc')
-        self.client.ignore('default')
-        self.client.use('scio_analyze')
+        self.client.watch("scio_doc")
+        self.client.ignore("default")
+        self.client.use("scio_analyze")
 
     async def reserve(self) -> Any:
         """Async reserve"""
@@ -102,14 +107,14 @@ class Server:
                 self.client.delete(job)  # type: ignore
                 continue
 
-            if not os.path.isfile(meta_data['filename']):
-                logging.warning("Could not find file '%s'", meta_data['filename'])
+            if not os.path.isfile(meta_data["filename"]):
+                logging.warning("Could not find file '%s'", meta_data["filename"])
                 self.client.delete(job)  # type: ignore
                 continue
 
-            with open(meta_data['filename'], 'rb') as fh:
+            with open(meta_data["filename"], "rb") as fh:
                 content = fh.read()
-                if meta_data['filename'].endswith(".html"):
+                if meta_data["filename"].endswith(".html"):
                     content = html.unescape(content.decode("utf8")).encode("utf8")
                 data = parser.from_buffer(content)
                 data.update(meta_data)
@@ -117,10 +122,10 @@ class Server:
             self.client.delete(job)  # type: ignore
             logging.info("Worker [%s] waiting to post result.", worker_id)
             try:
-                self.client.put(gzip.compress(json.dumps({**data, **meta_data}).encode('utf8')))  # type: ignore
+                self.client.put(gzip.compress(json.dumps({**data, **meta_data}).encode("utf8")))  # type: ignore
                 logging.info("Worker [%s] job done.", worker_id)
             except greenstalk.JobTooBigError:
-                logging.error("Job to big: %s.", meta_data['filename'])
+                logging.error("Job to big: %s.", meta_data["filename"])
 
     async def _start(self, n: int) -> None:
         """Start the server, create n number of workers and wait for data on the queue"""
@@ -137,7 +142,9 @@ class Server:
 
         for i, worker in workers:
             if worker.exception():
-                logging.error("Worker [%s] ended with exception %s", i, worker.exception())
+                logging.error(
+                    "Worker [%s] ended with exception %s", i, worker.exception()
+                )
 
     def start(self, n: int = 4) -> None:
         """start the server"""

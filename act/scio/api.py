@@ -27,8 +27,6 @@ import re
 from functools import lru_cache
 from typing import Dict, List, Optional, Text, Union
 
-import act.scio.config
-import act.scio.es
 import caep
 import elasticsearch
 import greenstalk  # type: ignore
@@ -38,6 +36,9 @@ from fastapi.responses import FileResponse, PlainTextResponse
 from pydantic import BaseModel, StrictInt, StrictStr
 from pydantic.types import constr
 
+import act.scio.config
+import act.scio.es
+
 XDG_CACHE = os.path.expanduser(os.environ.get("XDG_CACHE_HOME", "~/.cache"))
 
 app = FastAPI()
@@ -46,7 +47,7 @@ app = FastAPI()
 
 
 def max_current_jobs_ready(client: greenstalk.Client, tubes: List[Text]) -> int:
-    """ Get max current-jobs-ready from tubes specified """
+    """Get max current-jobs-ready from tubes specified"""
     max_jobs = 0
     for tube in tubes:
         # We need to check for the existense of a beanstalk tube
@@ -63,20 +64,23 @@ def max_current_jobs_ready(client: greenstalk.Client, tubes: List[Text]) -> int:
 
 
 class Document(BaseModel):
-    """ Document model """
+    """Document model"""
+
     content: StrictStr
     filename: StrictStr
     uri: Optional[StrictStr]
 
 
 class LookupResponse(BaseModel):
-    """ Response model for document search """
+    """Response model for document search"""
+
     filename: StrictStr
     content_type: StrictStr
 
 
 class SubmitResponse(BaseModel):
-    """ Response model for document submit """
+    """Response model for document submit"""
+
     filename: StrictStr
     hexdigest: StrictStr
     count: StrictInt
@@ -91,17 +95,31 @@ def parse_args() -> argparse.Namespace:
     """Helper setting up the argsparse configuration"""
 
     arg_parser = act.scio.config.parse_args("Scio API")
-    arg_parser.add_argument('--port', type=int, default=3000,
-                            help="API port to listen on (default=3000)")
-    arg_parser.add_argument('--max-jobs', type=int, default=10,
-                            help="Max jobs in queue before submit responds " +
-                            "with backpressure (429)")
-    arg_parser.add_argument('--reload', action="store_true",
-                            help="Reload web server on file change (dev mode)")
-    arg_parser.add_argument('--document-path', default=caep.get_cache_dir("scio/documents"),
-                            help=f"Storage path for documents = {XDG_CACHE}/scio/documents")
-    arg_parser.add_argument('--host', dest='host', default='127.0.0.1',
-                            help="Host interface (default=127.0.0.1)")
+    arg_parser.add_argument(
+        "--port", type=int, default=3000, help="API port to listen on (default=3000)"
+    )
+    arg_parser.add_argument(
+        "--max-jobs",
+        type=int,
+        default=10,
+        help="Max jobs in queue before submit responds " + "with backpressure (429)",
+    )
+    arg_parser.add_argument(
+        "--reload",
+        action="store_true",
+        help="Reload web server on file change (dev mode)",
+    )
+    arg_parser.add_argument(
+        "--document-path",
+        default=caep.get_cache_dir("scio/documents"),
+        help=f"Storage path for documents = {XDG_CACHE}/scio/documents",
+    )
+    arg_parser.add_argument(
+        "--host",
+        dest="host",
+        default="127.0.0.1",
+        help="Host interface (default=127.0.0.1)",
+    )
 
     args = caep.config.handle_args(arg_parser, "scio/etc", "scio.ini", "api")
 
@@ -115,9 +133,10 @@ def parse_args() -> argparse.Namespace:
     return args
 
 
-def document_lookup(document_id: Text,
-                    elasticsearch_client: elasticsearch.client.Elasticsearch) -> LookupResponse:
-    """ Lookup document location and content type from document_id (hexdigest) """
+def document_lookup(
+    document_id: Text, elasticsearch_client: elasticsearch.client.Elasticsearch
+) -> LookupResponse:
+    """Lookup document location and content type from document_id (hexdigest)"""
 
     filename: Text = ""
     content_type: Text = ""
@@ -129,23 +148,26 @@ def document_lookup(document_id: Text,
     except elasticsearch.exceptions.NotFoundError:
         pass
 
-    return LookupResponse(
-        filename=filename,
-        content_type=content_type
-    )
+    return LookupResponse(filename=filename, content_type=content_type)
 
 
 @app.post("/submit")
-async def submit(doc: Document, args: argparse.Namespace = Depends(parse_args)) -> SubmitResponse:
+async def submit(
+    doc: Document, args: argparse.Namespace = Depends(parse_args)
+) -> SubmitResponse:
     # Depends on parse_args which are used for settings. The result
     # is cached the first time it is executed
-    """ Submit document """
+    """Submit document"""
 
-    max_jobs = max_current_jobs_ready(args.beanstalk_client, ["scio_doc", "scio_analyze"])
+    max_jobs = max_current_jobs_ready(
+        args.beanstalk_client, ["scio_doc", "scio_analyze"]
+    )
 
     if max_jobs >= args.max_jobs:
         logging.warning("%s jobs in queue", max_jobs)
-        raise HTTPException(status_code=429, detail="To many jobs in queue, try again later")
+        raise HTTPException(
+            status_code=429, detail="To many jobs in queue, try again later"
+        )
 
     filename = os.path.join(args.document_path, os.path.basename(doc.filename))
     content: bytes = base64.b64decode(doc.content)
@@ -157,17 +179,20 @@ async def submit(doc: Document, args: argparse.Namespace = Depends(parse_args)) 
         hexdigest=hashlib.sha256(content).hexdigest(),
         count=len(content),
         error=None,
-        uri=doc.uri)
+        uri=doc.uri,
+    )
 
     args.beanstalk_client.put(response.json().encode("utf8"))
     return response
 
 
-@ app.get("/indicators/{indicator_type}", response_class=PlainTextResponse)
-def indicators(indicator_type: constr(regex=r"^(ipv4|ipv6|uri|email|fqdn|md5|sha1|sha256)$"),
-             last: constr(regex=r'^\d+[yMwdhms]?$') = "90d",
-             args: argparse.Namespace = Depends(parse_args)) -> PlainTextResponse:
-    """ Download indicators
+@app.get("/indicators/{indicator_type}", response_class=PlainTextResponse)
+def indicators(
+    indicator_type: constr(regex=r"^(ipv4|ipv6|uri|email|fqdn|md5|sha1|sha256)$"),
+    last: constr(regex=r"^\d+[yMwdhms]?$") = "90d",
+    args: argparse.Namespace = Depends(parse_args),
+) -> PlainTextResponse:
+    """Download indicators
 
     Allowed indicator types:
     * ipv4
@@ -213,15 +238,15 @@ def indicators(indicator_type: constr(regex=r"^(ipv4|ipv6|uri|email|fqdn|md5|sha
         end="now",
     )
 
-    return PlainTextResponse(
-            "\n".join(row[0].get(term) for row in res)
-    )
+    return PlainTextResponse("\n".join(row[0].get(term) for row in res))
 
 
-@ app.get("/download")
-def download(id: constr(regex=r"^[0-9A-Fa-f]{64}$"),
-             args: argparse.Namespace = Depends(parse_args)) -> Response:
-    """ Download document as original content"""
+@app.get("/download")
+def download(
+    id: constr(regex=r"^[0-9A-Fa-f]{64}$"),
+    args: argparse.Namespace = Depends(parse_args),
+) -> Response:
+    """Download document as original content"""
     res = document_lookup(id, args.elasticsearch_client)
 
     if not os.path.isfile(res.filename):
@@ -230,13 +255,16 @@ def download(id: constr(regex=r"^[0-9A-Fa-f]{64}$"),
     return FileResponse(
         res.filename,
         filename=os.path.basename(res.filename),
-        media_type=res.content_type)
+        media_type=res.content_type,
+    )
 
 
-@ app.get("/download_json")
-def download_json(id: constr(regex=r"^[0-9A-Fa-f]{64}$"),
-                  args: argparse.Namespace = Depends(parse_args)) -> Union[Response, Dict]:
-    """ Download document base64 decoded in json struct """
+@app.get("/download_json")
+def download_json(
+    id: constr(regex=r"^[0-9A-Fa-f]{64}$"),
+    args: argparse.Namespace = Depends(parse_args),
+) -> Union[Response, Dict]:
+    """Download document base64 decoded in json struct"""
     res = document_lookup(id, args.elasticsearch_client)
 
     if not os.path.isfile(res.filename):
@@ -251,12 +279,12 @@ def download_json(id: constr(regex=r"^[0-9A-Fa-f]{64}$"),
         "error": None,
         "bytes": len(content),
         "content": base64.b64encode(content),
-        "encoding": "base64"
+        "encoding": "base64",
     }
 
 
 def main() -> None:
-    """ Main API loop """
+    """Main API loop"""
     args = parse_args()
 
     uvicorn.run(
@@ -264,7 +292,8 @@ def main() -> None:
         host=args.host,
         port=args.port,
         log_level="info",
-        reload=args.reload)
+        reload=args.reload,
+    )
 
 
 if __name__ == "__main__":
