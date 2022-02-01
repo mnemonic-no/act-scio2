@@ -24,6 +24,12 @@ You will also need to install [beanstalkd](https://beanstalkd.github.io/). On de
 sudo apt install beanstalkd
 ```
 
+Configure beanstalk to accept larger payloads with the `-z` option. For red hat derived setups this can be configured in `/etc/sysconfig/beanstalkd`:
+
+```bash
+MAX_JOB_SIZE=-z 524288
+```
+
 You then need to install NLTK data files. A helper utility to do this is included:
 
 ```bash
@@ -68,6 +74,8 @@ The first time the server runs, it will download tika using maven. It will use a
 ```bash
 scio-tika-server
 ```
+
+`scio-tika-server` uses [tika-python](https://github.com/chrismattmann/tika-python) which depends on tika-server.jar. If your server has internet access, this will downloaded automatically. If not or you need proxy to connect to the internet, follow the instructions on "Airagap Environment Setup" here: [https://github.com/chrismattmann/tika-python](https://github.com/chrismattmann/tika-python). Currently only tested with tika-server version 1.24.1.
 
 ### Scio Analyze Server
 
