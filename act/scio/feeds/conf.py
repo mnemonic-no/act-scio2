@@ -40,6 +40,10 @@ def get_args() -> argparse.Namespace:
         help=f"sqlite db containing cached hashes. Default = {XDG_CACHE}/scio-feeds/cache.db",
     )
     parser.add_argument(
+        "--tlp",
+        help="Set TLP (RED, AMBER, GREEN, WHITE) on document upload",
+    )
+    parser.add_argument(
         "--scio",
         help="Upload to scio engine API url. "
         + "Set to empty value to not upload files.",
