@@ -41,7 +41,8 @@ def get_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--tlp",
-        help="Set TLP (RED, AMBER, GREEN, WHITE) on document upload",
+        help="Set TLP (RED, AMBER, GREEN, WHITE) on document upload. Default=WHITE",
+        default="WHITE",
     )
     parser.add_argument(
         "--scio",
