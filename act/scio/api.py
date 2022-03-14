@@ -35,9 +35,11 @@ from fastapi import Depends, FastAPI, HTTPException, Response
 from fastapi.responses import FileResponse, PlainTextResponse
 from pydantic import BaseModel, StrictInt, StrictStr
 from pydantic.types import constr
+from pydantic.typing import Literal
 
 import act.scio.config
 import act.scio.es
+from act.scio import tlp
 
 XDG_CACHE = os.path.expanduser(os.environ.get("XDG_CACHE_HOME", "~/.cache"))
 
@@ -69,6 +71,7 @@ class Document(BaseModel):
     content: StrictStr
     filename: StrictStr
     uri: Optional[StrictStr]
+    tlp: Optional[tlp.TLP]
 
 
 class LookupResponse(BaseModel):
@@ -85,6 +88,7 @@ class SubmitResponse(BaseModel):
     hexdigest: StrictStr
     count: StrictInt
     uri: Optional[StrictStr]
+    tlp: Optional[tlp.TLP]
     error: Optional[StrictStr]
 
 
@@ -178,6 +182,7 @@ async def submit(
         filename=filename,
         hexdigest=hashlib.sha256(content).hexdigest(),
         count=len(content),
+        tlp=doc.tlp,
         error=None,
         uri=doc.uri,
     )

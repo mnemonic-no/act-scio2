@@ -15,27 +15,29 @@ def read_as_base64(obj: IO) -> Text:
     return encoded_bytes.decode("ascii")
 
 
-def to_scio_submit_post_data(obj: IO, filemap: Dict) -> Dict[Text, Text]:
+def to_scio_submit_post_data(obj: IO, filemap: Dict, tlp: Text) -> Dict[Text, Text]:
     """Take a file like object, and return a dictionary on the correct form for
     submitting to the SCIO API (https://github.com/mnemonic-no/act-scio-api)"""
 
     metadata = filemap.copy()
     metadata["content"] = read_as_base64(obj)
+    metadata["tlp"] = tlp
 
     assert "content" in metadata
     assert "filename" in metadata
     assert "uri" in metadata
+    assert "tlp" in metadata
 
     return metadata
 
 
-def upload(url: Text, filemap: Dict) -> None:
+def upload(url: Text, filemap: Dict, tlp: Text) -> None:
     """Upload a file to the Scio engine"""
 
     retry_codes = [429, None]
 
     with open(filemap["filename"], "rb") as file_h:
-        post_data = to_scio_submit_post_data(file_h, filemap)
+        post_data = to_scio_submit_post_data(file_h, filemap, tlp)
 
         # Disable all proxy settings from environment
         session = requests.Session()

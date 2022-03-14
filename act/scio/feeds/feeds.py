@@ -31,6 +31,7 @@ import urllib3
 from act.scio.config import get_cache_dir
 from act.scio.feeds import cache, conf, download, upload
 from act.scio.logsetup import setup_logging
+from act.scio.tlp import valid_tlp
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -43,7 +44,9 @@ def sha256_of_file(filename: Text) -> Text:
         return hashlib.sha256(data).hexdigest()
 
 
-def upload_uncached_files(cache_file: Text, files: List[Dict], scio_url: Text) -> int:
+def upload_uncached_files(
+    cache_file: Text, files: List[Dict], scio_url: Text, tlp: Text
+) -> int:
     """Check each downloaded file hexdigest against a cache of previously uploaded
     files. Only upload "new" files."""
 
@@ -59,7 +62,7 @@ def upload_uncached_files(cache_file: Text, files: List[Dict], scio_url: Text) -
         if not mycache.contains(sha256):
             try:
                 if scio_url != "dummy.url":
-                    upload.upload(scio_url, filemap)
+                    upload.upload(scio_url, filemap, tlp)
                 mycache.insert(filename, sha256, str(datetime.datetime.now()))
                 logging.info("Uploaded %s to scio", filename)
                 nup += 1
@@ -73,6 +76,13 @@ def main() -> None:
     """Main program loop. entry point"""
 
     args = conf.get_args()
+
+    if args.tlp:
+        args.tlp = args.tlp.upper()
+
+        if not valid_tlp(args.tlp):
+            logging.error(f"Illegal TLP: {args.tlp}")
+            return
 
     if not args.store_path:
         args.store_path = get_cache_dir("scio-feeds", create=True)
@@ -99,7 +109,7 @@ def main() -> None:
 
     logging.info("Checking upload status of %s files", len(files))
 
-    nup = upload_uncached_files(args.cache, files, args.scio)
+    nup = upload_uncached_files(args.cache, files, args.scio, args.tlp)
 
     logging.info("Uploaded %s files", nup)
 
