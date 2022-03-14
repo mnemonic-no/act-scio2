@@ -6,6 +6,12 @@ Scio uses [tika](https://tika.apache.org) to extract text from documents (PDF, H
 The result is sent to the Scio Analyzer that extracts information using a combination of NLP
 (Natural Language Processing) and pattern matching.
 
+## Changelog
+
+### 0.0.42
+
+SCIO now supports setting TLP on data upload, to annotatet documents with `tlp` tag. Documents downloaded by feeds will have a default TLP white, but this can be changed in the config for feeds.
+
 ## Source code
 
 The source code the workers are available on [github](https://github.com/mnemonic-no/act-scio2).
