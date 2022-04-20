@@ -10,9 +10,8 @@ from typing import Dict, List, Optional, Text, Tuple
 
 import justext
 import requests
-from bs4 import BeautifulSoup
-
 from act.scio.feeds import analyze, download
+from bs4 import BeautifulSoup
 
 
 def get_content_from_entry(entry: Dict) -> Text:
@@ -80,8 +79,21 @@ def read_stoplist(fname: Text) -> frozenset:
     """Take a list of words (one pr. line) and create a frozenset
     for use as stopwords when extracting text with jusText"""
 
-    with open(fname, "r") as stream:
+    with open(fname, "r", encoding="utf-8") as stream:
         return frozenset(line.strip().lower() for line in stream)
+
+
+def sanitize_filename(filename: Text) -> Text:
+    """make sure that the filename is usable"""
+
+    # make sure that the basename is less than 255 characters
+    basename = os.path.basename(filename)
+    directory = os.path.dirname(filename)
+    if len(basename) > 255:
+        filename, extension = os.path.splitext(basename)
+        basename = safe_filename(filename[: 255 - len(extension)]) + extension
+
+    return os.path.join(directory, basename)
 
 
 def partial_entry_text_to_file(
@@ -108,7 +120,7 @@ def partial_entry_text_to_file(
         logging.warning("Unable to download content: %s", url)
         return None, None
 
-    filename = safe_filename(entry.get("title", str(uuid.uuid4())))
+    filename = entry.get("title", str(uuid.uuid4()))
 
     html_data = "<html>\n<head>\n"
     html_data += "<title>{0}</title>\n</head>\n".format(entry.get("title", "NO TITLE"))
@@ -133,8 +145,11 @@ def partial_entry_text_to_file(
 
     html_data += "\n</body>\n</html>"
 
-    full_filename = os.path.join(args.store_path, "download", filename + ".html")
-    with open(full_filename, "w") as html_file:
+    full_filename = sanitize_filename(
+        os.path.join(args.store_path, "download", filename + ".html")
+    )
+
+    with open(full_filename, "w", encoding="utf-8") as html_file:
         html_file.write(html_data)
 
     # we want to return the raw_html and not the "article extraction"
@@ -148,14 +163,15 @@ def entry_text_to_file(
     """Extract the entry content and write it to the proper file.
     Return the wrapped HTML"""
 
-    filename = safe_filename(entry.get("title", str(uuid.uuid4())))
+    filename = entry.get("title", str(uuid.uuid4()))
 
     html_data = create_html(entry)
 
-    full_filename = os.path.join(
-        os.path.join(args.store_path, "download"), filename + ".html"
+    full_filename = sanitize_filename(
+        os.path.join(os.path.join(args.store_path, "download"), filename + ".html")
     )
-    with open(full_filename, "w") as html_file:
+
+    with open(full_filename, "w", encoding="utf-8") as html_file:
         html_file.write(html_data)
 
     return full_filename, html_data
