@@ -10,8 +10,9 @@ from typing import Dict, List, Optional, Text, Tuple
 
 import justext
 import requests
-from act.scio.feeds import analyze, download
 from bs4 import BeautifulSoup
+
+from act.scio.feeds import analyze, download
 
 
 def get_content_from_entry(entry: Dict) -> Text:
@@ -89,9 +90,9 @@ def sanitize_filename(filename: Text) -> Text:
     # make sure that the basename is less than 255 characters
     basename = os.path.basename(filename)
     directory = os.path.dirname(filename)
-    if len(basename) > 255:
+    if len(basename) >= 255:
         filename, extension = os.path.splitext(basename)
-        basename = safe_filename(filename[: 255 - len(extension)]) + extension
+        basename = safe_filename(filename)[: 254 - len(extension)] + extension
 
     return os.path.join(directory, basename)
 
