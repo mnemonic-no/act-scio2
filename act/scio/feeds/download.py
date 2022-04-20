@@ -187,7 +187,9 @@ def handle_feed(
             download_and_store(
                 feed_url, args.ignore, args.store_path, args.proxy_string, link
             )
-            for link in analyze.filter_links(args.file_format, links)
+            for link in analyze.filter_links(
+                args.file_format, links, args.exclude_filenames
+            )
         )
 
     return "OK", feed_url, list(filter(None, files))
