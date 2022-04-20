@@ -32,6 +32,7 @@ Helper functions used for making desitions and modifications
 
 import logging
 import os
+import os.path
 import urllib
 import urllib.parse
 from typing import List, Optional, Text
@@ -81,7 +82,9 @@ def extract_file_extension(url: urllib.parse.ParseResult) -> Text:
 
 
 def filter_links(
-    file_formats: List[Text], links: List[urllib.parse.ParseResult]
+    file_formats: List[Text],
+    links: List[urllib.parse.ParseResult],
+    exclude_filenames: List[Text] = [],
 ) -> List[urllib.parse.ParseResult]:
     """Run though a list of urls, checking if they contains certain
     elements that looks like possible file download possibilities"""
@@ -92,4 +95,8 @@ def filter_links(
         ext = extract_file_extension(url)
         return ext in file_format_set
 
-    return list(filter(__contains_fileextension, links))
+    def __contains_exlude_file(url: urllib.parse.ParseResult) -> bool:
+        basename = os.path.basename(url.path)
+        return basename not in exclude_filenames
+
+    return list(filter(__contains_exlude_file, filter(__contains_fileextension, links)))
