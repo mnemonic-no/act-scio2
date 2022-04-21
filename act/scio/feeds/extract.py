@@ -97,6 +97,19 @@ def sanitize_filename(filename: Text) -> Text:
     return os.path.join(directory, basename)
 
 
+def create_storage_path(filename: Text, extension: Text, *path_elements: Text) -> Text:
+    """Build a path, sanitize filenames and build proper path structure"""
+
+    if not extension.startswith("."):
+        extension = "." + extension
+
+    return sanitize_filename(
+        os.path.join(
+            *path_elements, replace_unsafe_filename_characters(filename) + extension
+        )
+    )
+
+
 def partial_entry_text_to_file(
     args: argparse.Namespace, entry: Dict
 ) -> Tuple[Optional[Text], Optional[Text]]:
@@ -121,7 +134,7 @@ def partial_entry_text_to_file(
         logging.warning("Unable to download content: %s", url)
         return None, None
 
-    filename = replace_unsafe_filename_characters(entry.get("title", str(uuid.uuid4())))
+    filename = entry.get("title", str(uuid.uuid4()))
 
     html_data = "<html>\n<head>\n"
     html_data += "<title>{0}</title>\n</head>\n".format(entry.get("title", "NO TITLE"))
@@ -146,9 +159,7 @@ def partial_entry_text_to_file(
 
     html_data += "\n</body>\n</html>"
 
-    full_filename = sanitize_filename(
-        os.path.join(args.store_path, "download", filename + ".html")
-    )
+    full_filename = create_storage_path(filename, "html", args.store_path, download)
 
     with open(full_filename, "w", encoding="utf-8") as html_file:
         html_file.write(html_data)
@@ -164,13 +175,11 @@ def entry_text_to_file(
     """Extract the entry content and write it to the proper file.
     Return the wrapped HTML"""
 
-    filename = replace_unsafe_filename_characters(entry.get("title", str(uuid.uuid4())))
+    filename = entry.get("title", str(uuid.uuid4()))
 
     html_data = create_html(entry)
 
-    full_filename = sanitize_filename(
-        os.path.join(os.path.join(args.store_path, "download"), filename + ".html")
-    )
+    full_filename = create_storage_path(filename, "html", args.store_path, download)
 
     with open(full_filename, "w", encoding="utf-8") as html_file:
         html_file.write(html_data)
