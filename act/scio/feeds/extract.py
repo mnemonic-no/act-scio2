@@ -58,7 +58,7 @@ def create_html(entry: Dict) -> Text:
     )
 
 
-def safe_filename(path: Text) -> Text:
+def replace_unsafe_filename_characters(path: Text) -> Text:
     """Make filename safe by only allowing alpha numeric characters,
     digits and ._-"""
 
@@ -92,9 +92,22 @@ def sanitize_filename(filename: Text) -> Text:
     directory = os.path.dirname(filename)
     if len(basename) >= 255:
         filename, extension = os.path.splitext(basename)
-        basename = safe_filename(filename)[: 254 - len(extension)] + extension
+        basename = filename[: 254 - len(extension)] + extension
 
     return os.path.join(directory, basename)
+
+
+def create_storage_path(filename: Text, extension: Text, *path_elements: Text) -> Text:
+    """Build a path, sanitize filenames and build proper path structure"""
+
+    if not extension.startswith("."):
+        extension = "." + extension
+
+    return sanitize_filename(
+        os.path.join(
+            *path_elements, replace_unsafe_filename_characters(filename) + extension
+        )
+    )
 
 
 def partial_entry_text_to_file(
@@ -146,9 +159,7 @@ def partial_entry_text_to_file(
 
     html_data += "\n</body>\n</html>"
 
-    full_filename = sanitize_filename(
-        os.path.join(args.store_path, "download", filename + ".html")
-    )
+    full_filename = create_storage_path(filename, "html", args.store_path, download)
 
     with open(full_filename, "w", encoding="utf-8") as html_file:
         html_file.write(html_data)
@@ -168,9 +179,7 @@ def entry_text_to_file(
 
     html_data = create_html(entry)
 
-    full_filename = sanitize_filename(
-        os.path.join(os.path.join(args.store_path, "download"), filename + ".html")
-    )
+    full_filename = create_storage_path(filename, "html", args.store_path, download)
 
     with open(full_filename, "w", encoding="utf-8") as html_file:
         html_file.write(html_data)
