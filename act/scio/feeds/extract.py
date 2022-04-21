@@ -58,7 +58,7 @@ def create_html(entry: Dict) -> Text:
     )
 
 
-def safe_filename(path: Text) -> Text:
+def replace_unsafe_filename_characters(path: Text) -> Text:
     """Make filename safe by only allowing alpha numeric characters,
     digits and ._-"""
 
@@ -92,7 +92,7 @@ def sanitize_filename(filename: Text) -> Text:
     directory = os.path.dirname(filename)
     if len(basename) >= 255:
         filename, extension = os.path.splitext(basename)
-        basename = safe_filename(filename)[: 254 - len(extension)] + extension
+        basename = filename[: 254 - len(extension)] + extension
 
     return os.path.join(directory, basename)
 
@@ -121,7 +121,7 @@ def partial_entry_text_to_file(
         logging.warning("Unable to download content: %s", url)
         return None, None
 
-    filename = entry.get("title", str(uuid.uuid4()))
+    filename = replace_unsafe_filename_characters(entry.get("title", str(uuid.uuid4())))
 
     html_data = "<html>\n<head>\n"
     html_data += "<title>{0}</title>\n</head>\n".format(entry.get("title", "NO TITLE"))
@@ -164,7 +164,7 @@ def entry_text_to_file(
     """Extract the entry content and write it to the proper file.
     Return the wrapped HTML"""
 
-    filename = entry.get("title", str(uuid.uuid4()))
+    filename = replace_unsafe_filename_characters(entry.get("title", str(uuid.uuid4())))
 
     html_data = create_html(entry)
 
