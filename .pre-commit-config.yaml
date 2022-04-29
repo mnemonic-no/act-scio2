@@ -28,6 +28,16 @@ repos:
 
   - repo: local
     hooks:
+      - id: mypy
+        name: mypy
+        language: python
+        entry: mypy
+        types: [python]
+        additional_dependencies: [mypy==0.950]
+        args: ["--strict", "--install-types", "--non-interactive"]
+
+  - repo: local
+    hooks:
     -   id: pytest
         name: pytest
         entry: pytest
