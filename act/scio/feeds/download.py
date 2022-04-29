@@ -65,8 +65,8 @@ def download_and_store(
         logging.info("Status %s - %s", req.status_code, link)
         return {}
 
-    basename = extract.safe_filename(os.path.basename(link.path))
-    fname = os.path.join(storage_path, "download", basename)
+    basename = os.path.basename(link.path)
+    fname = extract.create_storage_path(basename, None, storage_path, "download")
 
     # check if the filename on disk is in the ignore file. If so, do not return filename
     # for upload. This differ from URL in the ignore file as the file is in fact downloaded by
