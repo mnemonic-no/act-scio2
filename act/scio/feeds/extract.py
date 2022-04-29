@@ -159,7 +159,7 @@ def partial_entry_text_to_file(
 
     html_data += "\n</body>\n</html>"
 
-    full_filename = create_storage_path(filename, "html", args.store_path, download)
+    full_filename = create_storage_path(filename, "html", args.store_path, "download")
 
     with open(full_filename, "w", encoding="utf-8") as html_file:
         html_file.write(html_data)
@@ -179,7 +179,7 @@ def entry_text_to_file(
 
     html_data = create_html(entry)
 
-    full_filename = create_storage_path(filename, "html", args.store_path, download)
+    full_filename = create_storage_path(filename, "html", args.store_path, "download")
 
     with open(full_filename, "w", encoding="utf-8") as html_file:
         html_file.write(html_data)
