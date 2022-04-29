@@ -30,7 +30,7 @@ submit utility.
 
 import logging
 import sqlite3
-from typing import Dict, List, Text
+from typing import Any, Dict, List, Text
 
 
 class Cache:
@@ -79,7 +79,7 @@ class Cache:
         self.conn.execute(sql, (filename, sha256, description))
         self.conn.commit()
 
-    def info(self, sha256: Text) -> List[Dict]:
+    def info(self, sha256: Text) -> List[Dict[Text, Any]]:
         """Get stored info about a digest. Returns a list of Dictionaries"""
 
         sql = (

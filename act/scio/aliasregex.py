@@ -5,7 +5,7 @@ regular expressions for matching purposes"""
 
 import re
 import sys
-from typing import Set, Text
+from typing import List, Optional, Set, Text
 
 
 def alias_set_from_config(config_file_name: Text) -> Set[Text]:
@@ -76,14 +76,14 @@ def regex_from_alias(alias: Text) -> Text:
 
 def normalize(
     name: Text,
-    space_before_numbers=True,
-    space_before_capitalized=True,
-    remove_non_alphanumeric=True,
-    remove_multiple_whitespace=True,
-    lower=True,
-    upper=False,
-    capitalize=False,
-    uppercase_abbr=None,
+    space_before_numbers: bool = True,
+    space_before_capitalized: bool = True,
+    remove_non_alphanumeric: bool = True,
+    remove_multiple_whitespace: bool = True,
+    lower: bool = True,
+    upper: bool = False,
+    capitalize: bool = False,
+    uppercase_abbr: Optional[List[Text]] = None,
 ) -> str:
     """
 

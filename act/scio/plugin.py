@@ -19,7 +19,7 @@ from act.scio import plugins
 module_interface = ["name", "analyze", "info", "version", "dependencies"]
 
 
-class Result(BaseModel):
+class Result(BaseModel):  # type: ignore
     """The result type returned by all analyze methods of the plugins."""
 
     name: StrictStr
@@ -91,9 +91,12 @@ def load_external_plugins(directory: Text) -> List[BasePlugin]:
 
 def load_plugin(module_name: Text) -> Optional[BasePlugin]:
     if module_name.endswith(".py"):
-        spec: ModuleSpec = spec_from_file_location("plugin_mod", module_name)
-        module = module_from_spec(spec)
-        spec.loader.exec_module(module)  # type: ignore
+        spec: Optional[ModuleSpec] = spec_from_file_location("plugin_mod", module_name)
+        if spec:
+            module = module_from_spec(spec)
+            spec.loader.exec_module(module)  # type: ignore
+        else:
+            raise ImportError(f"Unable to load {module_name}")
     else:
         try:
             module = import_module(module_name)

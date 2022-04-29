@@ -4,7 +4,7 @@ Helper functions for retrieving vocabulary aliases
 
 import argparse
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Text, Tuple
 
 import requests
 import urllib3
@@ -80,7 +80,7 @@ def parseargs() -> argparse.ArgumentParser:
 
 
 def output_alias(
-    filename: str, alias_map: Dict, exclude: Optional[List] = None
+    filename: str, alias_map: Dict[Text, Text], exclude: Optional[List[Text]] = None
 ) -> None:
     """
     Output alias to file
@@ -91,22 +91,24 @@ def output_alias(
     with open(filename, "w") as f:
         for key in sorted(alias_map.keys()):
             aliases = alias_map[key]
-            aliases = [
+            aliases_list = [
                 escape(alias).strip()
                 for alias in sorted(aliases)
                 if alias not in exclude and alias != key
             ]
-            f.write("{}:{}\n".format(escape(key).strip(), ",".join(aliases)))
+            f.write("{}:{}\n".format(escape(key).strip(), ",".join(aliases_list)))
 
 
-def merge(*lists: Dict, lower: bool = False) -> Dict:
+def merge(
+    *lists: Dict[Text, List[Text]], lower: bool = False
+) -> Dict[Text, List[Text]]:
     """
     Combine multiple alias lists in order.
     If key exists as one of the previous alias lists, add aliases to the previous
     main key
     """
 
-    combined: Dict = {}
+    combined: Dict[Text, List[Text]] = {}
 
     for alias_list in lists:
         for key, aliases in alias_list.items():
@@ -128,7 +130,7 @@ def merge(*lists: Dict, lower: bool = False) -> Dict:
 
 def fetch_json(
     url: str, proxy_string: str = "", timeout: int = 60, verify_https: bool = True
-) -> Dict:
+) -> Dict[Text, Any]:
     """Fetch remote URL as JSON
     url (string):                    URL to fetch
     proxy_string (string, optional): Optional proxy string on format host:port
@@ -145,7 +147,7 @@ def fetch_json(
     }
 
     if not verify_https:
-        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # type: ignore
 
     # Unable to infer type
     req = requests.get(url, **options)  # type: ignore

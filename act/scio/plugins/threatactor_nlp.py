@@ -84,7 +84,9 @@ class Plugin(BasePlugin):
                     n -= 1
 
                 current_actor: List[Text] = []
-                for (subtoken, pos_tag) in nlpdata.pos_tag.tokens[n : i - 1]:
+                for (subtoken, pos_tag) in nlpdata.pos_tag.tokens[
+                    n : i - 1  # noqa: E203
+                ]:
                     # check if we have reached a separator (comma, 'and' etc)
                     # if so, we need to create a result of what we have found thus
                     # far and look for more.
@@ -110,7 +112,7 @@ class Plugin(BasePlugin):
         return Result(name=self.name, version=self.version, result=res)
 
 
-def valid_actor(actor: List[Text]):
+def valid_actor(actor: List[Text]) -> bool:
     """Check that the list of elements are actualy
     valid formatted"""
 

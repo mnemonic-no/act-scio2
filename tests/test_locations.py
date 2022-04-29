@@ -6,7 +6,7 @@ import pytest
 from act.scio.plugins import locations
 
 
-@pytest.mark.asyncio  # typing: ignore
+@pytest.mark.asyncio  # type: ignore
 async def test_locations() -> None:
     """test for plugins"""
 

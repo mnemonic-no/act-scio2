@@ -35,7 +35,7 @@ import json
 import logging
 import os
 import sqlite3
-from typing import IO, Dict, List, Text, Tuple
+from typing import IO, Any, Dict, List, Optional, Text, Tuple
 
 import magic
 import requests
@@ -51,7 +51,7 @@ class CandidateFile:
     describing when the feed was published etc.
     """
 
-    def __init__(self, filename: Text, my_metadata):
+    def __init__(self, filename: Text, my_metadata: Dict[Text, Any]):
 
         LOGGER.debug("Creating CandidateFile %s", filename)
 
@@ -59,9 +59,9 @@ class CandidateFile:
         self.metadata = my_metadata
 
         self.mime = magic.Magic(mime=True)
-        self._sha256 = None
+        self._sha256: Optional[Text] = None
 
-    def uploadable(self):
+    def uploadable(self) -> Any:
         """Check that the file content is part of a list of valid mime-types"""
 
         # Some file endings we need to upload no matter what (typicaly files
@@ -75,7 +75,7 @@ class CandidateFile:
         # type starting in with application.
         return self.mime.from_file(self.filename).startswith("application")
 
-    def sha256(self):
+    def sha256(self) -> Text:
         """Compute the sha256 if it not allready computed, return the value"""
 
         if not self._sha256:  # compute sha256 only when needed and only once.
@@ -90,7 +90,7 @@ class CandidateFile:
 class Cache:
     """Cache handles the caching database logic"""
 
-    def __init__(self, filename="upload.sqlite"):
+    def __init__(self, filename: Text = "upload.sqlite"):
         """Initiate database, creating connection to file"""
 
         LOGGER.info("Connecting to %s", filename)
@@ -107,7 +107,7 @@ class Cache:
         """
         )
 
-    def uploaded(self, sha256):
+    def uploaded(self, sha256: Text) -> bool:
         """Check if a particular digest is allready uploaded. Returns
         True/False"""
 
@@ -122,7 +122,7 @@ class Cache:
         LOGGER.debug("Query for %s returns False", sha256)
         return False
 
-    def insert(self, filename, sha256, description=""):
+    def insert(self, filename: Text, sha256: Text, description: Text = "") -> None:
         """insert a new file in the metadata cache"""
 
         sql = "INSERT INTO upload(filename, sha256, description) VALUES(?,?,?)"
@@ -132,7 +132,7 @@ class Cache:
         self.conn.execute(sql, (filename, sha256, description))
         self.conn.commit()
 
-    def info(self, sha256):
+    def info(self, sha256: Text) -> List[Dict[Text, Text]]:
         """Get stored info about a digest. Returns a list of Dictionaries"""
 
         sql = (
@@ -197,7 +197,9 @@ def init() -> argparse.Namespace:
     return args
 
 
-def metadata(file_pairs: List[Tuple[Text, Text]]) -> List[Tuple[Text, Dict]]:
+def metadata(
+    file_pairs: List[Tuple[Text, Text]]
+) -> List[Tuple[Text, Dict[Text, Text]]]:
     """Takes a list of pairs (.html, .meta), opens the .meta file,
     parses the content and returns a list of pairs (.html, dict(meta))"""
 
@@ -240,14 +242,14 @@ def get_files(directories: List[Text]) -> List[CandidateFile]:
     return res
 
 
-def read_as_base64(obj: IO) -> Text:
+def read_as_base64(obj: IO[bytes]) -> Text:
     """Create a base64 encoded string from a file like object"""
 
     encoded_bytes = base64.b64encode(obj.read())
     return encoded_bytes.decode("ascii")
 
 
-def to_scio_submit_post_data(obj: IO, file_name: Text) -> Dict[Text, Text]:
+def to_scio_submit_post_data(obj: IO[bytes], file_name: Text) -> Dict[Text, Text]:
     """Take a file like object, and return a dictionary on the correct form for
     submitting to the SCIO API"""
 
@@ -315,7 +317,7 @@ def main() -> None:
     if args.log:
         logcfg["filename"] = args.log
 
-    logging.basicConfig(**logcfg)
+    logging.basicConfig(**logcfg)  # type: ignore
 
     try:
         upload(args)

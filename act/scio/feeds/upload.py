@@ -8,14 +8,16 @@ from typing import IO, Dict, Text
 import requests
 
 
-def read_as_base64(obj: IO) -> Text:
+def read_as_base64(obj: IO[bytes]) -> Text:
     """Create a base64 encoded string from a file like object"""
 
     encoded_bytes = base64.b64encode(obj.read())
     return encoded_bytes.decode("ascii")
 
 
-def to_scio_submit_post_data(obj: IO, filemap: Dict, tlp: Text) -> Dict[Text, Text]:
+def to_scio_submit_post_data(
+    obj: IO[bytes], filemap: Dict[Text, Text], tlp: Text
+) -> Dict[Text, Text]:
     """Take a file like object, and return a dictionary on the correct form for
     submitting to the SCIO API (https://github.com/mnemonic-no/act-scio-api)"""
 
@@ -31,7 +33,7 @@ def to_scio_submit_post_data(obj: IO, filemap: Dict, tlp: Text) -> Dict[Text, Te
     return metadata
 
 
-def upload(url: Text, filemap: Dict, tlp: Text) -> None:
+def upload(url: Text, filemap: Dict[Text, Text], tlp: Text) -> None:
     """Upload a file to the Scio engine"""
 
     retry_codes = [429, None]
