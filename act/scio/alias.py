@@ -7,7 +7,7 @@ import re
 from typing import Any, Dict, List, Optional, Tuple
 
 import requests
-import urllib3  # type: ignore
+import urllib3
 
 ESCAPE_CHARS = [",", ":", "#"]
 

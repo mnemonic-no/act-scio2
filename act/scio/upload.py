@@ -37,7 +37,7 @@ import os
 import sqlite3
 from typing import IO, Dict, List, Text, Tuple
 
-import magic  # type: ignore
+import magic
 import requests
 
 from act.scio.config import get_cache_dir

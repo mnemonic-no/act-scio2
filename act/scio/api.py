@@ -29,7 +29,7 @@ from typing import Dict, List, Optional, Text, Union
 
 import caep
 import elasticsearch
-import greenstalk  # type: ignore
+import greenstalk
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Response
 from fastapi.responses import FileResponse, PlainTextResponse
@@ -193,7 +193,7 @@ async def submit(
 
 @app.get("/indicators/{indicator_type}", response_class=PlainTextResponse)
 def indicators(
-    indicator_type: constr(regex=r"^(ipv4|ipv6|uri|email|fqdn|md5|sha1|sha256)$"),
+    indicator_type: constr[regex=r"^(ipv4|ipv6|uri|email|fqdn|md5|sha1|sha256)$"],
     last: constr(regex=r"^\d+[yMwdhms]?$") = "90d",
     args: argparse.Namespace = Depends(parse_args),
 ) -> PlainTextResponse:

@@ -13,7 +13,7 @@ from logging import info
 from typing import Any, Callable, Dict, List, Optional, Pattern, Union
 
 import addict
-import nltk  # type: ignore
+import nltk
 
 import act.scio.aliasregex as aliasregex
 from act.scio.alias import parse_aliases
@@ -105,7 +105,7 @@ class Vocabulary:
         self.stemmer = nltk.stem.PorterStemmer().stem
 
         if self.config.alias:
-            self.load_alias(self.config.alias)  # type: ignore
+            self.load_alias(self.config.alias)
 
         if self.config.regexmanual:
             self.regex = [
@@ -188,7 +188,7 @@ class Vocabulary:
         for regex in self.regex:
             for match in regex.findall(text):
                 if debug:
-                    logging.info("%s found by regex %s", match, regex)
+                    info("%s found by regex %s", match, regex)
                 result.append(normalize_result(match))
 
         return result

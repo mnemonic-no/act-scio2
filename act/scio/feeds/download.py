@@ -8,7 +8,7 @@ import shutil
 import urllib.parse
 from typing import Any, Dict, List, Optional, Text, Tuple, cast
 
-import feedparser  # type: ignore
+import feedparser
 import requests
 
 from act.scio.feeds import analyze, extract
@@ -79,6 +79,8 @@ def download_and_store(
         logging.info("Writing %s", fname)
         req.raw.decode_content = True
         shutil.copyfileobj(req.raw, download_file)
+
+    print(fname, link.geturl())
 
     return {"filename": fname, "uri": link.geturl()}
 

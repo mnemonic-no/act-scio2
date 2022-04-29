@@ -6,7 +6,7 @@ import pytest
 from act.scio.plugins import threatactor_pattern
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio  # type: ignore
 async def test_threatactor_pattern() -> None:
     """test for plugins"""
 

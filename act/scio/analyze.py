@@ -13,9 +13,9 @@ import re
 import sys
 from typing import Dict, List, Optional, Text
 
-import addict  # type: ignore
+import addict
 import caep
-import greenstalk  # type: ignore
+import greenstalk
 import pytz
 import requests
 

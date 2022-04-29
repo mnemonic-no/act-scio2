@@ -103,7 +103,7 @@ def load_plugin(module_name: Text) -> Optional[BasePlugin]:
 
     conform = True
     try:
-        p: BasePlugin = module.Plugin()  # type: ignore
+        p: BasePlugin = module.Plugin()
     except AttributeError as err:
         logging.warning("Could not load plugin from module %s: %s", module_name, err)
         return None
