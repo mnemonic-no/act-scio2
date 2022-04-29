@@ -100,8 +100,11 @@ def sanitize_filename(filename: Text) -> Text:
 def create_storage_path(filename: Text, extension: Text, *path_elements: Text) -> Text:
     """Build a path, sanitize filenames and build proper path structure"""
 
-    if not extension.startswith("."):
-        extension = "." + extension
+    if extension is not None:
+        if not extension.startswith("."):
+            extension = "." + extension
+    else:
+        extension = ""
 
     return sanitize_filename(
         os.path.join(
