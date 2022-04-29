@@ -4,6 +4,7 @@ import io
 import os
 
 import pytest
+
 # Unfortunately not exported
 from _pytest.monkeypatch import MonkeyPatch
 

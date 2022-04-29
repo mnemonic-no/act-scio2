@@ -1,4 +1,4 @@
-from typing import Dict, List, Text
+from typing import List, Text
 
 import addict
 
