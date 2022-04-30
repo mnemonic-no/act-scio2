@@ -45,7 +45,7 @@ setup(
         "beautifulsoup4",
         "bs4",
         "caep",
-        "elasticsearch",
+        "elasticsearch>=7.0.0,<8.0.0",
         "elasticsearch_dsl",
         "fastapi",
         "feedparser",
