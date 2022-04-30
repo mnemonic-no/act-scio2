@@ -9,7 +9,7 @@ networks:
 x-proxy: &proxy
   http_proxy: http://10.0.1.11:3128
   https_proxy: http://10.0.1.11:3128
-  no_proxy: 
+  no_proxy:
 
 x-build-args: &build-args
   args:
@@ -24,19 +24,21 @@ x-common: &common
       max-size: 500m
 
 x-meta-scio: &scio
-  build: 
+  build:
     dockerfile: docker/scio/Dockerfile
     context: ..
     <<: *build-args
   image: scio:dev
   depends_on:
-    - elasticsearch
+    - scio-elasticsearch
     - beanstalkd
   environment:
       BEANSTALK: beanstalkd
-      ELASTICSEARCH: elasticsearch
-      http_proxy: 
-      https_proxy: 
+      ELASTICSEARCH: scio-elasticsearch
+      TIKA_SERVER_JAR: file:////opt/tika/tika-server.jar
+      TIKA_LOG_PATH: /var/tmp
+      http_proxy:
+      https_proxy:
   volumes:
     - cache-data:/home/scio/.cache/scio
   deploy:
@@ -57,14 +59,13 @@ services:
   scio-api:
     <<: *common
     <<: *scio
-    command: .local/bin/scio-api
+    command: .local/bin/scio-api --host 0.0.0.0
     ports:
-      - 3000:3000
-        #- 127.0.0.1:3000:3000
+      - 127.0.0.1:3000:3000
 
   beanstalkd:
     <<: *common
-    build: 
+    build:
       context: beanstalkd/
       <<: *build-args
     image: beanstalkd:dev
@@ -73,7 +74,7 @@ services:
       restart_policy:
         condition: on-failure
 
-  elasticsearch:
+  scio-elasticsearch:
     <<: *common
     image: docker.elastic.co/elasticsearch/elasticsearch:7.17.3
     environment:
@@ -90,6 +91,14 @@ services:
         hard: -1
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
+
+  scio-kibana:
+    image: docker.elastic.co/kibana/kibana:7.17.3
+    environment:
+      SERVER_NAME: scio-kibana
+      ELASTICSEARCH_HOSTS: '["http://scio-elasticsearch:9200"]'
+    ports:
+      - 127.0.0.1:5601:5601
 
 volumes:
   elasticsearch-data:

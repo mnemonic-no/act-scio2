@@ -1,23 +1,26 @@
 # Docker files for scio
 
-Run analyze, tika-server and api:
+## Requirements
+
+You will need docker and docker-compose to run scio in docker.
+
+## Create network for SCIO containers
 
 ```bash
 sudo docker network create scio
-cd docker
-./run.sh
 ```
 
-### 
+## Run
+
+Run analyze, tika-server and api:
+
+```bash
+docker-compose up --build --remove-orphans
+```
+
+###
 Remove all data from docker instance
 
 ```bash
 docker-compose down --volumes
-```
-
-### Example queries that should have hits on sample data:
-
-```
-docker exec -it docker-app-1 /bin/bash
-http_proxy= poetry run script/populate_sample_queries.sh $METASEARCH_APIKEY
 ```
