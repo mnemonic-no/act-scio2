@@ -1,0 +1,98 @@
+---
+version: '3.8'
+
+networks:
+  scio:
+    external: true
+    name: scio
+
+x-proxy: &proxy
+  http_proxy: http://10.0.1.11:3128
+  https_proxy: http://10.0.1.11:3128
+  no_proxy: 
+
+x-build-args: &build-args
+  args:
+    <<: *proxy
+
+x-common: &common
+  networks:
+    - scio
+  logging:
+    options:
+      max-file: 5
+      max-size: 500m
+
+x-meta-scio: &scio
+  build: 
+    dockerfile: docker/scio/Dockerfile
+    context: ..
+    <<: *build-args
+  image: scio:dev
+  depends_on:
+    - elasticsearch
+    - beanstalkd
+  environment:
+      BEANSTALK: beanstalkd
+      ELASTICSEARCH: elasticsearch
+      http_proxy: 
+      https_proxy: 
+  volumes:
+    - cache-data:/home/scio/.cache/scio
+  deploy:
+    restart_policy:
+      condition: on-failure
+
+services:
+  scio-tika-server:
+    <<: *common
+    <<: *scio
+    command: .local/bin/scio-tika-server
+
+  scio-analyze:
+    <<: *common
+    <<: *scio
+    command: .local/bin/scio-analyze
+
+  scio-api:
+    <<: *common
+    <<: *scio
+    command: .local/bin/scio-api
+    ports:
+      - 3000:3000
+        #- 127.0.0.1:3000:3000
+
+  beanstalkd:
+    <<: *common
+    build: 
+      context: beanstalkd/
+      <<: *build-args
+    image: beanstalkd:dev
+    command: -l 0.0.0.0 -z 262140 -V
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  elasticsearch:
+    <<: *common
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.3
+    environment:
+      - node.name=elasticsearch
+      - cluster.name=scio
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - ES_SETTING_INGEST_GEOIP_DOWNLOADER_ENABLED=false
+      - "ES_JAVA_OPTS=-Xms2048m -Xmx2048m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+
+volumes:
+  elasticsearch-data:
+    driver: local
+  cache-data:
+    driver: local
