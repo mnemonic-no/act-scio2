@@ -116,15 +116,7 @@ class Server:
                 content = fh.read()
                 if meta_data["filename"].endswith(".html"):
                     content = html.unescape(content.decode("utf8")).encode("utf8")
-                try:
-                    data = parser.from_buffer(content)
-                except json.decoder.JSONDecodeError:
-                    logging.error(
-                        "Worker [%s] could not read json: %s", worker_id, content
-                    )
-                    self.client.delete(job)  # type: ignore
-                    return
-
+                data = parser.from_buffer(content)
                 data.update(meta_data)
 
             self.client.delete(job)  # type: ignore
