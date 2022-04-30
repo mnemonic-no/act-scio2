@@ -37,8 +37,9 @@ x-meta-scio: &scio
       ELASTICSEARCH: scio-elasticsearch
       TIKA_SERVER_JAR: file:////opt/tika/tika-server.jar
       TIKA_LOG_PATH: /var/tmp
-      http_proxy:
-      https_proxy:
+      no_proxy: 127.0.0.1,localhost,scio-api
+      # http_proxy: 
+      # https_proxy: 
   volumes:
     - cache-data:/home/scio/.cache/scio
   deploy:
@@ -49,17 +50,20 @@ services:
   scio-tika-server:
     <<: *common
     <<: *scio
-    command: .local/bin/scio-tika-server
+    command: scio-tika-server
 
   scio-analyze:
     <<: *common
     <<: *scio
-    command: .local/bin/scio-analyze
+    command: scio-analyze
+
+    volumes:
+      - ~/nltk_data:/home/scio/nltk_data:ro
 
   scio-api:
     <<: *common
     <<: *scio
-    command: .local/bin/scio-api --host 0.0.0.0
+    command: scio-api --host 0.0.0.0
     ports:
       - 127.0.0.1:3000:3000
 
