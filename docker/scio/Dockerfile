@@ -14,15 +14,23 @@ RUN chmod -R go+rX /opt/tika
 
 RUN useradd -ms /bin/bash scio
 USER scio
+WORKDIR /home/scio
+
+RUN mkdir -p .config/pip
+
+COPY /docker/resources/pip.conf .config/pip
+
+# TIKA
+COPY /docker/resources/nltk-download-insecure /var/tmp
+RUN pip3 install nltk
+RUN python3 /var/tmp/nltk-download-insecure
 
 ENV PATH=$PATH:/home/scio/.local/bin
 
 # All subsequent commands will be relative to /home/scio
-WORKDIR /home/scio
 
-RUN mkdir -p .config/pip scio/dist
+RUN mkdir -p scio/dist
 
-COPY /docker/resources/pip.conf .config/pip
 COPY /act scio/act
 COPY /etc scio/etc
 COPY /setup.py scio/setup.py

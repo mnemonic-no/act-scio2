@@ -45,9 +45,6 @@ services:
     <<: *scio
     command: scio-analyze
 
-    volumes:
-      - ~/nltk_data:/home/scio/nltk_data:ro
-
   scio-api:
     <<: *common
     <<: *scio

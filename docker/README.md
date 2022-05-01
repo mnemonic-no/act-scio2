@@ -4,11 +4,6 @@
 
 You will need docker and docker-compose to run scio in docker.
 
-# NLTK data
-
-Download nltk data locally so they are available under ~/nltk-data (e.g. by using scio-nltk-download).
-
-
 ## Create network for SCIO containers
 
 ```bash
