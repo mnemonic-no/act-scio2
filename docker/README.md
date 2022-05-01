@@ -15,9 +15,15 @@ Download nltk data locally so they are available under ~/nltk-data (e.g. by usin
 sudo docker network create scio
 ```
 
+## Build using proxy
+
+```bash
+docker-compose build --build-arg http_proxy=http://<PROXY>:<PORT> --build-arg https_proxy http://<PROXY>:<PORT>
+```
+
 ## Run
 
-Run analyze, tika-server and api:
+Build and run all components (currently except scio-feeds):
 
 ```bash
 docker-compose up --build --remove-orphans

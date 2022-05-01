@@ -6,15 +6,6 @@ networks:
     external: true
     name: scio
 
-x-proxy: &proxy
-  http_proxy: http://10.0.1.11:3128
-  https_proxy: http://10.0.1.11:3128
-  no_proxy:
-
-x-build-args: &build-args
-  args:
-    <<: *proxy
-
 x-common: &common
   networks:
     - scio
@@ -27,7 +18,6 @@ x-meta-scio: &scio
   build:
     dockerfile: docker/scio/Dockerfile
     context: ..
-    <<: *build-args
   image: scio:dev
   depends_on:
     - scio-elasticsearch
@@ -38,8 +28,6 @@ x-meta-scio: &scio
       TIKA_SERVER_JAR: file:////opt/tika/tika-server.jar
       TIKA_LOG_PATH: /var/tmp
       no_proxy: 127.0.0.1,localhost,scio-api
-      # http_proxy: 
-      # https_proxy: 
   volumes:
     - cache-data:/home/scio/.cache/scio
   deploy:
@@ -71,7 +59,6 @@ services:
     <<: *common
     build:
       context: beanstalkd/
-      <<: *build-args
     image: beanstalkd:dev
     command: -l 0.0.0.0 -z 262140 -V
     deploy:
@@ -99,7 +86,7 @@ services:
   scio-kibana:
     image: docker.elastic.co/kibana/kibana:7.17.3
     environment:
-      SERVER_NAME: scio-kibana
+      SERVER_NAME: localhost
       ELASTICSEARCH_HOSTS: '["http://scio-elasticsearch:9200"]'
     ports:
       - 127.0.0.1:5601:5601
