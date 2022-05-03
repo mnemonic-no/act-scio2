@@ -19,7 +19,7 @@ from act.scio import plugins
 module_interface = ["name", "analyze", "info", "version", "dependencies"]
 
 
-class Result(BaseModel):  # type: ignore
+class Result(BaseModel):
     """The result type returned by all analyze methods of the plugins."""
 
     name: StrictStr

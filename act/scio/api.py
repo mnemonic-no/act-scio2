@@ -46,15 +46,15 @@ app = FastAPI()
 # pylint: disable=too-few-public-methods
 
 
-class IndicatorTypeRegex(ConstrainedStr):  # type: ignore
+class IndicatorTypeRegex(ConstrainedStr):
     regex = re.compile(r"^(ipv4|ipv6|uri|email|fqdn|md5|sha1|sha256)$")
 
 
-class PeriodRegex(ConstrainedStr):  # type: ignore
+class PeriodRegex(ConstrainedStr):
     regex = re.compile(r"^\d+[yMwdhms]?$")
 
 
-class SHA256Regex(ConstrainedStr):  # type: ignore
+class SHA256Regex(ConstrainedStr):
     regex = re.compile(r"^[0-9A-Fa-f]{64}$")
 
 
@@ -75,7 +75,7 @@ def max_current_jobs_ready(client: greenstalk.Client, tubes: List[Text]) -> int:
     return max_jobs
 
 
-class Document(BaseModel):  # type: ignore
+class Document(BaseModel):
     """Document model"""
 
     content: StrictStr
@@ -84,14 +84,14 @@ class Document(BaseModel):  # type: ignore
     tlp: Optional[tlp.TLP]
 
 
-class LookupResponse(BaseModel):  # type: ignore
+class LookupResponse(BaseModel):
     """Response model for document search"""
 
     filename: StrictStr
     content_type: StrictStr
 
 
-class SubmitResponse(BaseModel):  # type: ignore
+class SubmitResponse(BaseModel):
     """Response model for document submit"""
 
     filename: StrictStr
