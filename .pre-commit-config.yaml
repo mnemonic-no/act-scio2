@@ -34,7 +34,7 @@ repos:
         language: python
         entry: mypy
         types: [python]
-        additional_dependencies: [mypy==0.950]
+        additional_dependencies: [mypy==0.950, pydantic]
         args: ["--strict", "--install-types", "--non-interactive"]
 
   - repo: local
