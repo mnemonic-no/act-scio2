@@ -80,8 +80,6 @@ def download_and_store(
         req.raw.decode_content = True
         shutil.copyfileobj(req.raw, download_file)
 
-    print(fname, link.geturl())
-
     return {"filename": fname, "uri": link.geturl()}
 
 
