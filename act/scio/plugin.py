@@ -91,9 +91,12 @@ def load_external_plugins(directory: Text) -> List[BasePlugin]:
 
 def load_plugin(module_name: Text) -> Optional[BasePlugin]:
     if module_name.endswith(".py"):
-        spec: ModuleSpec = spec_from_file_location("plugin_mod", module_name)
-        module = module_from_spec(spec)
-        spec.loader.exec_module(module)  # type: ignore
+        spec: Optional[ModuleSpec] = spec_from_file_location("plugin_mod", module_name)
+        if spec:
+            module = module_from_spec(spec)
+            spec.loader.exec_module(module)  # type: ignore
+        else:
+            raise ImportError(f"Unable to load {module_name}")
     else:
         try:
             module = import_module(module_name)
@@ -103,7 +106,7 @@ def load_plugin(module_name: Text) -> Optional[BasePlugin]:
 
     conform = True
     try:
-        p: BasePlugin = module.Plugin()  # type: ignore
+        p: BasePlugin = module.Plugin()
     except AttributeError as err:
         logging.warning("Could not load plugin from module %s: %s", module_name, err)
         return None

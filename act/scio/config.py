@@ -25,7 +25,7 @@ from typing import Optional, Text
 
 import caep
 import elasticsearch
-import greenstalk  # type: ignore
+import greenstalk
 
 import act.scio.es
 

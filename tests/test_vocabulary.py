@@ -45,7 +45,7 @@ def test_vocabulary_threat_actor() -> None:
     config.regexfromalias = True
     config.regexmanual = r"""
         \b([a-zA-Z]{4,}\s?[-_. ](?:dragon|duke|falcon|cedar|viper|panda|bear|jackal|spider|chollima|kitten|tiger))\b
-        \b((?:BRONZE|IRON|GOLD)(?:\s+|[-_.]+)[A-Z]{3,})\b"""
+        \b((?:BRONZE|IRON|GOLD)(?:\s+|[-_.]+)[A-Z]{3,})\b"""  # noqa: E501
 
     ta = Vocabulary(config)
 

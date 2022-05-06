@@ -33,7 +33,7 @@ TA4321
 """
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio  # type: ignore
 async def test_sectors() -> None:
     """test for plugins"""
 

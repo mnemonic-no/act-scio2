@@ -7,6 +7,7 @@ repos:
         entry: isort
         types: [python]
         additional_dependencies: [isort==5.10.1]
+        args: ["--profile", "black"]
 
   - repo: local
     hooks:
@@ -25,6 +26,16 @@ repos:
         entry: flake8
         types: [python]
         additional_dependencies: [flake8==4.0.1]
+
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy
+        language: python
+        entry: mypy
+        types: [python]
+        additional_dependencies: [mypy==0.950, pydantic]
+        args: ["--strict", "--install-types", "--non-interactive"]
 
   - repo: local
     hooks:

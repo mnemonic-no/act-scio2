@@ -19,7 +19,7 @@ Elasticsearch utilities for scio
 """
 
 from logging import debug
-from typing import Dict, Generator, List, Optional, Text, Tuple
+from typing import Any, Dict, Iterator, List, Optional, Text, Tuple
 
 import elasticsearch
 import elasticsearch_dsl
@@ -82,13 +82,13 @@ def query(
 
 def composite_aggs(
     search: Search, terms: List[Text], size: int = 100, missing: bool = False
-) -> Generator[elasticsearch_dsl.response.aggs.Bucket, None, None]:
+) -> Iterator[elasticsearch_dsl.response.aggs.Bucket]:
     """
     Helper function used to iterate over all possible bucket combinations of
     fields, using composite aggregation.
     """
 
-    def run_search(**kwargs: Dict) -> Search:
+    def run_search(**kwargs: Dict[Text, Any]) -> Search:
         s = search[:0]
 
         s.aggs.bucket(
@@ -121,7 +121,7 @@ def aggregation(
     start: Text,
     end: Text,
     missing: bool = False,
-) -> Generator[Tuple, None, None]:
+) -> Iterator[Tuple[Dict[Text, Text], int]]:
     """Aggregation"""
     search = query(client, start, end, size=0)
 

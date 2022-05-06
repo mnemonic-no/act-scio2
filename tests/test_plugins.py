@@ -5,11 +5,14 @@ import os
 
 import pytest
 
+# Unfortunately not exported
+from _pytest.monkeypatch import MonkeyPatch
+
 from act.scio import analyze, plugin
 
 
-@pytest.mark.asyncio
-async def test_plugins(monkeypatch) -> None:
+@pytest.mark.asyncio  # type: ignore
+async def test_plugins(monkeypatch: MonkeyPatch) -> None:
     """test for plugins"""
 
     plugin_dir = os.path.join(

@@ -41,7 +41,7 @@ def setup_logging(
     prefix: Text = "scio",
     maxBytes: int = 100000000,  # 100 MB
     backupCount: int = 6,
-):
+) -> None:
     """Setup loglevel and optional log to file"""
     numeric_level = getattr(logging, loglevel.upper(), None)
     if not isinstance(numeric_level, int):

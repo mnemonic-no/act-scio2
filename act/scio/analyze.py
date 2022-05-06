@@ -13,9 +13,9 @@ import re
 import sys
 from typing import Dict, List, Optional, Text
 
-import addict  # type: ignore
+import addict
 import caep
-import greenstalk  # type: ignore
+import greenstalk
 import pytz
 import requests
 
@@ -66,10 +66,12 @@ def parse_args() -> argparse.Namespace:
         field.strip() for field in args.metadata_date_fields.split(",")
     ]
 
-    return args
+    return args  # type: ignore
 
 
-def remove_non_iso_dates(metadata: Dict, isodate_fields: List[Text]) -> Dict:
+def remove_non_iso_dates(
+    metadata: Dict[Text, Text], isodate_fields: List[Text]
+) -> Dict[Text, Text]:
     filtered = {}
 
     for key, value in metadata.items():
