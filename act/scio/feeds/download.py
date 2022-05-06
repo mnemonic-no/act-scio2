@@ -8,7 +8,7 @@ import shutil
 import urllib.parse
 from typing import Any, Dict, List, Optional, Text, Tuple, cast
 
-import feedparser  # type: ignore
+import feedparser
 import requests
 
 from act.scio.feeds import analyze, extract
@@ -20,7 +20,7 @@ def download_and_store(
     storage_path: Text,
     proxy_string: Optional[Text],
     link: urllib.parse.ParseResult,
-) -> Dict:
+) -> Dict[Text, Text]:
     """Download and store a link. Storage defined in args"""
 
     # check if the actual url is in the ignore file. If so, no download will take place.
@@ -111,7 +111,7 @@ def get_feed(feed_url: Text, proxy_string: Optional[Text] = None) -> Any:
     return feedparser.parse(req.text)
 
 
-def proxies(proxy_string: Optional[Text]) -> Optional[Dict]:
+def proxies(proxy_string: Optional[Text]) -> Optional[Dict[Text, Text]]:
     """Return proxy dict to be used by requests if proxy_string is set"""
 
     if proxy_string:
@@ -119,7 +119,7 @@ def proxies(proxy_string: Optional[Text]) -> Optional[Dict]:
     return None
 
 
-def default_headers() -> Dict:
+def default_headers() -> Dict[Text, Text]:
     """Return default headers with a custom user agent"""
 
     headers = requests.utils.default_headers()  # type: ignore
@@ -131,12 +131,12 @@ def default_headers() -> Dict:
         }
     )  # Chrome v74 2020-06-25
 
-    return cast(Dict, headers)
+    return cast(Dict[Text, Text], headers)
 
 
 def handle_feed(
     args: argparse.Namespace, feed_url: Text, partial: bool
-) -> Tuple[Text, Text, List[Dict]]:
+) -> Tuple[Text, Text, List[Dict[Text, Text]]]:
     """Take a feed, extract all entries, download the full original
     web page if partial , extract links and download any documents references
     if specified in the arguments and write the feed entry content
@@ -147,7 +147,7 @@ def handle_feed(
     if not feed:
         return "NOT FEED", feed_url, []
 
-    files: List[Dict] = []
+    files: List[Dict[Text, Text]] = []
 
     logging.info("%s contains %s entries", feed_url, len(feed["entries"]))
 
@@ -197,11 +197,11 @@ def handle_feed(
 
 def download_feed_list(
     args: argparse.Namespace, feed_list: List[Text], partial: bool
-) -> List[Dict]:
+) -> List[Dict[Text, Text]]:
 
     """Download and analyze a list of feeds concurrently"""
 
-    files: List[Dict] = []
+    files: List[Dict[Text, Text]] = []
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=32) as executor:
         # Start the load operations and mark each future with its URL
@@ -220,8 +220,8 @@ def download_feed_list(
 
 
 def future_result_exception(
-    url: Text, future: concurrent.futures.Future
-) -> Tuple[Text, Text, List[Dict]]:
+    url: Text, future: concurrent.futures.Future  # type: ignore
+) -> Tuple[Text, Text, List[Dict[Text, Text]]]:
     """Retrieve the result of a future, logging any exception"""
 
     try:

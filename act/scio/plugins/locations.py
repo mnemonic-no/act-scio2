@@ -2,7 +2,7 @@ import configparser
 import csv
 import json
 import os
-from typing import Dict, List, Set, Text, Tuple
+from typing import Any, Dict, List, Set, Text, Tuple
 
 import addict
 
@@ -52,9 +52,9 @@ class Plugin(BasePlugin):
 
         return list(res)
 
-    def cities_from_file(self, filename: Text) -> Dict[Text, Dict]:
+    def cities_from_file(self, filename: Text) -> Dict[Text, Dict[Text, Any]]:
         reader = csv.reader(open(filename), dialect="excel-tab")
-        ret: Dict[Text, Dict] = {}
+        ret: Dict[Text, Dict[Text, Any]] = {}
         for _, city, _, _, _, _, _, _, cc, _, _, _, _, _, pop, _, _, area, _ in reader:
             city = city.split(",")[0]
             if (city in ret and ret[city]["population"] < int(pop)) or city not in ret:
@@ -68,10 +68,12 @@ class Plugin(BasePlugin):
                 )
         return ret
 
-    def countries_from_file(self, filename: Text) -> Tuple[Dict, Dict]:
+    def countries_from_file(
+        self, filename: Text
+    ) -> Tuple[Dict[Text, Text], Dict[Text, Text]]:
 
-        names: Dict = {}
-        alpha2: Dict = {}
+        names: Dict[Text, Text] = {}
+        alpha2: Dict[Text, Text] = {}
 
         countries = json.load(open(filename))
 

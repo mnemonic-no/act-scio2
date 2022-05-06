@@ -23,7 +23,7 @@ def parse_args() -> argparse.Namespace:
     """Helper setting up the argsparse configuration"""
 
     arg_parser = act.scio.config.parse_args("Scio 2 Tika server")
-    return caep.config.handle_args(arg_parser, "scio/etc", "scio.ini", "tika")
+    return caep.config.handle_args(arg_parser, "scio/etc", "scio.ini", "tika")  # type: ignore
 
 
 class Server:
@@ -122,7 +122,9 @@ class Server:
             self.client.delete(job)  # type: ignore
             logging.info("Worker [%s] waiting to post result.", worker_id)
             try:
-                self.client.put(gzip.compress(json.dumps({**data, **meta_data}).encode("utf8")))  # type: ignore
+                self.client.put(  # type: ignore
+                    gzip.compress(json.dumps({**data, **meta_data}).encode("utf8"))
+                )
                 logging.info("Worker [%s] job done.", worker_id)
             except greenstalk.JobTooBigError:
                 logging.error("Job to big: %s.", meta_data["filename"])

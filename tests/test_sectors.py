@@ -6,7 +6,7 @@ import pytest
 from act.scio.plugins import sectors
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio  # type: ignore
 async def test_sectors() -> None:
     """test for plugins"""
 
