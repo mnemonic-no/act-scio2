@@ -23,7 +23,9 @@ def get_args() -> argparse.Namespace:
     )
     parser.add_argument("--file-format", nargs="+", default="pdf doc xls csv xml")
     parser.add_argument(
-        "--exclude-filenames", nargs="+", default="sitemap.xml robots.txt"
+        "--exclude-filenames",
+        nargs="+",
+        default="sitemap.xml robots.txt rss.xml atom.xml",
     )
     parser.add_argument(
         "--store-path",
