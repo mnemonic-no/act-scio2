@@ -21,7 +21,6 @@ Elasticsearch utilities for scio
 from logging import debug
 from typing import Any, Dict, Iterator, List, Optional, Text, Tuple
 
-import elasticsearch
 import elasticsearch_dsl
 from elasticsearch import Elasticsearch
 from elasticsearch_dsl import A, Search
@@ -34,7 +33,7 @@ def es_client(
     username: Optional[Text] = None,
     password: Optional[Text] = None,
     timeout: int = 180,
-) -> elasticsearch.client.Elasticsearch:
+) -> Elasticsearch:
     """Elasticsearch client"""
 
     connection = {"host": host, "port": port}
@@ -54,7 +53,7 @@ def es_client(
 
 
 def query(
-    client: elasticsearch.client.Elasticsearch,
+    client: Elasticsearch,
     start: Text,
     end: Text,
     index: Text = "scio2",
@@ -116,7 +115,7 @@ def composite_aggs(
 
 
 def aggregation(
-    client: elasticsearch.client.Elasticsearch,
+    client: Elasticsearch,
     terms: List[Text],
     start: Text,
     end: Text,
