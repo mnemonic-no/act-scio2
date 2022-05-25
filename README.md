@@ -111,6 +111,18 @@ sudo service start scio-tika-server
 sudo service start scio-analyze
 ```
 
+## scio-feed cron job
+
+To continously fetch new content from feeds, you can add scio-feed to cron like this (make sure the directory $HOME/logs exists):
+
+```
+# Fetch scio feeds every hour
+0 * * * * /usr/local/bin/scio-feeds >> $HOME/logs/scio-feed.log.$(date +\%s) 2>&1
+
+# Delete logs from scio-feeds older than 7 days
+0 * * * * find $HOME/logs/ -name 'scio-feed.log.*' -mmin +10080 -exec rm {} \;
+```
+
 ## Local development
 
 Use pip to install in [local development mode](https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs). act-scio uses namespacing, so it is not compatible with using `setup.py install` or `setup.py develop`.
