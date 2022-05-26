@@ -148,7 +148,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def document_lookup(
-    document_id: Text, elasticsearch_client: elasticsearch.client.Elasticsearch
+    document_id: Text, elasticsearch_client: elasticsearch.Elasticsearch
 ) -> LookupResponse:
     """Lookup document location and content type from document_id (hexdigest)"""
 
@@ -248,12 +248,12 @@ def indicators(
 
     res = act.scio.es.aggregation(
         args.elasticsearch_client,
-        terms=[term],
+        term=term,
         start=start,
         end="now",
     )
 
-    return PlainTextResponse("\n".join(cast(Text, row[0].get(term)) for row in res))
+    return PlainTextResponse("\n".join(row[0] for row in res))
 
 
 @app.get("/download")  # type: ignore
