@@ -18,12 +18,9 @@ PERFORMANCE OF THIS SOFTWARE.
 Elasticsearch utilities for scio
 """
 
-from logging import debug
-from typing import Any, Dict, Iterator, List, Optional, Text, Tuple
+from typing import Iterator, Optional, Text, Tuple
 
-import elasticsearch_dsl
 from elasticsearch import Elasticsearch
-from elasticsearch_dsl import A, Search
 
 
 def es_client(
@@ -36,7 +33,7 @@ def es_client(
 ) -> Elasticsearch:
     """Elasticsearch client"""
 
-    connection = {"host": host, "port": port}
+    connection = {"host": host, "port": port, "scheme": "http"}
 
     if url_prefix:
         connection["url_prefx"] = url_prefix
@@ -52,83 +49,35 @@ def es_client(
     return Elasticsearch([connection], timeout=timeout, http_auth=http_auth)
 
 
-def query(
-    client: Elasticsearch,
-    start: Text,
-    end: Text,
-    index: Text = "scio2",
-    size: int = 100,
-) -> Search:
-    """Return elasticsearch query"""
-
-    search = Search(using=client, index=index).extra(size=size)
-
-    # pylint: disable=no-member
-    search = search.query(
-        "range",
-        **{
-            "Analyzed-Date": {
-                "gte": start,
-                "lte": end,
-            }
-        }
-    )
-
-    debug("ES-query: {}".format(search.to_dict()))
-
-    return search
-
-
-def composite_aggs(
-    search: Search, terms: List[Text], size: int = 100, missing: bool = False
-) -> Iterator[elasticsearch_dsl.response.aggs.Bucket]:
-    """
-    Helper function used to iterate over all possible bucket combinations of
-    fields, using composite aggregation.
-    """
-
-    def run_search(**kwargs: Dict[Text, Any]) -> Search:
-        s = search[:0]
-
-        s.aggs.bucket(
-            "comp",
-            "composite",
-            sources=[
-                {field: A("terms", field=field, missing_bucket=missing)}
-                for i, field in enumerate(terms)
-            ],
-            size=size,
-            **kwargs
-        )
-
-        return s.execute()
-
-    response = run_search()
-    while response.aggregations.comp.buckets:
-        for b in response.aggregations.comp.buckets:
-            yield b
-        if "after_key" in response.aggregations.comp:
-            after = response.aggregations.comp.after_key
-        else:
-            after = response.aggregations.comp.buckets[-1].key
-        response = run_search(after=after)
-
-
 def aggregation(
     client: Elasticsearch,
-    terms: List[Text],
+    term: Text,
     start: Text,
     end: Text,
     missing: bool = False,
-) -> Iterator[Tuple[Dict[Text, Text], int]]:
+    index: Text = "scio2",
+) -> Iterator[Tuple[Text, int]]:
     """Aggregation"""
-    search = query(client, start, end, size=0)
 
-    res = composite_aggs(search, terms, missing=missing)
+    response = client.search(
+        index=index,
+        body={
+            "size": 0,
+            "query": {
+                "range": {
+                    "Analyzed-Date": {
+                        "gte": start,
+                        "lte": end,
+                    }
+                }
+            },
+            "aggs": {
+                term: {
+                    "terms": {"field": term},
+                }
+            },
+        },
+    )
 
-    for hit in res:
-        path = hit.key.to_dict()
-
-        path["path"] = "/".join(path.values())
-
-        yield (path, hit.doc_count)
+    for aggr in response["aggregations"][term]["buckets"]:
+        yield aggr["key"], aggr["doc_count"]

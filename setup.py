@@ -11,7 +11,7 @@ with open(path.join(this_directory, "README.md"), "rb") as f:
 
 setup(
     name="act-scio",
-    version="0.0.50",
+    version="0.0.51",
     author="mnemonic AS",
     zip_safe=True,
     author_email="opensource@mnemonic.no",
@@ -46,7 +46,6 @@ setup(
         "bs4",
         "caep",
         "elasticsearch>=8.0.0",
-        "elasticsearch_dsl",
         "fastapi",
         "feedparser",
         "greenstalk>=2.0.0",
