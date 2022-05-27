@@ -25,17 +25,15 @@ import logging
 import os
 import re
 from functools import lru_cache
-from typing import Dict, List, Optional, Text, Union
+from typing import Dict, List, Optional, Text, Union, cast
 
 import caep
 import elasticsearch
-import greenstalk  # type: ignore
+import greenstalk
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Response
 from fastapi.responses import FileResponse, PlainTextResponse
-from pydantic import BaseModel, StrictInt, StrictStr
-from pydantic.types import constr
-from pydantic.typing import Literal
+from pydantic import BaseModel, ConstrainedStr, StrictInt, StrictStr
 
 import act.scio.config
 import act.scio.es
@@ -46,6 +44,18 @@ XDG_CACHE = os.path.expanduser(os.environ.get("XDG_CACHE_HOME", "~/.cache"))
 app = FastAPI()
 
 # pylint: disable=too-few-public-methods
+
+
+class IndicatorTypeRegex(ConstrainedStr):
+    regex = re.compile(r"^(ipv4|ipv6|uri|email|fqdn|md5|sha1|sha256)$")
+
+
+class PeriodRegex(ConstrainedStr):
+    regex = re.compile(r"^\d+[yMwdhms]?$")
+
+
+class SHA256Regex(ConstrainedStr):
+    regex = re.compile(r"^[0-9A-Fa-f]{64}$")
 
 
 def max_current_jobs_ready(client: greenstalk.Client, tubes: List[Text]) -> int:
@@ -134,11 +144,11 @@ def parse_args() -> argparse.Namespace:
     args.beanstalk_client = act.scio.config.beanstalk_client(args, use="scio_doc")
     args.elasticsearch_client = act.scio.config.elasticsearch_client(args)
 
-    return args
+    return args  # type: ignore
 
 
 def document_lookup(
-    document_id: Text, elasticsearch_client: elasticsearch.client.Elasticsearch
+    document_id: Text, elasticsearch_client: elasticsearch.Elasticsearch
 ) -> LookupResponse:
     """Lookup document location and content type from document_id (hexdigest)"""
 
@@ -155,7 +165,7 @@ def document_lookup(
     return LookupResponse(filename=filename, content_type=content_type)
 
 
-@app.post("/submit")
+@app.post("/submit")  # type: ignore
 async def submit(
     doc: Document, args: argparse.Namespace = Depends(parse_args)
 ) -> SubmitResponse:
@@ -191,10 +201,10 @@ async def submit(
     return response
 
 
-@app.get("/indicators/{indicator_type}", response_class=PlainTextResponse)
+@app.get("/indicators/{indicator_type}", response_class=PlainTextResponse)  # type: ignore
 def indicators(
-    indicator_type: constr(regex=r"^(ipv4|ipv6|uri|email|fqdn|md5|sha1|sha256)$"),
-    last: constr(regex=r"^\d+[yMwdhms]?$") = "90d",
+    indicator_type: IndicatorTypeRegex,
+    last: PeriodRegex,
     args: argparse.Namespace = Depends(parse_args),
 ) -> PlainTextResponse:
     """Download indicators
@@ -228,27 +238,27 @@ def indicators(
     if not args.elasticsearch_client:
         raise HTTPException(status_code=412, detail="Elasticsearch is not configured")
 
-    if re.search(r"^\d+$", last):
+    if re.search(r"^\d+$", cast(Text, last)):
         # Only digits - assume unix timestamp
         start = last
     else:
-        start = f"now-{last}"
+        start = f"now-{last}"  # type: ignore
 
     term = f"indicators.{indicator_type}.keyword"
 
     res = act.scio.es.aggregation(
         args.elasticsearch_client,
-        terms=[term],
+        term=term,
         start=start,
         end="now",
     )
 
-    return PlainTextResponse("\n".join(row[0].get(term) for row in res))
+    return PlainTextResponse("\n".join(row[0] for row in res))
 
 
-@app.get("/download")
+@app.get("/download")  # type: ignore
 def download(
-    id: constr(regex=r"^[0-9A-Fa-f]{64}$"),
+    id: SHA256Regex,
     args: argparse.Namespace = Depends(parse_args),
 ) -> Response:
     """Download document as original content"""
@@ -264,11 +274,11 @@ def download(
     )
 
 
-@app.get("/download_json")
+@app.get("/download_json")  # type: ignore
 def download_json(
-    id: constr(regex=r"^[0-9A-Fa-f]{64}$"),
+    id: SHA256Regex,
     args: argparse.Namespace = Depends(parse_args),
-) -> Union[Response, Dict]:
+) -> Union[Response, Dict[Text, Text]]:
     """Download document base64 decoded in json struct"""
     res = document_lookup(id, args.elasticsearch_client)
 

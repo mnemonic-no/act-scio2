@@ -1,6 +1,6 @@
 from typing import Text
 
-from pydantic.typing import Literal
+from pydantic.typing import Literal  # type: ignore
 
 TLP_ALLOWED_VALUES = ("RED", "AMBER", "GREEN", "WHITE")
 

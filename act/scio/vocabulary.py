@@ -10,10 +10,10 @@ import configparser
 import re
 import sys
 from logging import info
-from typing import Any, Callable, Dict, List, Optional, Pattern, Union
+from typing import Any, Callable, Dict, List, Optional, Pattern, Text, Union
 
 import addict
-import nltk  # type: ignore
+import nltk
 
 import act.scio.aliasregex as aliasregex
 from act.scio.alias import parse_aliases
@@ -78,7 +78,7 @@ class Vocabulary:
     """
 
     def __init__(
-        self, config: Union[addict.Dict, Dict, configparser.SectionProxy]
+        self, config: Union[addict.Dict, Dict[Text, Text], configparser.SectionProxy]
     ) -> None:
         """
         Args:
@@ -94,7 +94,7 @@ class Vocabulary:
         """
         self.config = addict.Dict(DEFAULT_CONFIG)
         self.config.update(config)
-        self.regex: List[Pattern] = []
+        self.regex: List[Pattern[Text]] = []
         self.vocab: Dict[str, Dict[str, addict.Dict]] = addict.Dict(
             none=addict.Dict(),
             lower=addict.Dict(),
@@ -105,7 +105,7 @@ class Vocabulary:
         self.stemmer = nltk.stem.PorterStemmer().stem
 
         if self.config.alias:
-            self.load_alias(self.config.alias)  # type: ignore
+            self.load_alias(self.config.alias)
 
         if self.config.regexmanual:
             self.regex = [
@@ -169,9 +169,9 @@ class Vocabulary:
 
     def regex_search(
         self,
-        text,
-        key_mod: str = "DEFAULT",
-        normalize_result: Callable = identity,
+        text: Text,
+        key_mod: Text = "DEFAULT",
+        normalize_result: Callable[[Text], Text] = identity,
         debug: bool = False,
     ) -> List[str]:
         """
@@ -188,7 +188,7 @@ class Vocabulary:
         for regex in self.regex:
             for match in regex.findall(text):
                 if debug:
-                    logging.info("%s found by regex %s", match, regex)
+                    info("%s found by regex %s", match, regex)
                 result.append(normalize_result(match))
 
         return result

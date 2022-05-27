@@ -24,8 +24,8 @@ import os
 from typing import Optional, Text
 
 import caep
-import elasticsearch
-import greenstalk  # type: ignore
+import greenstalk
+from elasticsearch import Elasticsearch
 
 import act.scio.es
 
@@ -77,7 +77,7 @@ def beanstalk_client(
 
 def elasticsearch_client(
     args: argparse.Namespace,
-) -> Optional[elasticsearch.client.Elasticsearch]:
+) -> Optional[Elasticsearch]:
     """Return elasticsearch client if args.elasticsearch, otherwise, return None"""
     if args.elasticsearch:
         logging.info("Connection to elasticsearch")

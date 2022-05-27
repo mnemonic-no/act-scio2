@@ -6,7 +6,7 @@ import logging
 import os.path
 import urllib.parse
 import uuid
-from typing import Dict, List, Optional, Text, Tuple
+from typing import Any, Dict, FrozenSet, List, Optional, Text, Tuple
 
 import justext
 import requests
@@ -15,7 +15,7 @@ from bs4 import BeautifulSoup
 from act.scio.feeds import analyze, download
 
 
-def get_content_from_entry(entry: Dict) -> Text:
+def get_content_from_entry(entry: Dict[Text, Any]) -> Text:
     """Extract and concatenate the content portion of a feed entry"""
 
     if "content" in entry:
@@ -26,7 +26,7 @@ def get_content_from_entry(entry: Dict) -> Text:
     return ""
 
 
-def get_summary_from_entry(entry: Dict) -> Text:
+def get_summary_from_entry(entry: Dict[Text, Any]) -> Text:
     """Extract summary from feed entry"""
 
     if "summary_detail" in entry:
@@ -35,7 +35,7 @@ def get_summary_from_entry(entry: Dict) -> Text:
     return ""
 
 
-def create_html(entry: Dict) -> Text:
+def create_html(entry: Dict[Text, Text]) -> Text:
     """Wrap an entry in html headers and footers"""
 
     html_data = """<html>
@@ -76,7 +76,7 @@ def replace_unsafe_filename_characters(path: Text) -> Text:
     return "".join(_safe_char(c) for c in path)
 
 
-def read_stoplist(fname: Text) -> frozenset:
+def read_stoplist(fname: Text) -> FrozenSet[Text]:
     """Take a list of words (one pr. line) and create a frozenset
     for use as stopwords when extracting text with jusText"""
 
@@ -97,7 +97,9 @@ def sanitize_filename(filename: Text) -> Text:
     return os.path.join(directory, basename)
 
 
-def create_storage_path(filename: Text, extension: Text, *path_elements: Text) -> Text:
+def create_storage_path(
+    filename: Text, extension: Optional[Text], *path_elements: Text
+) -> Text:
     """Build a path, sanitize filenames and build proper path structure"""
 
     if extension is not None:
@@ -114,7 +116,7 @@ def create_storage_path(filename: Text, extension: Text, *path_elements: Text) -
 
 
 def partial_entry_text_to_file(
-    args: argparse.Namespace, entry: Dict
+    args: argparse.Namespace, entry: Dict[Text, Text]
 ) -> Tuple[Optional[Text], Optional[Text]]:
     """Download the original content and write it to the proper file.
     Return the html."""
@@ -173,7 +175,7 @@ def partial_entry_text_to_file(
 
 
 def entry_text_to_file(
-    args: argparse.Namespace, entry: Dict
+    args: argparse.Namespace, entry: Dict[Text, Text]
 ) -> Tuple[Optional[Text], Optional[Text]]:
     """Extract the entry content and write it to the proper file.
     Return the wrapped HTML"""
@@ -190,7 +192,9 @@ def entry_text_to_file(
     return full_filename, html_data
 
 
-def get_links(entry: Dict, html_data: Text) -> List[urllib.parse.ParseResult]:
+def get_links(
+    entry: Dict[Text, Text], html_data: Text
+) -> List[urllib.parse.ParseResult]:
     """Extract any links from the html"""
 
     links = []
