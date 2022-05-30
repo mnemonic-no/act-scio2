@@ -16,13 +16,14 @@ RUN useradd -ms /bin/bash scio
 USER scio
 WORKDIR /home/scio
 
-RUN mkdir -p .config/pip
-
-COPY /docker/resources/pip.conf .config/pip
-
 # TIKA
 COPY /docker/resources/nltk-download-insecure /var/tmp
-RUN pip3 install nltk
+
+RUN pip3 install --no-cache-dir \
+    --trusted-host pypi.org \
+    --trusted-host pypi.python.org \
+    --trusted-host files.pythonhosted.org nltk
+
 RUN python3 /var/tmp/nltk-download-insecure
 
 ENV PATH=$PATH:/home/scio/.local/bin
@@ -42,4 +43,7 @@ RUN chown scio:scio /home/scio/.cache/scio
 RUN cd scio && \
     rm -f dist/*gz && \
     python3 setup.py sdist && \
-    pip3 install dist/*gz
+    pip3 install --no-cache-dir \
+    --trusted-host pypi.org \
+    --trusted-host pypi.python.org \
+    --trusted-host files.pythonhosted.org dist/*gz
