@@ -10,7 +10,13 @@ You will need docker and docker-compose to run scio in docker.
 sudo docker network create scio
 ```
 
-## Build using proxy
+## Build images
+
+```bash
+docker-compose build
+```
+
+Build With proxy:
 
 ```bash
 docker-compose build --build-arg http_proxy=http://<PROXY>:<PORT> --build-arg https_proxy http://<PROXY>:<PORT>
@@ -18,10 +24,10 @@ docker-compose build --build-arg http_proxy=http://<PROXY>:<PORT> --build-arg ht
 
 ## Run
 
-Build and run all components (currently except scio-feeds):
+Run all components (currently except scio-feeds):
 
 ```bash
-docker-compose up --build --remove-orphans
+docker-compose up --remove-orphans
 ```
 
 ###
