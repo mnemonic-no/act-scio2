@@ -84,6 +84,7 @@ repos:
         language: python
         types: [yaml]
         additional_dependencies: [pre-commit-hooks==4.0.1]
+        args: [--unsafe] # needed for duplicate anchors
 
       - id: debug-statements
         name: debug-statements

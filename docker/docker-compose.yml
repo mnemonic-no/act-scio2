@@ -1,0 +1,95 @@
+---
+version: '3.8'
+
+networks:
+  scio:
+    external: true
+    name: scio
+
+x-common: &common
+  networks:
+    - scio
+  logging:
+    options:
+      max-file: 5
+      max-size: 500m
+
+x-meta-scio: &scio
+  build:
+    dockerfile: docker/scio/Dockerfile
+    context: ..
+  image: scio:dev
+  depends_on:
+    - scio-elasticsearch
+    - beanstalkd
+  environment:
+      BEANSTALK: beanstalkd
+      ELASTICSEARCH: scio-elasticsearch
+      TIKA_SERVER_JAR: file:////opt/tika/tika-server.jar
+      TIKA_LOG_PATH: /var/tmp
+      no_proxy: 127.0.0.1,localhost,scio-api
+  volumes:
+    - cache-data:/home/scio/.cache/scio
+  deploy:
+    restart_policy:
+      condition: on-failure
+
+services:
+  scio-tika-server:
+    <<: *common
+    <<: *scio
+    command: scio-tika-server
+
+  scio-analyze:
+    <<: *common
+    <<: *scio
+    command: scio-analyze
+
+  scio-api:
+    <<: *common
+    <<: *scio
+    command: scio-api --host 0.0.0.0
+    ports:
+      - 127.0.0.1:3000:3000
+
+  beanstalkd:
+    <<: *common
+    build:
+      context: beanstalkd/
+    image: beanstalkd:dev
+    command: -l 0.0.0.0 -z 262140 -V
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  scio-elasticsearch:
+    <<: *common
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.2.2
+    environment:
+      - node.name=elasticsearch
+      - cluster.name=scio
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - ES_SETTING_INGEST_GEOIP_DOWNLOADER_ENABLED=false
+      - "ES_JAVA_OPTS=-Xms2048m -Xmx2048m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+
+  scio-kibana:
+    image: docker.elastic.co/kibana/kibana:8.2.2
+    environment:
+      SERVER_NAME: localhost
+      ELASTICSEARCH_HOSTS: '["http://scio-elasticsearch:9200"]'
+    ports:
+      - 127.0.0.1:5601:5601
+
+volumes:
+  elasticsearch-data:
+    driver: local
+  cache-data:
+    driver: local
