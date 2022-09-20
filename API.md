@@ -10,14 +10,14 @@ Submit document for analysis.
 
 JSON document with the following fields:
 
-| Field      | Description                                                                              |
-|------------|------------------------------------------------------------------------------------------|
-| `content`  | Base 64 encoded document (required)                                                      |
-| `filename` | Filename of document (required)                                                          |
-| `uri`      | URI source of document (optional)                                                        |
-| `tlp`      | TLP of document (`RED`, `AMBER`, `GREEN` or `WHITE`) (optional)                          |
-| `owner`    | Identifier of document owner (stringl, optional)                                         |
-| `store`    | Specify whether document should be stored to elasticsearch/disk (optional, default=true) |
+| Field      | Description                                                                                    |
+|------------|------------------------------------------------------------------------------------------------|
+| `content`  | Base 64 encoded document (string, required)                                                    |
+| `filename` | Filename of document (string, required)                                                        |
+| `uri`      | URI source of document (string, optional, default=null)                                        |
+| `tlp`      | TLP of document (`RED`, `AMBER`, `GREEN` or `WHITE`) (string, optional, default=null)          |
+| `owner`    | Identifier of document owner (string, optional, default=null)                                  |
+| `store`    | Specify whether document should be stored to elasticsearch/disk (bool, optional, default=true) |
 
 #### Response:
 
