@@ -51,7 +51,7 @@ Download indicators as text file.
 
 | Parameter | Description                                                                                                                                                                                                                                                                                     |
 |-----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `last`    | Maximum age of the indicator age (default=90d). The format should be either <NUM><TIME UNIT>, where TIME UNIT can be `y` (year), `M` (month), `w` (week), `d` (day), `h` (hour), `m` (minute), `s` (second) or <EPOC> (only digits) where the EPOC is a unix timestamp in milliseconds. |
+| `last`    | Maximum age of the indicator (default=90d). The format should be either <NUM><TIME UNIT>, where TIME UNIT can be `y` (year), `M` (month), `w` (week), `d` (day), `h` (hour), `m` (minute), `s` (second) or <EPOC> (only digits) where the EPOC is a unix timestamp in milliseconds. |
 
 #### Response
 
