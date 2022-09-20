@@ -6,7 +6,33 @@ SCIO API documentation.
 
 Submit document for analysis.
 
-TODO
+### POST body
+
+JSON document with the following fields:
+
+| Field      | Description                                                                              |
+|------------|------------------------------------------------------------------------------------------|
+| `content`  | Base 64 encoded document (required)                                                      |
+| `filename` | Filename of document (required)                                                          |
+| `uri`      | URI source of document (optional)                                                        |
+| `tlp`      | TLP of document (`RED`, `AMBER`, `GREEN` or `WHITE`) (optional)                          |
+| `owner`    | Identifier of document owner (stringl, optional)                                         |
+| `store`    | Specify whether document should be stored to elasticsearch/disk (optional, default=true) |
+
+#### Response:
+
+JSON document with the following fields:
+
+| Field       | Description                                      |
+|-------------|--------------------------------------------------|
+| `filename`  | Fielname as specified in the request             |
+| `uri`       | URI source from request                          |
+| `tlp`       | TLP from request                                 |
+| `owner`     | Owner from request                               |
+| `store`     | Store from request                               |
+| `hexdigest` | SHA256 of uploaded document                      |
+| `count`     | Bytes of uploaded document (after base64 decode) |
+| `error`     | Error description (null if no error)             |
 
 ## `GET /indicators/{indicator_type}`
 
@@ -25,7 +51,7 @@ Download indicators as text file.
 
 | Parameter | Description                                                                                                                                                                                                                                                                                     |
 |-----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `last`    | Maximum age of the indicator age (default=90d). The format should be either <NUM><TIME UNIT>, where TIME UNIT can be one of: `y` (year), `M` (month), `w` (week), `d` (day), `h` (hour), `m` (minute), `s` (second) or <EPOC> (only digits) where the EPOC is a unix timestamp in milliseconds. |
+| `last`    | Maximum age of the indicator age (default=90d). The format should be either <NUM><TIME UNIT>, where TIME UNIT can be `y` (year), `M` (month), `w` (week), `d` (day), `h` (hour), `m` (minute), `s` (second) or <EPOC> (only digits) where the EPOC is a unix timestamp in milliseconds. |
 
 #### Response
 
