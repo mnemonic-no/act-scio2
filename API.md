@@ -10,29 +10,29 @@ Submit document for analysis.
 
 JSON document with the following fields:
 
-| Field      | Description                                                                                    |
-|------------|------------------------------------------------------------------------------------------------|
-| `content`  | Base 64 encoded document (string, required)                                                    |
-| `filename` | Filename of document (string, required)                                                        |
-| `uri`      | URI source of document (string, optional, default=null)                                        |
-| `tlp`      | TLP of document (`RED`, `AMBER`, `GREEN` or `WHITE`) (string, optional, default=null)          |
-| `owner`    | Identifier of document owner (string, optional, default=null)                                  |
-| `store`    | Specify whether document should be stored to elasticsearch/disk (bool, optional, default=true) |
+| Field      | Description                                                     | Required | Type    | Default |
+|------------|-----------------------------------------------------------------|----------|---------|---------|
+| `content`  | Base 64 encoded document                                        | `yes`    | string  | n/a     |
+| `filename` | Filename of document                                            | `yes`    | string  | n/a     |
+| `uri`      | URI source of document                                          | `no`     | string  | null    |
+| `tlp`      | TLP of document (`RED`, `AMBER`, `GREEN` or `WHITE`)            | `no`     | string  | null    |
+| `owner`    | Identifier of document owner                                    | `no`     | string  | null    |
+| `store`    | Specify whether document should be stored to elasticsearch/disk | `no`     | boolean | true    |
 
 #### Response:
 
 JSON document with the following fields:
 
-| Field       | Description                                      |
-|-------------|--------------------------------------------------|
-| `filename`  | Fielname as specified in the request             |
-| `uri`       | URI source from request                          |
-| `tlp`       | TLP from request                                 |
-| `owner`     | Owner from request                               |
-| `store`     | Store from request                               |
-| `hexdigest` | SHA256 of uploaded document                      |
-| `count`     | Bytes of uploaded document (after base64 decode) |
-| `error`     | Error description (null if no error)             |
+| Field       | Description                                      | Type    |
+|-------------|--------------------------------------------------|---------|
+| `filename`  | Filename as specified in the request             | string  |
+| `uri`       | URI source from request                          | string  |
+| `tlp`       | TLP from request                                 | string  |
+| `owner`     | Owner from request                               | boolean |
+| `store`     | Store from request                               | string  |
+| `hexdigest` | SHA256 of uploaded document                      | string  |
+| `count`     | Bytes of uploaded document (after base64 decode) | int     |
+| `error`     | Error description (null if no error)             | string  |
 
 ## `GET /indicators/{indicator_type}`
 
