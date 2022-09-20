@@ -122,7 +122,7 @@ def proxies(proxy_string: Optional[Text]) -> Optional[Dict[Text, Text]]:
 def default_headers() -> Dict[Text, Text]:
     """Return default headers with a custom user agent"""
 
-    headers = requests.utils.default_headers()  # type: ignore
+    headers = requests.utils.default_headers()
     headers.update(
         {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
