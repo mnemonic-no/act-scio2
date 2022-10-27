@@ -25,7 +25,8 @@ import logging
 import os
 import re
 from functools import lru_cache
-from typing import Dict, List, Optional, Text, Union, cast
+from pathlib import Path, PurePath
+from typing import Dict, List, Text, Union, cast
 
 import caep
 import elasticsearch
@@ -33,13 +34,13 @@ import greenstalk
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Response
 from fastapi.responses import FileResponse, PlainTextResponse
-from pydantic import BaseModel, ConstrainedStr, StrictInt, StrictStr
+from pydantic import ConstrainedStr
 
 import act.scio.config
 import act.scio.es
-from act.scio import tlp
+from act.scio.models import Document, LookupResponse, SubmitResponse
 
-XDG_CACHE = os.path.expanduser(os.environ.get("XDG_CACHE_HOME", "~/.cache"))
+XDG_CACHE = Path(os.environ.get("XDG_CACHE_HOME", "~/.cache")).expanduser()
 
 app = FastAPI()
 
@@ -75,31 +76,10 @@ def max_current_jobs_ready(client: greenstalk.Client, tubes: List[Text]) -> int:
     return max_jobs
 
 
-class Document(BaseModel):
-    """Document model"""
-
-    content: StrictStr
-    filename: StrictStr
-    uri: Optional[StrictStr]
-    tlp: Optional[tlp.TLP]
-
-
-class LookupResponse(BaseModel):
-    """Response model for document search"""
-
-    filename: StrictStr
-    content_type: StrictStr
-
-
-class SubmitResponse(BaseModel):
-    """Response model for document submit"""
-
-    filename: StrictStr
-    hexdigest: StrictStr
-    count: StrictInt
-    uri: Optional[StrictStr]
-    tlp: Optional[tlp.TLP]
-    error: Optional[StrictStr]
+def create_path_if_not_exists(path: Path) -> None:
+    if not path.is_dir():
+        path.mkdir()
+        logging.info("Created directory: %s", path)
 
 
 # parse_args() is executed the first time and later the cached result
@@ -126,6 +106,7 @@ def parse_args() -> argparse.Namespace:
     arg_parser.add_argument(
         "--document-path",
         default=caep.get_cache_dir("scio/documents"),
+        type=Path,
         help=f"Storage path for documents = {XDG_CACHE}/scio/documents",
     )
     arg_parser.add_argument(
@@ -137,9 +118,10 @@ def parse_args() -> argparse.Namespace:
 
     args = caep.config.handle_args(arg_parser, "scio/etc", "scio.ini", "api")
 
-    if not os.path.isdir(args.document_path):
-        os.makedirs(args.document_path)
-        logging.info("Created directory: %s", args.document_path)
+    nostore_path = args.document_path / "NOSTORE"
+
+    create_path_if_not_exists(args.document_path)
+    create_path_if_not_exists(nostore_path)
 
     args.beanstalk_client = act.scio.config.beanstalk_client(args, use="scio_doc")
     args.elasticsearch_client = act.scio.config.elasticsearch_client(args)
@@ -183,18 +165,22 @@ async def submit(
             status_code=429, detail="To many jobs in queue, try again later"
         )
 
-    filename = os.path.join(args.document_path, os.path.basename(doc.filename))
+    path = args.document_path if doc.store else args.document_path / "NOSTORE"
+
+    filename = path / PurePath(doc.filename).name
     content: bytes = base64.b64decode(doc.content)
     with open(filename, "bw") as f:
         f.write(content)
 
     response = SubmitResponse(
-        filename=filename,
+        filename=str(filename),
         hexdigest=hashlib.sha256(content).hexdigest(),
         count=len(content),
         tlp=doc.tlp,
         error=None,
         uri=doc.uri,
+        store=doc.store,
+        owner=doc.owner,
     )
 
     args.beanstalk_client.put(response.json().encode("utf8"))
@@ -221,7 +207,7 @@ def indicators(
 
     You can also specify the maximum age of the document you want to
     get indicators from with the `last` argument (default=90d). The
-    format should be either be <NUM><TIME UNIT>, where TIME UNIT can be one of:
+    format should be either <NUM><TIME UNIT>, where TIME UNIT can be one of:
 
     y (year)
     M (month)
@@ -264,12 +250,12 @@ def download(
     """Download document as original content"""
     res = document_lookup(id, args.elasticsearch_client)
 
-    if not os.path.isfile(res.filename):
+    if not Path(res.filename).is_file():
         return Response(content="File not found", media_type="application/text")
 
     return FileResponse(
         res.filename,
-        filename=os.path.basename(res.filename),
+        filename=PurePath(res.filename).name,
         media_type=res.content_type,
     )
 
@@ -282,7 +268,7 @@ def download_json(
     """Download document base64 decoded in json struct"""
     res = document_lookup(id, args.elasticsearch_client)
 
-    if not os.path.isfile(res.filename):
+    if not Path(res.filename).is_file():
         return {
             "error": "File not found",
             "bytes": 0,

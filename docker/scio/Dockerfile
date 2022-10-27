@@ -47,3 +47,5 @@ RUN cd scio && \
     --trusted-host pypi.org \
     --trusted-host pypi.python.org \
     --trusted-host files.pythonhosted.org dist/*gz
+
+RUN scio-config user

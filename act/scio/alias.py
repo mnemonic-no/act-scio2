@@ -147,7 +147,7 @@ def fetch_json(
     }
 
     if not verify_https:
-        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # type: ignore
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
     # Unable to infer type
     req = requests.get(url, **options)  # type: ignore

@@ -64,7 +64,7 @@ services:
 
   scio-elasticsearch:
     <<: *common
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.2.2
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.4.1
     environment:
       - node.name=elasticsearch
       - cluster.name=scio
@@ -73,6 +73,7 @@ services:
       - xpack.security.enabled=false
       - ES_SETTING_INGEST_GEOIP_DOWNLOADER_ENABLED=false
       - "ES_JAVA_OPTS=-Xms2048m -Xmx2048m"
+      - logger.level=ERROR
     ulimits:
       memlock:
         soft: -1
@@ -81,12 +82,16 @@ services:
       - elasticsearch-data:/usr/share/elasticsearch/data
 
   scio-kibana:
-    image: docker.elastic.co/kibana/kibana:8.2.2
+    <<: *common
+    image: docker.elastic.co/kibana/kibana:8.4.1
     environment:
       SERVER_NAME: localhost
       ELASTICSEARCH_HOSTS: '["http://scio-elasticsearch:9200"]'
+      LOGGING_ROOT_LEVEL: "error"
     ports:
       - 127.0.0.1:5601:5601
+    depends_on:
+      - scio-elasticsearch
 
 volumes:
   elasticsearch-data:
