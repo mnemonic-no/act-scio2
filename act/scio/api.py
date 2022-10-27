@@ -76,6 +76,12 @@ def max_current_jobs_ready(client: greenstalk.Client, tubes: List[Text]) -> int:
     return max_jobs
 
 
+def create_path_if_not_exists(path: Path) -> None:
+    if not path.is_dir():
+        path.mkdir()
+        logging.info("Created directory: %s", path)
+
+
 # parse_args() is executed the first time and later the cached result
 # is used. In this way, we use to configure settings in API endpoints
 @lru_cache()
@@ -114,10 +120,8 @@ def parse_args() -> argparse.Namespace:
 
     nostore_path = args.document_path / "NOSTORE"
 
-    for path in (args.document_path, nostore_path):
-        if not path.is_dir():
-            path.mkdir()
-            logging.info("Created directory: %s", path)
+    create_path_if_not_exists(args.document_path)
+    create_path_if_not_exists(nostore_path)
 
     args.beanstalk_client = act.scio.config.beanstalk_client(args, use="scio_doc")
     args.elasticsearch_client = act.scio.config.elasticsearch_client(args)
