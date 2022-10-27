@@ -5,7 +5,7 @@ from pydantic import BaseModel, StrictInt, StrictStr
 from act.scio.tlp import TLP
 
 
-class BaseDocument(BaseModel):
+class ScioBaseDocument(BaseModel):
     """Document model"""
 
     filename: StrictStr
@@ -15,7 +15,7 @@ class BaseDocument(BaseModel):
     store: bool = True
 
 
-class Document(BaseDocument):
+class Document(ScioBaseDocument):
     """Document model"""
 
     content: StrictStr
@@ -28,7 +28,7 @@ class LookupResponse(BaseModel):
     content_type: StrictStr
 
 
-class SubmitResponse(BaseDocument):
+class SubmitResponse(ScioBaseDocument):
     """Response model for document submit"""
 
     hexdigest: StrictStr
