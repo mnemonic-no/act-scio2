@@ -11,14 +11,14 @@ with open(path.join(this_directory, "README.md"), "rb") as f:
 
 setup(
     name="act-scio",
-    version="0.0.51",
+    version="0.0.52",
     author="mnemonic AS",
     zip_safe=True,
     author_email="opensource@mnemonic.no",
     description="ACT SCIO",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    license="MIT",
+    license="ISC",
     keywords="ACT, mnemonic",
     entry_points={
         "console_scripts": [
@@ -29,6 +29,7 @@ setup(
             "scio-tika-server = act.scio.tika_engine:main",
             "scio-nltk-download= act.scio.nltk_download:main",
             "scio-upload = act.scio.upload:main",
+            "scio-submit= act.scio.submit:main",
         ]
     },
     # Include ini-file(s) from act/workers/etc

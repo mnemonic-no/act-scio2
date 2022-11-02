@@ -16,7 +16,7 @@ repos:
         language: python
         entry: black
         types: [python]
-        additional_dependencies: [black==22.3.0]
+        additional_dependencies: [black==22.8.0]
 
   - repo: local
     hooks:
@@ -34,7 +34,7 @@ repos:
         language: python
         entry: mypy
         types: [python]
-        additional_dependencies: [mypy==0.950, pydantic]
+        additional_dependencies: [mypy==0.971, pydantic]
         args: ["--strict", "--install-types", "--non-interactive"]
 
   - repo: local

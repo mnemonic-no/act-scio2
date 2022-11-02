@@ -10,7 +10,7 @@ The result is sent to the Scio Analyzer that extracts information using a combin
 
 ### 0.0.42
 
-SCIO now supports setting TLP on data upload, to annotatet documents with `tlp` tag. Documents downloaded by feeds will have a default TLP white, but this can be changed in the config for feeds.
+SCIO now supports setting TLP on data upload, to annotate documents with `tlp` tag. Documents downloaded by feeds will have a default TLP white, but this can be changed in the config for feeds.
 
 ## Source code
 
@@ -59,6 +59,8 @@ scio-api
 
 This will setup the API on 127.0.0.1:3000. Use `--port <PORT> and --host <IP>` to listen on another port and/or another interface.
 
+For documentation of the API endpoint see [API.md](API.md).
+
 ## Configuration
 
 You can create a default configuration using this command (should be run as the user running scio):
@@ -95,6 +97,19 @@ You can also read directly from stdin like this:
 
 ```bash
 echo "The companies in the Bus; Finanical, Aviation and Automobile industry are large." | scio-analyze --beanstalk=
+```
+
+### Scio Submit
+
+Submit document (from file or URI) to `scio_api`.
+
+Example:
+
+```bash
+scio-submit \
+   --uri https://www2.fireeye.com/rs/848-DID-242/images/rpt-apt29-hammertoss.pdf \
+   --scio-baseuri http://localhost:3000/submit \
+   --tlp white
 ```
 
 ## Running as a service

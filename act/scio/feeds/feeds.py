@@ -33,7 +33,7 @@ from act.scio.feeds import cache, conf, download, upload
 from act.scio.logsetup import setup_logging
 from act.scio.tlp import valid_tlp
 
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # type: ignore
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def sha256_of_file(filename: Text) -> Text:

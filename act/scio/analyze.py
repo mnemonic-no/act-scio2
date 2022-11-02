@@ -11,6 +11,7 @@ import logging
 import os.path
 import re
 import sys
+from pathlib import Path
 from typing import Dict, List, Optional, Text
 
 import addict
@@ -217,6 +218,21 @@ async def async_main() -> None:
             continue
         result_json = json.dumps(result, indent="  ")
 
+        store = result.get("store", False)
+        filename = result["filename"]
+        hexdigest = result.get("hexdigest")
+        owner = result.get("owner")
+        tlp = result.get("tlp")
+
+        logging.info(
+            "Recieved job: hexdigest=%s, filename=%s, tlp=%s, owner=%s, store=%s",
+            hexdigest,
+            filename,
+            tlp,
+            owner,
+            store,
+        )
+
         if args.webdump:
             proxies = (
                 {"http": args.proxy_string, "https": args.proxy_string}
@@ -228,8 +244,7 @@ async def async_main() -> None:
             if r.status_code != 200:
                 logging.error("Unable to post result data to webdump: %s", r.text)
 
-        if elasticsearch_client:
-            hexdigest = result.get("hexdigest")
+        if elasticsearch_client and store:
 
             if not hexdigest:
                 logging.error("Missing hexdigest, skipping elasticsearch storage")
@@ -249,6 +264,19 @@ async def async_main() -> None:
         if not (args.webdump or elasticsearch_client):
             # Print to stdout if we do not send to webdump or elasticsearch
             print(result_json)
+
+        if not store:
+            # Delete file after it has been analyzed
+            logging.info(
+                "Removed file because store=False (hexdigest=%s, filename=%s)",
+                hexdigest,
+                filename,
+            )
+
+            try:
+                Path(filename).unlink()
+            except (NotADirectoryError, FileNotFoundError) as e:
+                logging.error("Unable to remove %s: %s", filename, e)
 
         # If we are not listening on a beanstalk work queue, behave like a command line
         # utility and exit after one document.
