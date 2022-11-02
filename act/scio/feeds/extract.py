@@ -117,13 +117,13 @@ def create_storage_path(
 
 def partial_entry_text_to_file(
     args: argparse.Namespace, entry: Dict[Text, Text]
-) -> Tuple[Optional[Text], Optional[Text]]:
+) -> Tuple[Optional[Text], Optional[Text], Optional[Text]]:
     """Download the original content and write it to the proper file.
     Return the html."""
 
     if "link" not in entry:
         logging.warning("entry does not contain 'link'")
-        return None, None
+        return None, None, None
 
     url = entry["link"]
 
@@ -137,7 +137,7 @@ def partial_entry_text_to_file(
 
     if req.status_code >= 400:
         logging.warning("Unable to download content: %s", url)
-        return None, None
+        return None, None, None
 
     filename = entry.get("title", str(uuid.uuid4()))
 
@@ -171,16 +171,17 @@ def partial_entry_text_to_file(
 
     # we want to return the raw_html and not the "article extraction"
     # since we want to extract links to .pdfs etc.
-    return full_filename, raw_html
+    return full_filename, url, raw_html
 
 
 def entry_text_to_file(
     args: argparse.Namespace, entry: Dict[Text, Text]
-) -> Tuple[Optional[Text], Optional[Text]]:
+) -> Tuple[Optional[Text], Optional[Text], Optional[Text]]:
     """Extract the entry content and write it to the proper file.
     Return the wrapped HTML"""
 
     filename = entry.get("title", str(uuid.uuid4()))
+    url = entry.get("link")
 
     html_data = create_html(entry)
 
@@ -189,7 +190,7 @@ def entry_text_to_file(
     with open(full_filename, "w", encoding="utf-8") as html_file:
         html_file.write(html_data)
 
-    return full_filename, html_data
+    return full_filename, url, html_data
 
 
 def get_links(
