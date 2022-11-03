@@ -159,13 +159,13 @@ def handle_feed(
             entry.get("title", f"No title : {feed_url}"),
         )
 
-        filename, html_data = (
+        filename, url, html_data = (
             extract.partial_entry_text_to_file(args, entry)
             if partial
             else extract.entry_text_to_file(args, entry)
         )
         if filename:
-            entry = {"filename": filename, "uri": feed_url}
+            entry = {"filename": filename, "uri": url if url else feed_url}
             files.append(entry)
             logging.debug("Added entry %s to list of files", entry)
         else:
