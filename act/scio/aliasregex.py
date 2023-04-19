@@ -84,6 +84,7 @@ def normalize(
     upper: bool = False,
     capitalize: bool = False,
     uppercase_abbr: Optional[List[Text]] = None,
+    allow_non_alphanumeric: Optional[Text] = None,
 ) -> str:
     """
 
@@ -96,6 +97,8 @@ def normalize(
     upper (bool): uppercase
     capitalize (bool): uppercase all first characters in words
     uppercase_abbr (list[str]): list of abbrevations to uppercase
+    allow_non_alphanumeric (str): regular expression that will be excluded from
+                                  removal of non_alphanumeric characters
 
     The transformation in ran in the same order as the arguments are specified,
     so you can use lower=True and capitalize=True to transform sOmeThing -> Something
@@ -112,7 +115,9 @@ def normalize(
         # Replace "winntiGroup" with "winnti group"
         name = re.sub(r"([a-z])([A-Z])", r"\1 \2", name)
 
-    if remove_non_alphanumeric:
+    if remove_non_alphanumeric and not (
+        allow_non_alphanumeric and re.search(allow_non_alphanumeric, name)
+    ):
         # Replace "APT-27" with "APT 27"
         name = re.sub(r"[^a-zA-Z0-9 ]+", " ", name, 0)
 

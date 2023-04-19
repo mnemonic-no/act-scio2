@@ -9,7 +9,9 @@ from act.scio.plugin import BasePlugin, Result
 from act.scio.vocabulary import Vocabulary
 
 
-def normalize_ta(name: Text, uppercase_abbr: List[Text]) -> Text:
+def normalize_ta(
+    name: Text, uppercase_abbr: List[Text], allow_non_alphanumeric: str
+) -> Text:
     """Normalize TA names. Words are capitalized unless configured
     to be excempt"""
 
@@ -17,6 +19,7 @@ def normalize_ta(name: Text, uppercase_abbr: List[Text]) -> Text:
         name,
         capitalize=True,
         uppercase_abbr=uppercase_abbr,
+        allow_non_alphanumeric=allow_non_alphanumeric,
     )
 
     return res
@@ -39,12 +42,13 @@ class Plugin(BasePlugin):
     dependencies: List[Text] = []
 
     async def analyze(self, nlpdata: addict.Dict) -> Result:
-
         ini = configparser.ConfigParser()
         ini.read([os.path.join(self.configdir, "threatactor_pattern.ini")])
         ini["threat_actor"]["alias"] = os.path.join(
             self.configdir, ini["threat_actor"]["alias"]
         )
+
+        allow_non_alphanumeric = ini["threat_actor"].get("allow_non_alphanumeric", None)
 
         uppercase_abbr = abbreviation_list(
             ini["threat_actor"].get("uppercase_abbr", "")
@@ -56,7 +60,9 @@ class Plugin(BasePlugin):
 
         res.ThreatActors = vocab.regex_search(
             nlpdata.content,
-            normalize_result=(lambda x: normalize_ta(x, uppercase_abbr)),
+            normalize_result=(
+                lambda x: normalize_ta(x, uppercase_abbr, allow_non_alphanumeric)
+            ),
             debug=self.debug,
         )
 
