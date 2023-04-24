@@ -24,6 +24,12 @@ def fatal(message: Text, exit_code: int = 1) -> None:
 VALID_TLP = ", ".join(tlp.TLP_ALLOWED_VALUES)
 
 
+DEFAULT_USER_AGENT = (
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
+    + "Chrome/112.0.0.0 Safari/537.36"
+)
+
+
 def parseargs(description: Text) -> argparse.Namespace:
     """Parse arguments"""
     parser = argparse.ArgumentParser(description=description)
@@ -32,6 +38,11 @@ def parseargs(description: Text) -> argparse.Namespace:
     parser.add_argument("--proxy-string", help="Proxy to use for external queries")
     parser.add_argument("--scio-baseuri", required=True, help="SCIO API URI")
     parser.add_argument("--http-user", help="SCIO HTTP Basic Auth user")
+    parser.add_argument(
+        "--http-user-agent",
+        default=DEFAULT_USER_AGENT,
+        help="User agent used to download from uri",
+    )
     parser.add_argument("--http-password", help="SCIO HTTP Basic Auth password")
     parser.add_argument("--uri", help="Download content from URI and submit content")
     parser.add_argument("--filename", help="Submit file")
@@ -56,10 +67,16 @@ def parseargs(description: Text) -> argparse.Namespace:
 
 
 def get_uri(
-    uri: Text, proxies: Optional[Dict[Text, Any]], timeout: Optional[int] = 30
+    uri: Text,
+    proxies: Optional[Dict[Text, Any]],
+    timeout: Optional[int] = 30,
+    user_agent: Optional[str] = None,
 ) -> bytes:
     "Return content from URI"
-    req = requests.get(uri, proxies=proxies, timeout=timeout)
+
+    headers = {"User-Agent": user_agent} if user_agent else {}
+
+    req = requests.get(uri, proxies=proxies, timeout=timeout, headers=headers)
 
     if not req.status_code == 200:
         fatal("Unable to get {}. Status code={}".format(uri, req.status_code))
@@ -121,7 +138,12 @@ def main() -> None:
     )
 
     if args.uri:
-        content = get_uri(args.uri, proxies=proxies, timeout=args.http_timeout)
+        content = get_uri(
+            args.uri,
+            proxies=proxies,
+            timeout=args.http_timeout,
+            user_agent=args.http_user_agent,
+        )
         # Use basename from URI as filename
         filename = os.path.basename(args.uri)
 

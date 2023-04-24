@@ -26,7 +26,7 @@ import os
 import re
 from functools import lru_cache
 from pathlib import Path, PurePath
-from typing import Dict, List, Text, Union, cast
+from typing import Dict, List, Text, cast, Any
 
 import caep
 import elasticsearch
@@ -264,7 +264,7 @@ def download(
 def download_json(
     id: SHA256Regex,
     args: argparse.Namespace = Depends(parse_args),
-) -> Union[Response, Dict[Text, Text]]:
+) -> Dict[Text, Any]:
     """Download document base64 decoded in json struct"""
     res = document_lookup(id, args.elasticsearch_client)
 

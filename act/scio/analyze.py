@@ -76,7 +76,6 @@ def remove_non_iso_dates(
     filtered = {}
 
     for key, value in metadata.items():
-
         if key in isodate_fields:
             if not isinstance(value, str):
                 logging.warning("date value is not string %s:%s", key, value)
@@ -134,7 +133,7 @@ async def analyze(
     # make sure we have a Creation-Date field even though the
     # document did not contain one. When missing, use current analyzed time.
     nlpdata["Creation-Date"] = nlpdata.get("metadata", {}).get(
-        "Creation-Date", nlpdata["Analyzed-Date"]
+        "dcterms:created", nlpdata["Analyzed-Date"]
     )
 
     staged = []  # for plugins with dependencies
@@ -245,7 +244,6 @@ async def async_main() -> None:
                 logging.error("Unable to post result data to webdump: %s", r.text)
 
         if elasticsearch_client and store:
-
             if not hexdigest:
                 logging.error("Missing hexdigest, skipping elasticsearch storage")
             else:
