@@ -154,7 +154,12 @@ async def analyze(
 
         for task in tasks:
             if task.exception():
-                logging.error("%s returned an exception: %s", task, task.exception())
+                logging.error(
+                    "%s returned an exception: %s, \n%s",
+                    task,
+                    task.exception(),
+                    "\n".join(str(frame) for frame in task.get_stack()),
+                )
             else:
                 res = task.result()
                 nlpdata[res.name] = res.result
