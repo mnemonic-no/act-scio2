@@ -5,11 +5,11 @@ RUN apt -y install openjdk-11-jdk-headless curl inetutils-ping telnet python3 py
 
 # Download tika jar+md5 that will be used by tika-server
 RUN mkdir /opt/tika
-ENV TIKA_VERSION=1.28.1
-RUN curl --insecure -o /opt/tika/tika-server.jar \
-    https://repo1.maven.org/maven2/org/apache/tika/tika-server/${TIKA_VERSION}/tika-server-${TIKA_VERSION}.jar
-RUN curl --insecure -o /opt/tika/tika-server.jar.md5 \
-    https://repo1.maven.org/maven2/org/apache/tika/tika-server/${TIKA_VERSION}/tika-server-${TIKA_VERSION}.jar.md5
+ENV TIKA_VERSION=2.7.0
+RUN curl -L --insecure -o /opt/tika/tika-server.jar \
+    https://dlcdn.apache.org/tika/${TIKA_VERSION}/tika-server-standard-${TIKA_VERSION}.jar
+RUN curl -L --insecure -o /opt/tika/tika-server.jar.md5 \
+    https://dlcdn.apache.org/tika/${TIKA_VERSION}/tika-server-standard-${TIKA_VERSION}.jar.md5
 RUN chmod -R go+rX /opt/tika
 
 RUN useradd -ms /bin/bash scio
@@ -37,7 +37,7 @@ COPY /etc scio/etc
 COPY /setup.py scio/setup.py
 COPY /README.md scio/README.md
 
-RUN mkdir -p /home/scio/.cache/scio
+RUN mkdir -p .cache/scio .config
 RUN chown scio:scio /home/scio/.cache/scio
 
 RUN cd scio && \

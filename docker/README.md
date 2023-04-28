@@ -19,7 +19,7 @@ docker-compose build
 Build With proxy:
 
 ```bash
-docker-compose build --build-arg http_proxy=http://<PROXY>:<PORT> --build-arg https_proxy http://<PROXY>:<PORT>
+docker-compose build --build-arg http_proxy=http://<PROXY>:<PORT> --build-arg=https_proxy http://<PROXY>:<PORT>
 ```
 
 ## Run

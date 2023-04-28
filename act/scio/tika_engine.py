@@ -31,7 +31,6 @@ class Server:
     Apache Tika for text extraction and den sending it to Scio for text analyzis."""
 
     def __init__(self, beanstalk_host: Text = "127.0.0.1", beanstalk_port: int = 11300):
-
         self.client: Optional[greenstalk.Client] = None
         self.connect(beanstalk_host, beanstalk_port)
 

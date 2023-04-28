@@ -36,18 +36,15 @@ x-meta-scio: &scio
 
 services:
   scio-tika-server:
-    <<: *common
-    <<: *scio
+    <<: [*scio, *common]
     command: scio-tika-server
 
   scio-analyze:
-    <<: *common
-    <<: *scio
+    <<: [*scio, *common]
     command: scio-analyze
 
   scio-api:
-    <<: *common
-    <<: *scio
+    <<: [*scio, *common]
     command: scio-api --host 0.0.0.0
     ports:
       - 127.0.0.1:3000:3000
@@ -64,7 +61,7 @@ services:
 
   scio-elasticsearch:
     <<: *common
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.4.1
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.7.0
     environment:
       - node.name=elasticsearch
       - cluster.name=scio
@@ -83,11 +80,12 @@ services:
 
   scio-kibana:
     <<: *common
-    image: docker.elastic.co/kibana/kibana:8.4.1
+    image: docker.elastic.co/kibana/kibana:8.7.0
     environment:
       SERVER_NAME: localhost
       ELASTICSEARCH_HOSTS: '["http://scio-elasticsearch:9200"]'
       LOGGING_ROOT_LEVEL: "error"
+      telemetry.optIn: false
     ports:
       - 127.0.0.1:5601:5601
     depends_on:
