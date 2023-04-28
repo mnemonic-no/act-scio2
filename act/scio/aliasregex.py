@@ -4,8 +4,8 @@ This module contains function to convert an alias config file an/or an alias int
 regular expressions for matching purposes"""
 
 import re
-import sys
 from typing import List, Optional, Set, Text
+from logging import info
 
 
 def alias_set_from_config(config_file_name: Text) -> Set[Text]:
@@ -151,9 +151,7 @@ def get_reg_ex_set(config_file_name: Text) -> Set[Text]:
     alias_set = alias_set_from_config(config_file_name)
     for alias in alias_set:
         if alias.isdigit():
-            sys.stderr.write(
-                f"WARNING: Unable to create regex from all digit alias {alias}\n"
-            )
+            info(f"Unable to create regex from all digit alias {alias}")
             continue
         regex_set.add(regex_from_alias(alias))
 

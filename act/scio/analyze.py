@@ -263,7 +263,7 @@ async def async_main() -> None:
             # Print to stdout if we do not send to webdump or elasticsearch
             print(result_json)
 
-        if not store:
+        if (not store) and filename:
             # Delete file after it has been analyzed
             logging.info(
                 "Removed file because store=False (hexdigest=%s, filename=%s)",
@@ -273,7 +273,7 @@ async def async_main() -> None:
 
             try:
                 Path(filename).unlink()
-            except (NotADirectoryError, FileNotFoundError) as e:
+            except (NotADirectoryError, FileNotFoundError, TypeError) as e:
                 logging.error("Unable to remove %s: %s", filename, e)
 
         # If we are not listening on a beanstalk work queue, behave like a command line
