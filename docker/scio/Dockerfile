@@ -1,7 +1,7 @@
-FROM docker.io/debian:buster
+FROM docker.io/debian:bullseye
 
 RUN apt update
-RUN apt -y install openjdk-11-jdk-headless curl inetutils-ping telnet python3 python3-setuptools python3-pip
+RUN apt -y install openjdk-17-jdk-headless curl inetutils-ping telnet python3 python3-setuptools python3-pip
 
 # Download tika jar+md5 that will be used by tika-server
 RUN mkdir /opt/tika
