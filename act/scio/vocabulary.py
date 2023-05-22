@@ -9,7 +9,7 @@
 import configparser
 import re
 import sys
-from logging import info
+from logging import info, warning
 from typing import Any, Callable, Dict, List, Optional, Pattern, Text, Union
 
 import addict
@@ -132,7 +132,6 @@ class Vocabulary:
             filename (str): Filename to read aliases from
         """
         with open(filename, "r") as f:
-
             for line in f.readlines():
                 # Remove comments (starting with '#'), unless they are escaped
                 line = re.sub(r"(?<!\\)#.*", "", line)
@@ -141,7 +140,10 @@ class Vocabulary:
                     continue  # Skip empty lines
 
                 # Get key and aliases
-                primary, aliases = parse_aliases(line)
+                try:
+                    primary, aliases = parse_aliases(line)
+                except ValueError:
+                    warning(f"parse_aliases() did not return two items: {line}")
 
                 for name in [primary] + aliases:
                     # Stor a separate entry for each type of key_mod

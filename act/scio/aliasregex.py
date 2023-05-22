@@ -5,7 +5,7 @@ regular expressions for matching purposes"""
 
 import re
 from typing import List, Optional, Set, Text
-from logging import info
+from logging import warning, info
 
 
 def alias_set_from_config(config_file_name: Text) -> Set[Text]:
@@ -13,7 +13,11 @@ def alias_set_from_config(config_file_name: Text) -> Set[Text]:
 
     alias_set = set()
     for line in open(config_file_name):
-        pri, rest = re.split(r"(?<!\\):", line, maxsplit=1)
+        try:
+            pri, rest = re.split(r"(?<!\\):", line, maxsplit=1)
+        except ValueError:
+            warning(f"Unable to split alias (missing colon?): {line}")
+            continue
         aliases = re.split(r"(?<!\\),", rest)
         aliases.append(pri)
         aliases = [alias.strip() for alias in aliases if alias.strip() != ""]
