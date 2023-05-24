@@ -83,7 +83,7 @@ The first time the server runs, it will download tika using maven. It will use a
 scio-tika-server
 ```
 
-`scio-tika-server` uses [tika-python](https://github.com/chrismattmann/tika-python) which depends on tika-server.jar. If your server has internet access, this will downloaded automatically. If not or you need proxy to connect to the internet, follow the instructions on "Airagap Environment Setup" here: [https://github.com/chrismattmann/tika-python](https://github.com/chrismattmann/tika-python). Currently only tested with tika-server version 1.24.1.
+`scio-tika-server` uses [tika-python](https://github.com/chrismattmann/tika-python) which depends on tika-server.jar. If your server has internet access, this will downloaded automatically. If not or you need proxy to connect to the internet, follow the instructions on "Airagap Environment Setup" here: [https://github.com/chrismattmann/tika-python](https://github.com/chrismattmann/tika-python). Currently only tested with tika-server version 2.7.0.
 
 ### Scio Analyze Server
 
@@ -96,7 +96,7 @@ scio-analyze
 You can also read directly from stdin like this:
 
 ```bash
-echo "The companies in the Bus; Finanical, Aviation and Automobile industry are large." | scio-analyze --beanstalk=
+echo "The companies in the Bus; Finanical, Aviation and Automobile industry are large." | scio-analyze --beanstalk= --elasticsearch=
 ```
 
 ### Scio Submit
