@@ -151,7 +151,8 @@ class Server:
         """start the server"""
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(asyncio.wait([self._start(n)]))
+
+        loop.run_until_complete(self._start(n))
 
         logging.info("Server ended")
 
