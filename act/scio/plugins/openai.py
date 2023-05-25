@@ -76,6 +76,9 @@ class Plugin(BasePlugin):
         else:
             doc_tlp = nlpdata["tlp"].upper()
 
+        if ini.has_option("DEFAULT", "proxy"):
+            openai.proxy = ini["DEFAULT"]["proxy"]
+
         res = addict.Dict()
 
         for name in ini.sections():
