@@ -101,6 +101,7 @@ class Plugin(BasePlugin):
 
             if not prompt.get("apikey"):
                 info(f"No apikey defined, skipping {name}")
+                continue
 
             if not prompt.get("query"):
                 warning(f"No query defined in {name}")
