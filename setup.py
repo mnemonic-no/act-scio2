@@ -11,7 +11,7 @@ with open(path.join(this_directory, "README.md"), "rb") as f:
 
 setup(
     name="act-scio",
-    version="0.0.61",
+    version="0.0.62",
     author="mnemonic AS",
     zip_safe=True,
     author_email="opensource@mnemonic.no",
@@ -54,7 +54,7 @@ setup(
         "justext",
         "nltk",
         "openai",
-        "pydantic>=1.9.0",
+        "pydantic>=1.9.0,<2.0.0",
         "pytest-asyncio",
         "pytest",
         "python-magic",
