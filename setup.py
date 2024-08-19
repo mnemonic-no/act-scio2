@@ -54,7 +54,7 @@ setup(
         "justext",
         "nltk",
         "openai",
-        "pydantic>=1.9.0,<2.0.0",
+        "pydantic>=1.9.0,<3.0.0",
         "pytest-asyncio",
         "pytest",
         "python-magic",
